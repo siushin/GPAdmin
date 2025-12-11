@@ -110,15 +110,11 @@ const handleSettings = () => {
 }
 
 const handleLogout = async () => {
-  try {
-    await userStore.logout()
-    message.success('已退出登录')
-    // 使用 replace 避免返回上一页
-    router.replace('/login')
-  } catch (error) {
-    console.error('退出登录失败:', error)
-    message.error('退出登录失败，请重试')
-  }
+  // 调用退出登录，无论接口响应如何都会执行退出流程
+  await userStore.logout()
+  message.success('已退出登录')
+  // 使用 replace 避免返回上一页
+  router.replace('/login')
 }
 </script>
 

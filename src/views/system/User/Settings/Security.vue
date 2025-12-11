@@ -18,7 +18,7 @@
       <div class="security-item">
         <div class="security-info">
           <div class="security-title">密保手机</div>
-          <div class="security-desc">已绑定手机:138****8293</div>
+          <div class="security-desc">已绑定手机:191****2836</div>
         </div>
         <a-button type="link" class="security-action" @click="handleModifyPhone">修改</a-button>
       </div>
@@ -40,7 +40,7 @@
       <div class="security-item">
         <div class="security-info">
           <div class="security-title">备用邮箱</div>
-          <div class="security-desc">已绑定邮箱:ant***sign.com</div>
+          <div class="security-desc">已绑定邮箱:siu***163.com</div>
         </div>
         <a-button type="link" class="security-action" @click="handleModifyEmail">修改</a-button>
       </div>
@@ -147,6 +147,7 @@
 import { ref, reactive, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
+import { api } from '@/api'
 
 // 弹窗显示状态
 const passwordModalVisible = ref(false)
@@ -268,14 +269,42 @@ const handleModifyPassword = () => {
 const handleSubmitPassword = async () => {
   try {
     await passwordFormRef.value?.validate()
-    // 这里调用修改密码的API
-    message.success('密码修改成功')
-    passwordModalVisible.value = false
-    passwordFormData.currentPassword = ''
-    passwordFormData.newPassword = ''
-    passwordFormData.confirmPassword = ''
-  } catch (error) {
-    console.error('表单验证失败:', error)
+
+    // 调用修改密码的API
+    const response = await api.changePassword({
+      current_password: passwordFormData.currentPassword,
+      password: passwordFormData.newPassword,
+      confirm_password: passwordFormData.confirmPassword
+    })
+
+    // 检查响应结果
+    if (response && (response.code === 200 || response.code === 0 || !response.code)) {
+      message.success(response.message || '密码修改成功')
+      passwordModalVisible.value = false
+      passwordFormData.currentPassword = ''
+      passwordFormData.newPassword = ''
+      passwordFormData.confirmPassword = ''
+    } else {
+      // token 过期的情况已经在 request.ts 中全局处理，这里只处理其他错误
+      const responseData = response as any
+      const errorMessage = responseData?.message || responseData?.msg || '密码修改失败'
+      // 如果错误信息不包含 "token已过期"，说明是其他错误，需要显示提示
+      if (!errorMessage.includes('token已过期')) {
+        message.error(errorMessage)
+      }
+    }
+  } catch (error: any) {
+    // 处理错误
+    // token 过期的情况已经在 request.ts 中全局处理，这里只处理其他错误
+    const errorResponse = error?.response?.data
+    const errorMsg = errorResponse?.message || errorResponse?.msg || error?.message || '密码修改失败，请重试'
+
+    // 如果错误信息不包含 "token已过期"，说明是其他错误，需要显示提示
+    // token 过期的情况已经在 request.ts 中处理了，不需要在这里重复处理
+    if (!errorMsg.includes('token已过期')) {
+      message.error(errorMsg)
+    }
+    console.error('修改密码失败:', error)
   }
 }
 

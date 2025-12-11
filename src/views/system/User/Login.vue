@@ -45,7 +45,7 @@
                     <a-form-item>
                         <div class="form-options">
                             <a-checkbox v-model:checked="autoLogin" class="auto-login-checkbox">
-                                自动登录
+                                记住密码
                             </a-checkbox>
                             <a class="forgot-password" @click.prevent>忘记密码</a>
                         </div>
@@ -123,9 +123,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, notification } from 'ant-design-vue'
 import {
     UserOutlined,
     LockOutlined,
@@ -307,41 +307,136 @@ const handleAccountSubmit = async (values: any) => {
             password: values.password
         })
 
-        if (response.code === 200 && response.data) {
-            // 存储 token
-            userStore.setToken(response.data.token)
-
-            // 存储用户信息
-            if (response.data.userInfo) {
-                userStore.setUserInfo(response.data.userInfo)
+        // 处理登录成功的情况
+        // 支持多种响应格式：{ code: 200, data: {...} } 或直接返回数据
+        if (response && (response.code === 200 || response.code === 0 || !response.code)) {
+            const responseData = response.data || response
+            
+            // 存储 token（优先使用 access_token，支持多种字段名：access_token, token, accessToken）
+            let token = responseData.access_token || responseData.token || responseData.accessToken
+            
+            // 确保 token 是字符串类型
+            if (token) {
+                // 如果 token 是对象，尝试提取字符串值
+                if (typeof token === 'object') {
+                    // 如果 access_token 是对象，尝试提取其中的字符串字段
+                    token = token.token || token.access_token || token.value || token
+                    // 如果仍然是对象，转换为字符串（但这种情况应该避免）
+                    if (typeof token === 'object') {
+                        console.error('token 是对象类型，无法提取字符串值:', token)
+                        token = null
+                    }
+                }
+                
+                // 确保 token 是字符串
+                if (token && typeof token === 'string') {
+                    // 计算过期时间：支持 expiresIn（秒）、expires_in、expireTime（时间戳）
+                    const expiresIn = responseData.expiresIn || responseData.expires_in || 7200 // 默认2小时（秒）
+                    const expireTime = responseData.expireTime || responseData.expire_time
+                    
+                    if (expireTime) {
+                        // 如果提供了过期时间戳
+                        userStore.setToken(token, expireTime)
+                    } else if (expiresIn) {
+                        // 如果提供了有效时长（秒），计算过期时间戳
+                        const expireTimestamp = Date.now() + expiresIn * 1000
+                        userStore.setToken(token, expireTimestamp)
+                    } else {
+                        // 如果没有提供过期时间，只保存 token
+                        userStore.setToken(token)
+                    }
+                } else {
+                    console.warn('登录响应中的 token 不是字符串类型:', token)
+                }
             } else {
-                // 如果没有返回用户信息，调用获取用户信息接口
+                console.warn('登录响应中未找到 token 字段')
+            }
+
+            // 保存登录响应的完整 data 数据
+            userStore.setLoginData(responseData)
+
+            // 存储用户信息（支持多种字段名：userInfo, user, data）
+            // 优先使用 userInfo 或 user 字段，如果没有则使用整个 responseData
+            let userInfo = responseData.userInfo || responseData.user
+            if (!userInfo || typeof userInfo !== 'object') {
+                // 如果没有单独的 userInfo 字段，使用整个 responseData（排除 token 相关字段）
+                const { token, access_token, accessToken, expiresIn, expires_in, expireTime, expire_time, ...restData } = responseData
+                userInfo = restData
+            }
+            
+            // 只要有用户信息对象就保存
+            if (userInfo && typeof userInfo === 'object') {
+                userStore.setUserInfo(userInfo as any)
+            } else {
+                // 如果没有返回用户信息，尝试调用获取用户信息接口
                 try {
                     const userInfoRes = await api.getUserInfo()
-                    if (userInfoRes.code === 200 && userInfoRes.data) {
-                        userStore.setUserInfo(userInfoRes.data)
+                    if (userInfoRes && (userInfoRes.code === 200 || userInfoRes.code === 0)) {
+                        const userData = userInfoRes.data || userInfoRes
+                        if (userData && typeof userData === 'object') {
+                            userStore.setUserInfo(userData as any)
+                        }
                     }
                 } catch (error) {
                     console.error('获取用户信息失败:', error)
+                    // 即使获取用户信息失败，也允许登录成功（token 已保存）
                 }
             }
 
-            // 如果选择了自动登录，保存用户名（可选）
+            // 如果选择了自动登录，保存用户名和密码
             if (autoLogin.value) {
                 localStorage.setItem('rememberUsername', values.username)
+                localStorage.setItem('rememberPassword', values.password)
             } else {
                 localStorage.removeItem('rememberUsername')
+                localStorage.removeItem('rememberPassword')
             }
 
-            message.success('登录成功')
+            // 显示右侧弹窗通知
+            const userNickname = userStore.userInfo?.nickname || userStore.userInfo?.username || '用户'
+            notification.success({
+                message: '欢迎',
+                description: `欢迎回来，${userNickname}！`,
+                placement: 'topRight',
+                duration: 4.5
+            })
+            
+            message.success(response.message || '登录成功')
             // 跳转到管理后台首页
             router.replace('/')
         } else {
-            // 错误已在request拦截器中统一处理，这里不需要重复提示
-            console.error('登录失败:', response.message || '登录失败')
+            // 登录失败，显示错误信息
+            const errorMsg = response?.message || response?.msg || '登录失败，请检查账号密码'
+            message.error(errorMsg)
+            console.error('登录失败:', response)
         }
     } catch (error: any) {
-        // 错误已在request拦截器中统一处理，这里不需要重复提示
+        // 处理网络错误或其他异常
+        let errorMsg = '登录失败，请稍后重试'
+        
+        if (error.response) {
+            // HTTP 错误响应
+            const status = error.response.status
+            const errorData = error.response.data
+            
+            if (status === 401) {
+                errorMsg = errorData?.message || errorData?.msg || '账号或密码错误'
+            } else if (status === 400) {
+                errorMsg = errorData?.message || errorData?.msg || '请求参数错误'
+            } else if (status >= 500) {
+                errorMsg = errorData?.message || errorData?.msg || '服务器错误，请稍后重试'
+            } else {
+                errorMsg = errorData?.message || errorData?.msg || `请求失败 (${status})`
+            }
+        } else if (error.request) {
+            // 请求已发出但没有收到响应
+            errorMsg = '网络连接失败，请检查网络设置'
+        } else if (error.message) {
+            // 其他错误
+            errorMsg = error.message
+        }
+        
+        message.error(errorMsg)
         console.error('登录失败:', error)
     } finally {
         loading.value = false
@@ -395,6 +490,19 @@ const handlePhoneSubmit = async (values: any) => {
 const goToRegister = () => {
     router.push('/register')
 }
+
+// 页面加载时，读取保存的用户名和密码
+onMounted(() => {
+    const rememberedUsername = localStorage.getItem('rememberUsername')
+    const rememberedPassword = localStorage.getItem('rememberPassword')
+    if (rememberedUsername) {
+        accountForm.username = rememberedUsername
+        autoLogin.value = true
+    }
+    if (rememberedPassword) {
+        accountForm.password = rememberedPassword
+    }
+})
 
 // 清理定时器
 onUnmounted(() => {

@@ -4,13 +4,18 @@ import type { ApiResponse } from '@/types'
 // 登录认证相关 API
 export const authApi = {
   // 账号密码登录
-  login(data: { username: string; password: string }): Promise<ApiResponse<{ token: string; userInfo: any }>> {
-    return request.post('/auth/login', data)
+  login(data: { username: string; password: string }): Promise<ApiResponse<{ token: string; userInfo: any; expiresIn?: number }>> {
+    return request.post('/admin/login', data)
   },
 
   // 手机号登录
   loginByPhone(data: { phone: string; captcha: string }): Promise<ApiResponse<{ token: string; userInfo: any }>> {
     return request.post('/auth/login/phone', data)
+  },
+
+  // 刷新 token
+  refreshToken(): Promise<ApiResponse<{ token: string; expiresIn?: number }>> {
+    return request.post('/admin/refreshToken')
   },
 
   // 获取用户信息
@@ -20,6 +25,11 @@ export const authApi = {
 
   // 登出
   logout(): Promise<ApiResponse<void>> {
-    return request.post('/auth/logout')
+    return request.post('/admin/logout')
+  },
+
+  // 修改密码
+  changePassword(data: { current_password: string; password: string; confirm_password: string }): Promise<ApiResponse<void>> {
+    return request.post('/admin/changePassword', data)
   }
 }
