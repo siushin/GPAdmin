@@ -145,9 +145,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import { api } from '@/api'
+import { useUserStore } from '@/stores/user'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 // 弹窗显示状态
 const passwordModalVisible = ref(false)
@@ -278,23 +283,26 @@ const handleSubmitPassword = async () => {
     })
 
     // 检查响应结果
-    if (response && (response.code === 200 || response.code === 0 || !response.code)) {
+    if (response && response.code === 200) {
       message.success(response.message || '密码修改成功')
       passwordModalVisible.value = false
       passwordFormData.currentPassword = ''
       passwordFormData.newPassword = ''
       passwordFormData.confirmPassword = ''
+
+      // 修改密码成功后，退出登录并跳转到登录页
+      setTimeout(async () => {
+        await userStore.logout()
+        router.replace('/login')
+      }, 1500) // 1.5秒后退出，让用户看到成功提示
     } else {
-      // token 过期的情况已经在 request.ts 中全局处理，这里只处理其他错误
+      // 修改密码接口的错误由这里处理，显示错误提示
       const responseData = response as any
       const errorMessage = responseData?.message || responseData?.msg || '密码修改失败'
-      // 如果错误信息不包含 "token已过期"，说明是其他错误，需要显示提示
-      if (!errorMessage.includes('token已过期')) {
-        message.error(errorMessage)
-      }
+      message.error(errorMessage)
     }
   } catch (error: any) {
-    // 处理错误
+    // 处理错误，显示错误提示
     // token 过期的情况已经在 request.ts 中全局处理，这里只处理其他错误
     const errorResponse = error?.response?.data
     const errorMsg = errorResponse?.message || errorResponse?.msg || error?.message || '密码修改失败，请重试'

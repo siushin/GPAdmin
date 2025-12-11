@@ -218,6 +218,9 @@ service.interceptors.response.use(
       url.includes('/register') ||
       url.includes('/auth/register')
 
+    // 修改密码接口的特殊处理：错误由调用方自己处理，不在拦截器中提示
+    const isChangePasswordRequest = url.includes('/admin/changePassword')
+
     // 如果返回的状态码不是 200，则视为错误
     // 成功的 code 必须为 200
     if (res.code !== undefined && res.code !== 200) {
@@ -233,8 +236,8 @@ service.interceptors.response.use(
           await userStore.logout()
           router.replace('/login')
         }, 3500) // 3.5秒后退出，确保提示信息已消失
-      } else {
-        // 所有非 200 的错误都要显示错误提示
+      } else if (!isPublicRequest && !isChangePasswordRequest) {
+        // 所有非 200 的错误都要显示错误提示（公开接口和修改密码接口除外）
         message.error(errorMessage)
       }
 
