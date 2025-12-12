@@ -23,7 +23,7 @@
           <a-avatar :size="32" class="user-avatar">
             <UserOutlined />
           </a-avatar>
-          <span class="user-name">{{ userStore.userInfo?.nickname || 'admin' }}</span>
+          <span class="user-name">{{ userStore.userInfo?.real_name || userStore.userInfo?.nickname || 'admin' }}</span>
         </div>
         <template #overlay>
           <a-menu @select="handleMenuSelect">
@@ -102,7 +102,8 @@ const toggleFullscreen = () => {
   }
 }
 
-const handleMenuSelect = ({ key }: { key: string }) => {
+const handleMenuSelect = (info: any) => {
+  const key = String(info.key)
   // 处理菜单选择（除了logout，其他项使用这个）
   if (key !== 'logout') {
     switch (key) {

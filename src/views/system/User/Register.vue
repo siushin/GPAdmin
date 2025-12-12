@@ -256,13 +256,51 @@ const particlesOptions: ISourceOptions = {
 const handleRegisterSubmit = async () => {
     loading.value = true
     try {
-        // TODO: 调用注册接口
+        // 调用注册接口
+        await api.register({
+            username: registerForm.username,
+            password: registerForm.password,
+            password_confirmation: registerForm.confirmPassword,
+            mobile: registerForm.phone,
+            code: registerForm.captcha
+        })
+
+        // 注册成功
+        message.success('注册成功')
+
+        // 刷新当前页面
         setTimeout(() => {
             message.success('注册成功，请登录')
             router.push('/login')
             loading.value = false
         }, 1000)
-    } catch (error) {
+    } catch (error: any) {
+        // 处理网络错误或其他异常
+        let errorMsg = '注册失败，请稍后重试'
+
+        if (error.response) {
+            // HTTP 错误响应
+            const status = error.response.status
+            const errorData = error.response.data
+
+            if (status === 400) {
+                errorMsg = errorData?.message || errorData?.msg || '请求参数错误'
+            } else if (status >= 500) {
+                errorMsg = errorData?.message || errorData?.msg || '服务器错误，请稍后重试'
+            } else {
+                errorMsg = errorData?.message || errorData?.msg || `请求失败 (${status})`
+            }
+        } else if (error.request) {
+            // 请求已发出但没有收到响应
+            errorMsg = '网络连接失败，请检查网络设置'
+        } else if (error.message) {
+            // 其他错误
+            errorMsg = error.message
+        }
+
+        message.error(errorMsg)
+        console.error('注册失败:', error)
+    } finally {
         loading.value = false
     }
 }

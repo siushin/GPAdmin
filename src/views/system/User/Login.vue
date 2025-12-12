@@ -35,8 +35,8 @@
                         </a-input>
                     </a-form-item>
                     <a-form-item name="password">
-                        <a-input-password v-model:value="accountForm.password" placeholder="密码: admin or ant.design"
-                            size="large" class="login-input">
+                        <a-input-password v-model:value="accountForm.password" placeholder="密码: admin" size="large"
+                            class="login-input">
                             <template #prefix>
                                 <LockOutlined class="input-icon" />
                             </template>
