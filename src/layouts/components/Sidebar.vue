@@ -63,7 +63,7 @@ const selectedKeys = ref<string[]>([])
 const openKeys = ref<string[]>([])
 
 // 环境变量
-const appTitle = import.meta.env.VITE_APP_TITLE || 'XXX管理系统'
+const appTitle = import.meta.env.VITE_APP_TITLE || 'GPAdmin管理后台'
 
 // 图标映射
 const iconMap: Record<string, any> = {

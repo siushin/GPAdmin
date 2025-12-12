@@ -125,8 +125,8 @@ import { api } from '@/api'
 const router = useRouter()
 
 // 环境变量
-const appTitle = import.meta.env.VITE_APP_TITLE || '野原家管理系统'
-const appSubtitle = import.meta.env.VITE_APP_SUBTITLE || '春日部市双叶町最具影响力的家庭管理系统'
+const appTitle = import.meta.env.VITE_APP_TITLE || 'GPAdmin管理后台'
+const appSubtitle = import.meta.env.VITE_APP_SUBTITLE || '你的宝可梦仓库再也不会乱成精灵球堆啦'
 
 const loading = ref(false)
 const countdown = ref(0)

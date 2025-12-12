@@ -1,4 +1,4 @@
-# 野原家管理系统 (GPAdmin)
+# GPAdmin管理后台
 
 一个基于 Vue 3 + TypeScript + Vite 构建的现代化管理后台系统，采用 Ant Design Vue 组件库，提供完整的用户管理、角色管理、菜单管理、部门管理等功能。
 
@@ -230,9 +230,9 @@ cp .env.development .env.local
 
 ```env
 # 应用配置
-VITE_APP_TITLE=野原家管理系统
-VITE_APP_SUBTITLE=春日部市双叶町最具影响力的家庭管理系统
-VITE_APP_COMPANY=野原家
+VITE_APP_TITLE=GPAdmin管理后台
+VITE_APP_SUBTITLE=你的宝可梦仓库再也不会乱成精灵球堆啦
+VITE_APP_COMPANY=GPAdmin
 VITE_APP_COPYRIGHT_START_YEAR=2025
 
 # API 配置
@@ -437,9 +437,9 @@ export const api = {
 
 | 变量名 | 说明 | 默认值 | 示例 |
 |--------|------|--------|------|
-| `VITE_APP_TITLE` | 应用标题 | - | 野原家管理系统 |
-| `VITE_APP_SUBTITLE` | 应用副标题 | - | 春日部市双叶町最具影响力的家庭管理系统 |
-| `VITE_APP_COMPANY` | 公司名称 | - | 野原家 |
+| `VITE_APP_TITLE` | 应用标题 | - | GPAdmin管理后台 |
+| `VITE_APP_SUBTITLE` | 应用副标题 | - | 你的宝可梦仓库再也不会乱成精灵球堆啦 |
+| `VITE_APP_COMPANY` | 公司名称 | - | GPAdmin |
 | `VITE_APP_COPYRIGHT_START_YEAR` | 版权起始年份 | 2025 | 2025 |
 | `VITE_API_BASE_URL` | API 基础路径 | /api | /api 或 <http://localhost:3000/api> |
 | `VITE_USE_MOCK` | 是否使用 Mock | false | true/false |

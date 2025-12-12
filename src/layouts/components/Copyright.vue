@@ -8,7 +8,7 @@
 import { computed } from 'vue'
 
 // 环境变量
-const appCompany = import.meta.env.VITE_APP_COMPANY || 'XXX有限公司'
+const appCompany = import.meta.env.VITE_APP_COMPANY || 'GPAdmin'
 
 // 动态年份计算（获取当前年份）
 const copyrightYear = computed(() => {

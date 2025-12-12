@@ -224,7 +224,7 @@ router.beforeEach((to, _from, next) => {
   }
 
   // 设置页面标题
-  const appTitle = import.meta.env.VITE_APP_TITLE || '野原家管理系统'
+  const appTitle = import.meta.env.VITE_APP_TITLE || 'GPAdmin管理后台'
   document.title = to.meta.title ? `${to.meta.title} - ${appTitle}` : appTitle
 
   next()
