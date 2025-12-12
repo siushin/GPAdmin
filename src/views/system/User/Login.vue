@@ -8,7 +8,7 @@
             <!-- Logo 和标题 -->
             <div class="login-header">
                 <div class="header-top">
-                    <img src="@/assets/logo.svg" alt="Logo" class="logo" />
+                    <img src="@/assets/pokemon.png" alt="Logo" class="logo" />
                     <h1 class="app-title">{{ appTitle }}</h1>
                 </div>
                 <p class="app-subtitle">{{ appSubtitle }}</p>
@@ -47,7 +47,7 @@
                             <a-checkbox v-model:checked="autoLogin" class="auto-login-checkbox">
                                 记住密码
                             </a-checkbox>
-                            <a class="forgot-password" @click.prevent>忘记密码</a>
+                            <a class="forgot-password" @click="goToForgotPassword">忘记密码</a>
                         </div>
                     </a-form-item>
                     <a-form-item>
@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, notification } from 'ant-design-vue'
 import {
@@ -163,6 +163,9 @@ const loginType = ref<'account' | 'phone'>('account')
 // 自动登录
 const autoLogin = ref(false)
 
+// 保存初始用户名（用于判断用户名是否改变）
+const initialUsername = ref('')
+
 // 登录加载状态
 const loading = ref(false)
 
@@ -170,6 +173,14 @@ const loading = ref(false)
 const accountForm = reactive({
     username: '',
     password: ''
+})
+
+// 监听用户名变化，如果用户名改变则取消记住密码
+watch(() => accountForm.username, (newUsername) => {
+    // 如果用户名改变且与初始用户名不同，取消记住密码
+    if (initialUsername.value && newUsername !== initialUsername.value && autoLogin.value) {
+        autoLogin.value = false
+    }
 })
 
 // 手机号表单
@@ -594,12 +605,18 @@ const goToRegister = () => {
     router.push('/register')
 }
 
+// 跳转到忘记密码页
+const goToForgotPassword = () => {
+    router.push('/forgot-password')
+}
+
 // 页面加载时，读取保存的用户名和密码
 onMounted(() => {
     const rememberedUsername = localStorage.getItem('rememberUsername')
     const rememberedPassword = localStorage.getItem('rememberPassword')
     if (rememberedUsername) {
         accountForm.username = rememberedUsername
+        initialUsername.value = rememberedUsername // 保存初始用户名
         autoLogin.value = true
     }
     if (rememberedPassword) {
@@ -653,7 +670,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 4px;
     margin-bottom: 8px;
 }
 

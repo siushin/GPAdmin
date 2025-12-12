@@ -168,6 +168,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/system/User/ForgotPassword.vue'),
+    meta: {
+      title: '重置密码',
+      hideInMenu: true,
+      layout: false
+    }
+  },
+  {
     path: '/qrcode/:platform',
     name: 'QrCode',
     component: () => import('@/views/system/User/Settings/Binding/QrCode.vue'),
@@ -196,7 +206,7 @@ router.beforeEach((to, _from, next) => {
   const token = userStore.token
 
   // 白名单：不需要登录的页面
-  const whiteList = ['/login', '/register']
+  const whiteList = ['/login', '/register', '/forgot-password']
 
   // 二维码页面路径匹配
   const isQrCodePage = to.path.startsWith('/qrcode/')

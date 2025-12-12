@@ -34,12 +34,17 @@ export const authApi = {
   },
 
   // 发送短信验证码
-  sendSmsCode(data: { mobile: string; type: 'login' | 'register' }): Promise<ApiResponse<void>> {
+  sendSmsCode(data: { mobile: string; type: 'login' | 'register' | 'reset' }): Promise<ApiResponse<void>> {
     return request.post('/sms/send', data)
   },
 
   // 用户注册
   register(data: { username: string; password: string; password_confirmation: string; mobile: string; code: string }): Promise<ApiResponse<void>> {
     return request.post('/admin/register', data)
+  },
+
+  // 重置密码
+  resetPassword(data: { mobile: string; code: string; password: string; password_confirmation: string }): Promise<ApiResponse<void>> {
+    return request.post('/admin/resetPassword', data)
   }
 }

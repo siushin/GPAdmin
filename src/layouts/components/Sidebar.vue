@@ -3,7 +3,7 @@
     class="sidebar">
     <!-- Logo -->
     <div class="logo-wrapper" :class="{ collapsed: collapsed }">
-      <img src="@/assets/logo.svg" alt="Logo" class="logo-img" :class="{ collapsed: collapsed }" />
+      <img src="@/assets/pokemon.png" alt="Logo" class="logo-img" :class="{ collapsed: collapsed }" />
       <span v-if="!collapsed" class="logo-text">{{ appTitle }}</span>
     </div>
 
@@ -258,7 +258,7 @@ const toggleCollapse = () => {
 .logo-img {
   width: 32px;
   height: 32px;
-  margin-right: 12px;
+  margin-right: 4px;
   flex-shrink: 0;
 }
 
