@@ -26,7 +26,7 @@
           <span class="user-name">{{ userStore.userInfo?.nickname || 'admin' }}</span>
         </div>
         <template #overlay>
-          <a-menu>
+          <a-menu @select="handleMenuSelect">
             <a-menu-item key="profile" @click="handleProfile">
               <UserOutlined />
               个人中心
@@ -36,7 +36,7 @@
               个人设置
             </a-menu-item>
             <a-menu-divider />
-            <a-menu-item key="logout" @click="handleLogout">
+            <a-menu-item key="logout" @click.stop="handleLogout">
               <LogoutOutlined />
               退出登录
             </a-menu-item>
@@ -67,7 +67,8 @@ import {
   MenuItem as AMenuItem,
   MenuDivider as AMenuDivider,
   Avatar as AAvatar,
-  message
+  message,
+  Modal
 } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 
@@ -101,6 +102,20 @@ const toggleFullscreen = () => {
   }
 }
 
+const handleMenuSelect = ({ key }: { key: string }) => {
+  // 处理菜单选择（除了logout，其他项使用这个）
+  if (key !== 'logout') {
+    switch (key) {
+      case 'profile':
+        router.push('/profile')
+        break
+      case 'settings':
+        router.push('/settings/basic')
+        break
+    }
+  }
+}
+
 const handleProfile = () => {
   router.push('/profile')
 }
@@ -109,12 +124,43 @@ const handleSettings = () => {
   router.push('/settings/basic')
 }
 
-const handleLogout = async () => {
-  // 调用退出登录，无论接口响应如何都会执行退出流程
-  await userStore.logout()
-  message.success('已退出登录')
-  // 使用 replace 避免返回上一页
-  router.replace('/login')
+const handleLogout = () => {
+  Modal.confirm({
+    title: '确认退出',
+    content: '确定要退出登录吗？',
+    okText: '确定',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        // 先清除本地存储，确保路由守卫能立即检测到
+        localStorage.removeItem('token')
+        localStorage.removeItem('tokenExpireTime')
+        localStorage.removeItem('userInfo')
+        localStorage.removeItem('loginData')
+        sessionStorage.clear()
+
+        // 调用退出登录方法（异步执行，不等待结果）
+        userStore.logout().catch(() => {
+          // 即使出错也不影响退出流程
+        })
+
+        // 显示退出成功提示
+        message.success('已退出登录')
+
+        // 立即使用 window.location 强制跳转，确保完全清除状态并刷新页面
+        window.location.href = '/login'
+      } catch (error) {
+        console.error('退出登录失败:', error)
+        // 即使出错也强制跳转
+        localStorage.removeItem('token')
+        localStorage.removeItem('tokenExpireTime')
+        localStorage.removeItem('userInfo')
+        localStorage.removeItem('loginData')
+        sessionStorage.clear()
+        window.location.href = '/login'
+      }
+    }
+  })
 }
 </script>
 

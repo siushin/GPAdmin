@@ -20,11 +20,11 @@
 
                 <a-form :model="registerForm" :rules="registerRules as any" @finish="handleRegisterSubmit"
                     layout="vertical" class="register-form" :validate-trigger="['change', 'blur']">
-                    <a-form-item name="email">
-                        <a-input v-model:value="registerForm.email" placeholder="邮箱" size="large"
+                    <a-form-item name="username">
+                        <a-input v-model:value="registerForm.username" placeholder="用户名" size="large"
                             class="register-input">
                             <template #prefix>
-                                <MailOutlined class="input-icon" />
+                                <UserOutlined class="input-icon" />
                             </template>
                         </a-input>
                     </a-form-item>
@@ -106,7 +106,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-    MailOutlined,
+    UserOutlined,
     LockOutlined,
     MobileOutlined,
     SafetyOutlined
@@ -131,7 +131,7 @@ const loading = ref(false)
 const countdown = ref(0)
 
 const registerForm = reactive({
-    email: '',
+    username: '',
     password: '',
     confirmPassword: '',
     phone: '',
@@ -159,13 +159,16 @@ const validateAgreement = (_rule: any, value: boolean) => {
 }
 
 const registerRules: any = {
-    email: [
-        { required: true, message: '请输入邮箱', trigger: 'blur' },
-        { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+        { min: 3, message: '用户名至少3位', trigger: 'blur' },
+        { max: 20, message: '用户名最多20位', trigger: 'blur' },
+        { pattern: /^[a-zA-Z0-9_.]+$/, message: '用户名只能包含数字、英文大小写、下划线和点', trigger: 'blur' }
     ],
     password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
-        { min: 8, message: '密码至少8位', trigger: 'blur' }
+        { min: 8, message: '密码至少8位', trigger: 'blur' },
+        { pattern: /^[a-zA-Z0-9_.]+$/, message: '密码只能包含数字、英文大小写、下划线和点', trigger: 'blur' }
     ],
     confirmPassword: [
         { required: true, validator: validateConfirmPassword, trigger: 'blur' }
