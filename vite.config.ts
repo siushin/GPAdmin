@@ -11,8 +11,8 @@ export default defineConfig({
     }
   },
   server: {
-    host: '0.0.0.0', // 允许外部访问
+    host: true, // 允许外部访问
     port: 5173,
-    allowedHosts: 'all' // 允许所有域名
+    allowedHosts: true, // 允许所有域名
   }
 })
