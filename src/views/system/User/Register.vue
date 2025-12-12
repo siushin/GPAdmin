@@ -260,7 +260,7 @@ const handleRegisterSubmit = async () => {
         await api.register({
             username: registerForm.username,
             password: registerForm.password,
-            password_confirmation: registerForm.confirmPassword,
+            confirm_password: registerForm.confirmPassword,
             mobile: registerForm.phone,
             code: registerForm.captcha
         })

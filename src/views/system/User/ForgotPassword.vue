@@ -52,9 +52,9 @@
                         </a-input-password>
                     </a-form-item>
 
-                    <a-form-item name="password_confirmation">
-                        <a-input-password v-model:value="resetForm.password_confirmation" placeholder="确认新密码"
-                            size="large" class="forgot-password-input">
+                    <a-form-item name="confirmPassword">
+                        <a-input-password v-model:value="resetForm.confirmPassword" placeholder="确认新密码" size="large"
+                            class="forgot-password-input">
                             <template #prefix>
                                 <LockOutlined class="input-icon" />
                             </template>
@@ -115,7 +115,7 @@ const resetForm = reactive({
     mobile: '',
     code: '',
     password: '',
-    password_confirmation: ''
+    confirmPassword: ''
 })
 
 // 自定义验证：确认密码
@@ -142,7 +142,7 @@ const resetRules: any = {
         { min: 8, message: '密码至少8位', trigger: 'blur' },
         { pattern: /^[a-zA-Z0-9_.]+$/, message: '密码只能包含数字、英文大小写、下划线和点', trigger: 'blur' }
     ],
-    password_confirmation: [
+    confirmPassword: [
         { required: true, validator: validateConfirmPassword, trigger: 'blur' }
     ]
 }
@@ -222,7 +222,7 @@ const handleResetSubmit = async () => {
             mobile: resetForm.mobile,
             code: resetForm.code,
             password: resetForm.password,
-            password_confirmation: resetForm.password_confirmation
+            confirm_password: resetForm.confirmPassword
         })
 
         // 重置成功
@@ -254,7 +254,7 @@ const sendCaptcha = async () => {
         // 调用发送验证码接口
         await api.sendSmsCode({
             mobile: resetForm.mobile,
-            type: 'reset'
+            type: 'reset_password'
         })
         message.success('验证码已发送')
         countdown.value = 60
