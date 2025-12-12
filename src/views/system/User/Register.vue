@@ -120,6 +120,7 @@ import {
 } from 'ant-design-vue'
 import type { ISourceOptions } from '@tsparticles/engine'
 import AppFooter from '@/layouts/components/AppFooter.vue'
+import { api } from '@/api'
 
 const router = useRouter()
 
@@ -266,20 +267,34 @@ const handleRegisterSubmit = async () => {
     }
 }
 
-const sendCaptcha = () => {
+const sendCaptcha = async () => {
     if (!registerForm.phone) {
         message.warning('请先输入手机号')
         return
     }
-    // TODO: 调用发送验证码接口
-    message.success('验证码已发送')
-    countdown.value = 60
-    const timer = setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) {
-            clearInterval(timer)
-        }
-    }, 1000)
+    if (!/^1[3-9]\d{9}$/.test(registerForm.phone)) {
+        message.warning('请输入正确的手机号')
+        return
+    }
+
+    try {
+        // 调用发送验证码接口
+        await api.sendSmsCode({
+            mobile: registerForm.phone,
+            type: 'register'
+        })
+        message.success('验证码已发送')
+        countdown.value = 60
+        const timer = setInterval(() => {
+            countdown.value--
+            if (countdown.value <= 0) {
+                clearInterval(timer)
+            }
+        }, 1000)
+    } catch (error: any) {
+        // 错误信息已在 request 拦截器中统一处理
+        console.error('发送验证码失败:', error)
+    }
 }
 
 const goToLogin = () => {

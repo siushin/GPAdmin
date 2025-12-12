@@ -9,8 +9,8 @@ export const authApi = {
   },
 
   // 手机号登录
-  loginByPhone(data: { phone: string; captcha: string }): Promise<ApiResponse<{ token: string; userInfo: any }>> {
-    return request.post('/auth/login/phone', data)
+  loginByCode(data: { mobile: string; code: string }): Promise<ApiResponse<{ token: string; userInfo: any; expiresIn?: number }>> {
+    return request.post('/admin/loginByCode', data)
   },
 
   // 刷新 token
@@ -31,5 +31,10 @@ export const authApi = {
   // 修改密码
   changePassword(data: { current_password: string; password: string; confirm_password: string }): Promise<ApiResponse<void>> {
     return request.post('/admin/changePassword', data)
+  },
+
+  // 发送短信验证码
+  sendSmsCode(data: { mobile: string; type: 'login' | 'register' }): Promise<ApiResponse<void>> {
+    return request.post('/sms/send', data)
   }
 }

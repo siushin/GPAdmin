@@ -114,9 +114,9 @@ const mockUrlMap: Record<string, (config: InternalAxiosRequestConfig) => Promise
     const data = parseRequestData(config.data)
     return mockApi.login(data)
   },
-  '/auth/login/phone': (config) => {
+  '/admin/loginByCode': (config) => {
     const data = parseRequestData(config.data)
-    return mockApi.loginByPhone(data)
+    return mockApi.loginByCode(data)
   },
   '/user/info': () => mockApi.getUserInfo(),
   '/user/list': (config) => {

@@ -1,11 +1,10 @@
 // 登录认证相关 Mock 数据
 
 // 登录 Mock 数据
-const mockLogin = (data: { username: string; password: string } | { phone: string; captcha: string }) => {
+const mockLogin = (data: { username: string; password: string }) => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // 模拟登录成功
-      const isPhoneLogin = 'phone' in data
       resolve({
         code: 200,
         message: '登录成功',
@@ -13,7 +12,31 @@ const mockLogin = (data: { username: string; password: string } | { phone: strin
           token: 'mock_token_' + Date.now(),
           userInfo: {
             id: 1,
-            username: isPhoneLogin ? data.phone : data.username,
+            username: data.username,
+            nickname: '野原新之助',
+            avatar: '',
+            roles: ['admin'],
+            permissions: ['*']
+          }
+        }
+      })
+    }, 800)
+  })
+}
+
+// 手机号登录 Mock 数据
+const mockLoginByCode = (data: { mobile: string; code: string }) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // 模拟登录成功
+      resolve({
+        code: 200,
+        message: '登录成功',
+        data: {
+          token: 'mock_token_' + Date.now(),
+          userInfo: {
+            id: 1,
+            username: data.mobile,
             nickname: '野原新之助',
             avatar: '',
             roles: ['admin'],
@@ -51,7 +74,7 @@ export const authMock = {
   login: mockLogin,
 
   // 手机号登录
-  loginByPhone: mockLogin,
+  loginByCode: mockLoginByCode,
 
   // 获取用户信息
   getUserInfo: mockGetUserInfo
