@@ -25,6 +25,15 @@ export default {
    * @name 详细的代理配置
    * @doc https://github.com/chimurai/http-proxy-middleware
    */
+  dev: {
+    // localhost:8000/api/** -> http://laravel-api.cc/api/**
+    '/api/': {
+      target:
+        process.env.UMI_APP_API_BASE_URL || 'https://preview.pro.ant.design',
+      changeOrigin: true,
+      pathRewrite: { '^/api': '' },
+    },
+  },
   test: {
     // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
     '/api/': {

@@ -2,8 +2,10 @@ import {
   AlipayCircleOutlined,
   LockOutlined,
   MobileOutlined,
+  QqOutlined,
   TaobaoCircleOutlined,
   UserOutlined,
+  WechatOutlined,
   WeiboCircleOutlined,
 } from '@ant-design/icons';
 import {
@@ -69,16 +71,18 @@ const ActionIcons = () => {
 
   return (
     <>
-      <AlipayCircleOutlined
-        key="AlipayCircleOutlined"
+      <WechatOutlined key="WechatOutlined" className={styles.action} />
+      <QqOutlined key="QqOutlined" className={styles.action} />
+      <WeiboCircleOutlined
+        key="WeiboCircleOutlined"
         className={styles.action}
       />
       <TaobaoCircleOutlined
         key="TaobaoCircleOutlined"
         className={styles.action}
       />
-      <WeiboCircleOutlined
-        key="WeiboCircleOutlined"
+      <AlipayCircleOutlined
+        key="AlipayCircleOutlined"
         className={styles.action}
       />
     </>
@@ -182,8 +186,8 @@ const Login: React.FC = () => {
             minWidth: 280,
             maxWidth: '75vw',
           }}
-          logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
+          logo={<img alt="logo" src="/pokemon.png" />}
+          title={process.env.UMI_APP_TITLE || 'GPAdmin管理后台'}
           subTitle={intl.formatMessage({
             id: 'pages.layouts.userLayout.title',
           })}
@@ -228,7 +232,7 @@ const Login: React.FC = () => {
             <LoginMessage
               content={intl.formatMessage({
                 id: 'pages.login.accountLogin.errorMessage',
-                defaultMessage: '账户或密码错误(admin/ant.design)',
+                defaultMessage: '账户或密码错误(admin)',
               })}
             />
           )}
@@ -242,7 +246,7 @@ const Login: React.FC = () => {
                 }}
                 placeholder={intl.formatMessage({
                   id: 'pages.login.username.placeholder',
-                  defaultMessage: '用户名: admin or user',
+                  defaultMessage: '用户名: admin',
                 })}
                 rules={[
                   {
@@ -264,7 +268,7 @@ const Login: React.FC = () => {
                 }}
                 placeholder={intl.formatMessage({
                   id: 'pages.login.password.placeholder',
-                  defaultMessage: '密码: ant.design',
+                  defaultMessage: '密码: admin',
                 })}
                 rules={[
                   {
