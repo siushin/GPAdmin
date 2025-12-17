@@ -17,7 +17,7 @@ const Settings: ProLayoutProps & {
   colorWeak: false,
   title: process.env.UMI_APP_TITLE || 'GPAdmin管理后台',
   pwa: true,
-  logo: 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+  logo: '/pokemon.png',
   iconfontUrl: '',
   token: {
     // 参见ts声明，demo 见文档，通过token 修改样式
