@@ -166,9 +166,9 @@ export default defineConfig({
       projectName: 'swagger',
     },
   ],
-  mock: {
-    include: ['mock/**/*', 'src/pages/**/_mock.ts'],
-  },
+  // 禁用 mock，让所有接口走真实的后端 API
+  // 注意：启动命令 start:dev 中也设置了 MOCK=none
+  mock: false,
   /**
    * @name 是否开启 mako
    * @description 使用 mako 极速研发

@@ -80,14 +80,44 @@ export async function getInitialState(): Promise<{
     }
     return undefined;
   };
-  // 如果不是登录页面，执行
+
+  // 如果不是登录页面，检查是否有 token
   const { location } = history;
   if (
     ![loginPath, '/user/register', '/user/register-result'].includes(
       location.pathname,
     )
   ) {
-    const currentUser = await fetchUserInfo();
+    // 检查是否有 token，如果没有直接跳转登录页
+    const token = localStorage.getItem('token');
+    if (!token) {
+      history.push(loginPath);
+      return {
+        fetchUserInfo,
+        settings: defaultSettings as Partial<LayoutSettings>,
+      };
+    }
+
+    // 有 token 时，从 localStorage 读取用户信息，不请求接口
+    const userInfoStr = localStorage.getItem('userInfo');
+    let currentUser: API.CurrentUser | undefined;
+
+    if (userInfoStr) {
+      try {
+        currentUser = JSON.parse(userInfoStr);
+      } catch (e) {
+        console.error('解析用户信息失败:', e);
+        // 如果解析失败，清除 token 并跳转登录页
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        history.push(loginPath);
+      }
+    } else {
+      // 如果没有用户信息，清除 token 并跳转登录页
+      localStorage.removeItem('token');
+      history.push(loginPath);
+    }
+
     return {
       fetchUserInfo,
       currentUser,
@@ -180,6 +210,7 @@ export const layout: RunTimeLayoutConfig = ({
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const request: RequestConfig = {
-  baseURL: 'https://proapi.azurewebsites.net',
+  // 设置 baseURL，直接请求真实的后端 API
+  baseURL: process.env.UMI_APP_API_BASE_URL || 'http://laravel-api.cc',
   ...errorConfig,
 };

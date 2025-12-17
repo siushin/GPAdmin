@@ -50,6 +50,9 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
    */
   const loginOut = async () => {
     await outLogin();
+    // 清除本地存储的 token 和用户信息
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
     const { search, pathname } = window.location;
     const urlParams = new URL(window.location.href).searchParams;
     const searchParams = new URLSearchParams({

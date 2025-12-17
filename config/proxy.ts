@@ -27,11 +27,18 @@ export default {
    */
   dev: {
     // localhost:8000/api/** -> http://laravel-api.cc/api/**
-    '/api/': {
-      target:
-        process.env.UMI_APP_API_BASE_URL || 'https://preview.pro.ant.design',
+    '/api': {
+      target: process.env.UMI_APP_API_BASE_URL || 'http://laravel-api.cc',
       changeOrigin: true,
-      pathRewrite: { '^/api': '' },
+      secure: false,
+      // 不重写路径，保留 /api 前缀
+      // pathRewrite: { '^/api': '' },
+      onProxyReq: (proxyReq: any, req: any, res: any) => {
+        console.log('代理请求:', req.method, req.url, '-> ', proxyReq.path);
+      },
+      onProxyRes: (proxyRes: any, req: any, res: any) => {
+        console.log('代理响应:', proxyRes.statusCode, req.url);
+      },
     },
   },
   test: {

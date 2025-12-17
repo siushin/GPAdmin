@@ -24,6 +24,14 @@ declare namespace API {
   };
 
   type LoginResult = {
+    code?: number;
+    message?: string;
+    data?: {
+      token?: string;
+      user?: any;
+      [key: string]: any;
+    };
+    // 保留旧格式兼容性
     status?: string;
     type?: string;
     currentAuthority?: string;

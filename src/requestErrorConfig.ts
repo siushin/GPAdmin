@@ -1,4 +1,4 @@
-﻿import type { RequestOptions } from '@@/plugin-request/request';
+import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { message, notification } from 'antd';
 
@@ -12,8 +12,11 @@ enum ErrorShowType {
 }
 // 与后端约定的响应数据格式
 interface ResponseStructure {
-  success: boolean;
-  data: any;
+  code: number; // 200为成功，其他为失败
+  message?: string;
+  data?: any;
+  // 保留旧格式兼容性
+  success?: boolean;
   errorCode?: number;
   errorMessage?: string;
   showType?: ErrorShowType;
@@ -29,12 +32,18 @@ export const errorConfig: RequestConfig = {
   errorConfig: {
     // 错误抛出
     errorThrower: (res) => {
-      const { success, data, errorCode, errorMessage, showType } =
+      const { code, message, data, errorCode, errorMessage, showType } =
         res as unknown as ResponseStructure;
-      if (!success) {
-        const error: any = new Error(errorMessage);
+      // 统一标准：code !== 200 表示失败
+      if (code && code !== 200) {
+        const error: any = new Error(message || errorMessage || '请求失败');
         error.name = 'BizError';
-        error.info = { errorCode, errorMessage, showType, data };
+        error.info = {
+          errorCode: code,
+          errorMessage: message || errorMessage,
+          showType,
+          data,
+        };
         throw error; // 抛出自制的错误
       }
     },
@@ -88,9 +97,13 @@ export const errorConfig: RequestConfig = {
   // 请求拦截器
   requestInterceptors: [
     (config: RequestOptions) => {
-      // 拦截请求配置，进行个性化处理。
-      const url = config?.url?.concat('?token=123');
-      return { ...config, url };
+      // 拦截请求配置，添加认证token
+      const token = localStorage.getItem('token');
+      if (token && config.headers) {
+        // 添加Authorization头
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
     },
   ],
 
@@ -98,10 +111,17 @@ export const errorConfig: RequestConfig = {
   responseInterceptors: [
     (response) => {
       // 拦截响应数据，进行个性化处理
-      const { data } = response as unknown as ResponseStructure;
+      const { data } = response as any;
 
-      if (data?.success === false) {
-        message.error('请求失败！');
+      // 统一标准：code !== 200 表示失败
+      if (data?.code && data.code !== 200) {
+        // 如果是401未授权或token过期，不显示错误消息，让业务逻辑处理（跳转登录页）
+        if (data.code === 401 || data.code === 1000) {
+          // 静默处理，不显示错误消息
+          return response;
+        }
+        const errorMsg = data.message || '请求失败！';
+        message.error(errorMsg);
       }
       return response;
     },
