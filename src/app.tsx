@@ -3,7 +3,8 @@ import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
-import React from 'react';
+import { notification } from 'antd';
+import React, { useEffect } from 'react';
 import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
 import defaultSettings from '../config/defaultSettings';
@@ -12,6 +13,52 @@ import '@ant-design/v5-patch-for-react-19';
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
+
+/**
+ * 欢迎通知组件
+ */
+const WelcomeNotification: React.FC<{
+  currentUser?: API.CurrentUser;
+  isDev: boolean;
+  initialState: any;
+  setInitialState: any;
+  children: React.ReactNode;
+}> = ({ currentUser, isDev, initialState, setInitialState, children }) => {
+  useEffect(() => {
+    // 检查是否刚刚登录
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (justLoggedIn === 'true' && currentUser) {
+      // 显示欢迎通知
+      notification.success({
+        message: '欢迎回来',
+        description: `欢迎，${currentUser.name || '用户'}！`,
+        placement: 'topRight',
+        duration: 3,
+      });
+      // 清除标记
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }, [currentUser]);
+
+  return (
+    <>
+      {children}
+      {isDev && (
+        <SettingDrawer
+          disableUrlParams
+          enableDarkTheme
+          settings={initialState?.settings}
+          onSettingChange={(settings) => {
+            setInitialState((preInitialState: any) => ({
+              ...preInitialState,
+              settings,
+            }));
+          }}
+        />
+      )}
+    </>
+  );
+};
 
 /**
  * @see https://umijs.org/docs/api/runtime-config#getinitialstate
@@ -113,22 +160,14 @@ export const layout: RunTimeLayoutConfig = ({
     childrenRender: (children) => {
       // if (initialState?.loading) return <PageLoading />;
       return (
-        <>
+        <WelcomeNotification
+          currentUser={initialState?.currentUser}
+          isDev={isDev}
+          initialState={initialState}
+          setInitialState={setInitialState}
+        >
           {children}
-          {isDev && (
-            <SettingDrawer
-              disableUrlParams
-              enableDarkTheme
-              settings={initialState?.settings}
-              onSettingChange={(settings) => {
-                setInitialState((preInitialState) => ({
-                  ...preInitialState,
-                  settings,
-                }));
-              }}
-            />
-          )}
-        </>
+        </WelcomeNotification>
       );
     },
     ...initialState?.settings,
