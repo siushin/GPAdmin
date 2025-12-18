@@ -23,7 +23,13 @@ import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import { App } from 'antd';
 import React, { useEffect } from 'react';
-import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components';
+import {
+  AvatarDropdown,
+  AvatarName,
+  Footer,
+  SelectLang,
+  SettingButton,
+} from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
 import { setNotificationInstance } from '@/utils/notification';
 import { clearToken, isTokenExpired } from '@/utils/token';
@@ -122,11 +128,8 @@ const loginPath = '/user/login';
  */
 const WelcomeNotification: React.FC<{
   currentUser?: API.CurrentUser;
-  isDev: boolean;
-  initialState: any;
-  setInitialState: any;
   children: React.ReactNode;
-}> = ({ currentUser, isDev, initialState, setInitialState, children }) => {
+}> = ({ currentUser, children }) => {
   const { notification } = App.useApp();
 
   useEffect(() => {
@@ -150,24 +153,7 @@ const WelcomeNotification: React.FC<{
     }
   }, [currentUser, notification]);
 
-  return (
-    <>
-      {children}
-      {isDev && (
-        <SettingDrawer
-          disableUrlParams
-          enableDarkTheme
-          settings={initialState?.settings}
-          onSettingChange={(settings) => {
-            setInitialState((preInitialState: any) => ({
-              ...preInitialState,
-              settings,
-            }));
-          }}
-        />
-      )}
-    </>
-  );
+  return <>{children}</>;
 };
 
 /**
@@ -270,8 +256,29 @@ export const layout: RunTimeLayoutConfig = ({
   initialState,
   setInitialState,
 }) => {
+  const handleSettingClick = () => {
+    // 直接触发 SettingDrawer 的打开
+    // 由于 handle 被 CSS 隐藏，我们需要临时显示它并触发点击
+    const handle = document.querySelector(
+      '.ant-pro-setting-drawer-handle',
+    ) as HTMLElement;
+    if (handle) {
+      // 临时显示并触发点击
+      const originalDisplay = handle.style.display;
+      handle.style.display = 'block';
+      handle.click();
+      // 立即隐藏
+      setTimeout(() => {
+        handle.style.display = originalDisplay || 'none';
+      }, 0);
+    }
+  };
+
   return {
-    actionsRender: () => [<SelectLang key="SelectLang" />],
+    actionsRender: () => [
+      <SelectLang key="SelectLang" />,
+      <SettingButton key="SettingButton" onClick={handleSettingClick} />,
+    ],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
       title: <AvatarName />,
@@ -368,14 +375,20 @@ export const layout: RunTimeLayoutConfig = ({
       // if (initialState?.loading) return <PageLoading />;
       return (
         <App>
-          <WelcomeNotification
-            currentUser={initialState?.currentUser}
-            isDev={isDev}
-            initialState={initialState}
-            setInitialState={setInitialState}
-          >
+          <WelcomeNotification currentUser={initialState?.currentUser}>
             {children}
           </WelcomeNotification>
+          <SettingDrawer
+            disableUrlParams
+            enableDarkTheme
+            settings={initialState?.settings}
+            onSettingChange={(settings) => {
+              setInitialState((preInitialState: any) => ({
+                ...preInitialState,
+                settings,
+              }));
+            }}
+          />
         </App>
       );
     },
