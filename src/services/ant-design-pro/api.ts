@@ -143,6 +143,26 @@ export async function getUserMenus(options?: { [key: string]: any }) {
   });
 }
 
+/** 获取我的应用列表 POST /api/admin/app/myApps */
+export async function getMyApps(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      name: string;
+      alias: string;
+      description: string;
+      keywords: string[];
+      priority: number;
+      enabled: boolean;
+      path: string;
+    }>;
+  }>('/api/admin/app/myApps', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /api/notices */
 export async function getNotices(options?: { [key: string]: any }) {
   return request<API.NoticeIconList>('/api/notices', {

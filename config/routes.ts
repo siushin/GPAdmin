@@ -39,6 +39,109 @@ export default [
     component: './Dashboard/Workplace',
   },
   {
+    path: '/user',
+    name: 'user.management',
+    icon: 'team',
+    routes: [
+      {
+        path: '/user/account',
+        name: 'user.account',
+        component: './User/Account',
+      },
+      {
+        path: '/user/user',
+        name: 'user.user',
+        component: './User/User',
+      },
+      {
+        path: '/user/profile',
+        name: 'user.profile',
+        component: './User/Profile',
+      },
+      {
+        path: '/user/social',
+        name: 'user.social',
+        component: './User/Social',
+      },
+    ],
+  },
+  {
+    path: '/app',
+    name: 'app.management',
+    icon: 'appstore',
+    routes: [
+      {
+        path: '/app/market',
+        name: 'app.market',
+        component: './App/Market',
+      },
+      {
+        path: '/app/my',
+        name: 'app.my',
+        component: './App/My',
+      },
+    ],
+  },
+  {
+    path: '/notification',
+    name: 'notification.management',
+    icon: 'bell',
+    routes: [
+      {
+        path: '/notification/system',
+        name: 'notification.system',
+        component: './Notification/System',
+      },
+      {
+        path: '/notification/message',
+        name: 'notification.message',
+        component: './Notification/Message',
+      },
+      {
+        path: '/notification/announcement',
+        name: 'notification.announcement',
+        component: './Notification/Announcement',
+      },
+    ],
+  },
+  {
+    path: '/system',
+    name: 'system.management',
+    icon: 'setting',
+    routes: [
+      {
+        path: '/system/admin',
+        name: 'system.admin',
+        component: './System/Admin',
+      },
+      {
+        path: '/system/role',
+        name: 'system.role',
+        component: './System/Role',
+      },
+      {
+        path: '/system/menu',
+        name: 'system.menu',
+        component: './System/Menu',
+      },
+      {
+        path: '/system/organization',
+        name: 'system.organization',
+        component: './System/Organization',
+      },
+      {
+        path: '/system/dict',
+        name: 'system.dict',
+        component: './System/Dict',
+      },
+      {
+        path: '/system/log',
+        name: 'system.log',
+        component: './System/Log',
+      },
+    ],
+  },
+  {
     path: '/admin',
     name: 'admin',
     icon: 'crown',
