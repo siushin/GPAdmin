@@ -5,12 +5,15 @@ import {
   BlockOutlined,
   BookOutlined,
   FileTextOutlined,
+  IdcardOutlined,
   LinkOutlined,
   MessageOutlined,
   NotificationOutlined,
   ProfileOutlined,
   SettingOutlined,
+  ShareAltOutlined,
   SoundOutlined,
+  TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
@@ -41,6 +44,9 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   ApartmentOutlined,
   BookOutlined,
   FileTextOutlined,
+  TeamOutlined,
+  IdcardOutlined,
+  ShareAltOutlined,
 };
 
 /**
