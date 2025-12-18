@@ -17,10 +17,11 @@ import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
-import { notification } from 'antd';
+import { App } from 'antd';
 import React, { useEffect } from 'react';
 import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { setNotificationInstance } from '@/utils/notification';
 import { clearToken, isTokenExpired } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
@@ -79,7 +80,7 @@ const patchMenuIcon = (menuData: any[]): any[] => {
     if (typeof newItem.icon === 'string' && newItem.icon.trim() !== '') {
       const IconComponent = getIconComponent(newItem.icon);
       if (IconComponent) {
-        // 使用 React.createElement 创建图标元素（与一级菜单保持一致）
+        // 使用 JSX 语法创建图标元素（ProLayout 推荐方式）
         newItem.icon = React.createElement(IconComponent);
       } else {
         // 如果图标不存在，移除 icon 字段，避免显示错误
@@ -118,6 +119,13 @@ const WelcomeNotification: React.FC<{
   setInitialState: any;
   children: React.ReactNode;
 }> = ({ currentUser, isDev, initialState, setInitialState, children }) => {
+  const { notification } = App.useApp();
+
+  useEffect(() => {
+    // 设置全局 notification 实例
+    setNotificationInstance(notification);
+  }, [notification]);
+
   useEffect(() => {
     // 检查是否刚刚登录
     const justLoggedIn = sessionStorage.getItem('justLoggedIn');
@@ -132,7 +140,7 @@ const WelcomeNotification: React.FC<{
       // 清除标记
       sessionStorage.removeItem('justLoggedIn');
     }
-  }, [currentUser]);
+  }, [currentUser, notification]);
 
   return (
     <>
@@ -271,10 +279,18 @@ export const layout: RunTimeLayoutConfig = ({
       // 转换图标字符串为图标组件
       return patchMenuIcon(menuData);
     },
+    // 菜单配置：默认展开所有菜单
+    menu: {
+      defaultOpenAll: true,
+    },
     // 自定义子菜单渲染，确保图标能够显示
     subMenuItemRender: (menuItemProps: any, defaultDom: React.ReactNode) => {
-      // 如果有图标，确保图标被正确渲染
-      // defaultDom 已经包含了图标，直接返回即可
+      // 检查菜单项是否有图标
+      if (menuItemProps.icon && React.isValidElement(menuItemProps.icon)) {
+        // 如果 defaultDom 是数组或 Fragment，需要找到文本节点并添加图标
+        // 否则直接返回 defaultDom（ProLayout 应该已经处理了图标）
+        return defaultDom;
+      }
       return defaultDom;
     },
     footerRender: () => <Footer />,
@@ -320,14 +336,16 @@ export const layout: RunTimeLayoutConfig = ({
     childrenRender: (children) => {
       // if (initialState?.loading) return <PageLoading />;
       return (
-        <WelcomeNotification
-          currentUser={initialState?.currentUser}
-          isDev={isDev}
-          initialState={initialState}
-          setInitialState={setInitialState}
-        >
-          {children}
-        </WelcomeNotification>
+        <App>
+          <WelcomeNotification
+            currentUser={initialState?.currentUser}
+            isDev={isDev}
+            initialState={initialState}
+            setInitialState={setInitialState}
+          >
+            {children}
+          </WelcomeNotification>
+        </App>
       );
     },
     ...initialState?.settings,

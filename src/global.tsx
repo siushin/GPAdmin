@@ -1,5 +1,6 @@
 import { useIntl } from '@umijs/max';
-import { Button, message, notification } from 'antd';
+import { Button, message } from 'antd';
+import { getNotification } from '@/utils/notification';
 import defaultSettings from '../config/defaultSettings';
 
 const { pwa } = defaultSettings;
@@ -58,14 +59,14 @@ if (pwa) {
       <Button
         type="primary"
         onClick={() => {
-          notification.destroy(key);
+          getNotification().destroy(key);
           reloadSW();
         }}
       >
         {useIntl().formatMessage({ id: 'app.pwa.serviceworker.updated.ok' })}
       </Button>
     );
-    notification.open({
+    getNotification().open({
       message: useIntl().formatMessage({ id: 'app.pwa.serviceworker.updated' }),
       description: useIntl().formatMessage({
         id: 'app.pwa.serviceworker.updated.hint',

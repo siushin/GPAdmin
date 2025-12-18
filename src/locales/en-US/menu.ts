@@ -15,7 +15,7 @@ export default {
   'menu.notification.message': 'Message',
   'menu.notification.announcement': 'Announcement Management',
   'menu.system.management': 'System Management',
-  'menu.system.user': 'User Management',
+  'menu.system.admin': 'Admin Management',
   'menu.system.role': 'Role Management',
   'menu.system.menu': 'Menu Management',
   'menu.system.organization': 'Organization',

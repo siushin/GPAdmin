@@ -15,7 +15,7 @@ export default {
   'menu.notification.message': '站內信',
   'menu.notification.announcement': '公告管理',
   'menu.system.management': '系統管理',
-  'menu.system.user': '用戶管理',
+  'menu.system.admin': '管理員管理',
   'menu.system.role': '角色管理',
   'menu.system.menu': '菜單管理',
   'menu.system.organization': '組織架構',

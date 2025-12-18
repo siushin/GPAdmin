@@ -1,7 +1,8 @@
 import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { history } from '@umijs/max';
-import { message, notification } from 'antd';
+import { message } from 'antd';
+import { getNotification } from '@/utils/notification';
 import {
   clearToken,
   getToken,
@@ -75,7 +76,7 @@ export const errorConfig: RequestConfig = {
               message.error(errorMessage);
               break;
             case ErrorShowType.NOTIFICATION:
-              notification.open({
+              getNotification().open({
                 description: errorMessage,
                 message: errorCode,
               });
