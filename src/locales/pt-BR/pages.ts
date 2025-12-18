@@ -51,6 +51,30 @@ export default {
     'Por favor, concorde com os Termos de Serviço e Política de Privacidade',
   'pages.register.haveAccount': 'Já tem uma conta?',
   'pages.register.goToLogin': 'Entrar',
+  'pages.resetPassword.subtitle': 'Redefinir Senha',
+  'pages.resetPassword.submit': 'Redefinir Senha',
+  'pages.resetPassword.failure': 'Falha ao redefinir senha, tente novamente!',
+  'pages.resetPassword.phone.placeholder': 'Número de Telefone',
+  'pages.resetPassword.phone.required':
+    'Por favor, insira seu número de telefone!',
+  'pages.resetPassword.phone.invalid':
+    'Formato de número de telefone inválido!',
+  'pages.resetPassword.captcha.placeholder': 'Código de Verificação',
+  'pages.resetPassword.captcha.required':
+    'Por favor insira o código de verificação!',
+  'pages.resetPassword.getVerificationCode': 'Obter Código',
+  'pages.resetPassword.password.placeholder':
+    'Digite a nova senha (pelo menos 6 caracteres)',
+  'pages.resetPassword.password.required': 'Por favor, insira a nova senha!',
+  'pages.resetPassword.password.min':
+    'A senha deve ter pelo menos 6 caracteres!',
+  'pages.resetPassword.confirmPassword.placeholder': 'Confirme a Nova Senha',
+  'pages.resetPassword.confirmPassword.required':
+    'Por favor, confirme a nova senha!',
+  'pages.resetPassword.confirmPassword.notMatch':
+    'As duas senhas não coincidem',
+  'pages.resetPassword.rememberPassword': 'Lembrou sua senha?',
+  'pages.resetPassword.backToLogin': 'Voltar ao Login',
   'pages.404.subTitle': 'Desculpe, a página que você visitou não existe. ',
   'pages.404.buttonText': 'Voltar à página inicial',
   'pages.admin.subPage.title': 'Esta página só pode ser vista pelo Admin',

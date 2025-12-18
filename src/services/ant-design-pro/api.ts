@@ -102,6 +102,35 @@ export async function register(
   });
 }
 
+/** 重置密码接口 POST /api/resetPassword */
+export async function resetPassword(
+  body: {
+    phone: string;
+    code: string;
+    password: string;
+    confirm_password: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/resetPassword', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: {
+      phone: body.phone,
+      code: body.code,
+      password: body.password,
+      confirm_password: body.confirm_password,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /api/notices */
 export async function getNotices(options?: { [key: string]: any }) {
   return request<API.NoticeIconList>('/api/notices', {

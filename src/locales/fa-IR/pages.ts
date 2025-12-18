@@ -50,6 +50,27 @@ export default {
     'لطفا با شرایط استفاده و سیاست حفظ حریم خصوصی موافقت کنید',
   'pages.register.haveAccount': 'قبلاً حساب کاربری دارید؟',
   'pages.register.goToLogin': 'وارد شوید',
+  'pages.resetPassword.subtitle': 'بازنشانی رمز عبور',
+  'pages.resetPassword.submit': 'بازنشانی رمز عبور',
+  'pages.resetPassword.failure':
+    'بازنشانی رمز عبور ناموفق بود، لطفا دوباره تلاش کنید!',
+  'pages.resetPassword.phone.placeholder': 'شماره تلفن',
+  'pages.resetPassword.phone.required': 'لطفا شماره تلفن خود را وارد کنید!',
+  'pages.resetPassword.phone.invalid': 'فرمت شماره تلفن نامعتبر است!',
+  'pages.resetPassword.captcha.placeholder': 'کد تأیید',
+  'pages.resetPassword.captcha.required': 'لطفا کد تأیید را وارد کنید!',
+  'pages.resetPassword.getVerificationCode': 'دریافت کد',
+  'pages.resetPassword.password.placeholder':
+    'رمز عبور جدید را وارد کنید (حداقل 6 کاراکتر)',
+  'pages.resetPassword.password.required': 'لطفا رمز عبور جدید را وارد کنید!',
+  'pages.resetPassword.password.min': 'رمز عبور باید حداقل 6 کاراکتر باشد!',
+  'pages.resetPassword.confirmPassword.placeholder':
+    'رمز عبور جدید را تأیید کنید',
+  'pages.resetPassword.confirmPassword.required':
+    'لطفا رمز عبور جدید را تأیید کنید!',
+  'pages.resetPassword.confirmPassword.notMatch': 'دو رمز عبور مطابقت ندارند',
+  'pages.resetPassword.rememberPassword': 'رمز عبور را به خاطر آوردید؟',
+  'pages.resetPassword.backToLogin': 'بازگشت به ورود',
   'pages.404.subTitle': 'ببخشيد، صفحه اي که ديديد وجود نداره',
   'pages.404.buttonText': 'بازگشت به صفحه اصلی',
   'pages.admin.subPage.title': 'این صفحه فقط توسط مدیر قابل مشاهده است',

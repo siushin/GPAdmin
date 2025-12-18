@@ -51,6 +51,27 @@ export default {
     'Silakan setujui Ketentuan Layanan dan Kebijakan Privasi',
   'pages.register.haveAccount': 'Sudah punya akun?',
   'pages.register.goToLogin': 'Masuk',
+  'pages.resetPassword.subtitle': 'Reset Kata Sandi',
+  'pages.resetPassword.submit': 'Reset Kata Sandi',
+  'pages.resetPassword.failure': 'Reset kata sandi gagal, silakan coba lagi!',
+  'pages.resetPassword.phone.placeholder': 'Nomor Telepon',
+  'pages.resetPassword.phone.required': 'Silakan masukkan nomor telepon Anda!',
+  'pages.resetPassword.phone.invalid': 'Format nomor telepon tidak valid!',
+  'pages.resetPassword.captcha.placeholder': 'Kode Verifikasi',
+  'pages.resetPassword.captcha.required': 'Silakan masukkan kode verifikasi!',
+  'pages.resetPassword.getVerificationCode': 'Dapatkan Kode',
+  'pages.resetPassword.password.placeholder':
+    'Masukkan kata sandi baru (minimal 6 karakter)',
+  'pages.resetPassword.password.required': 'Silakan masukkan kata sandi baru!',
+  'pages.resetPassword.password.min': 'Kata sandi harus minimal 6 karakter!',
+  'pages.resetPassword.confirmPassword.placeholder':
+    'Konfirmasi Kata Sandi Baru',
+  'pages.resetPassword.confirmPassword.required':
+    'Silakan konfirmasi kata sandi baru!',
+  'pages.resetPassword.confirmPassword.notMatch':
+    'Kedua kata sandi tidak cocok',
+  'pages.resetPassword.rememberPassword': 'Ingat kata sandi Anda?',
+  'pages.resetPassword.backToLogin': 'Kembali ke Login',
   'pages.404.subTitle': 'Maaf, halaman yang Anda kunjungi tidak ada. ',
   'pages.404.buttonText': 'Kembali ke halaman utama',
   'pages.admin.subPage.title': 'Halaman ini hanya dapat dilihat oleh admin',

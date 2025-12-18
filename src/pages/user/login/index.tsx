@@ -577,10 +577,14 @@ const Login: React.FC = () => {
                     defaultMessage="注册账号"
                   />
                 </a>
-                <a>
+                <a
+                  onClick={() => {
+                    history.push('/user/reset-password');
+                  }}
+                >
                   <FormattedMessage
                     id="pages.login.forgotPassword"
-                    defaultMessage="忘记密码"
+                    defaultMessage="忘记密码 ?"
                   />
                 </a>
               </div>

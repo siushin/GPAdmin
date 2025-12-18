@@ -50,6 +50,29 @@ export default {
     '利用規約とプライバシーポリシーに同意してください',
   'pages.register.haveAccount': 'すでにアカウントをお持ちですか？',
   'pages.register.goToLogin': 'ログイン',
+  'pages.resetPassword.subtitle': 'パスワードをリセット',
+  'pages.resetPassword.submit': 'パスワードをリセット',
+  'pages.resetPassword.failure':
+    'パスワードリセットに失敗しました。もう一度お試しください！',
+  'pages.resetPassword.phone.placeholder': '電話番号',
+  'pages.resetPassword.phone.required': '電話番号を入力してください！',
+  'pages.resetPassword.phone.invalid': '電話番号の形式が正しくありません！',
+  'pages.resetPassword.captcha.placeholder': '確認コードを入力',
+  'pages.resetPassword.captcha.required': '確認コードを入力してください！',
+  'pages.resetPassword.getVerificationCode': '確認コードを取得',
+  'pages.resetPassword.password.placeholder':
+    '新しいパスワードを入力（6文字以上）',
+  'pages.resetPassword.password.required':
+    '新しいパスワードを入力してください！',
+  'pages.resetPassword.password.min':
+    'パスワードは6文字以上である必要があります！',
+  'pages.resetPassword.confirmPassword.placeholder': '新しいパスワードを再入力',
+  'pages.resetPassword.confirmPassword.required':
+    '新しいパスワードを再入力してください！',
+  'pages.resetPassword.confirmPassword.notMatch':
+    '2つのパスワードが一致しません',
+  'pages.resetPassword.rememberPassword': 'パスワードを思い出しましたか？',
+  'pages.resetPassword.backToLogin': 'ログインに戻る',
   'pages.404.subTitle':
     '申し訳ありませんが、アクセスしたページは存在しません。',
   'pages.404.buttonText': 'ホームに戻る',
