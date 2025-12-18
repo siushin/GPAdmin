@@ -7,6 +7,7 @@ import { notification } from 'antd';
 import React, { useEffect } from 'react';
 import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { clearToken, isTokenExpired } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import '@ant-design/v5-patch-for-react-19';
@@ -98,7 +99,18 @@ export async function getInitialState(): Promise<{
       };
     }
 
-    // 有 token 时，从 localStorage 读取用户信息，不请求接口
+    // 检查 token 是否过期
+    if (isTokenExpired()) {
+      clearToken();
+      localStorage.removeItem('userInfo');
+      history.push(loginPath);
+      return {
+        fetchUserInfo,
+        settings: defaultSettings as Partial<LayoutSettings>,
+      };
+    }
+
+    // 有 token 且未过期时，从 localStorage 读取用户信息，不请求接口
     const userInfoStr = localStorage.getItem('userInfo');
     let currentUser: API.CurrentUser | undefined;
 
@@ -108,13 +120,13 @@ export async function getInitialState(): Promise<{
       } catch (e) {
         console.error('解析用户信息失败:', e);
         // 如果解析失败，清除 token 并跳转登录页
-        localStorage.removeItem('token');
+        clearToken();
         localStorage.removeItem('userInfo');
         history.push(loginPath);
       }
     } else {
       // 如果没有用户信息，清除 token 并跳转登录页
-      localStorage.removeItem('token');
+      clearToken();
       history.push(loginPath);
     }
 

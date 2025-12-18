@@ -20,6 +20,24 @@ export async function outLogin(options?: { [key: string]: any }) {
   });
 }
 
+/** 刷新token接口 POST /api/refreshToken */
+export async function refreshToken(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    data: {
+      token: {
+        token_type: string;
+        expires_in: number;
+        access_token: string;
+        refresh_token: string;
+      };
+    };
+  }>('/api/refreshToken', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 登录接口 POST /api/login/account */
 export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
   return request<API.LoginResult>('/api/login/account', {
@@ -30,6 +48,24 @@ export async function login(body: API.LoginParams, options?: { [key: string]: an
     data: {
       username: body.username,
       password: body.password,
+    },
+    ...(options || {}),
+  });
+}
+
+/** 手机号验证码登录接口 POST /api/login/code */
+export async function loginByCode(
+  body: { phone: string; code: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.LoginResult>('/api/login/code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: {
+      phone: body.phone,
+      code: body.code,
     },
     ...(options || {}),
   });

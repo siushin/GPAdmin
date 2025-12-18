@@ -1,6 +1,15 @@
 import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
+import { history } from '@umijs/max';
 import { message, notification } from 'antd';
+import {
+  clearToken,
+  getToken,
+  isTokenExpired,
+  refreshTokenIfNeeded,
+} from '@/utils/token';
+
+const loginPath = '/user/login';
 
 // 错误处理方案： 错误类型
 enum ErrorShowType {
@@ -96,9 +105,18 @@ export const errorConfig: RequestConfig = {
 
   // 请求拦截器
   requestInterceptors: [
-    (config: RequestOptions) => {
+    async (config: RequestOptions) => {
+      // 检查token是否过期，如果过期则不添加token（让后端返回401，由响应拦截器处理）
+      if (isTokenExpired()) {
+        // token已过期，不添加token，让后端返回401
+        return config;
+      }
+
+      // 检查并刷新token（如果快过期）
+      await refreshTokenIfNeeded();
+
       // 拦截请求配置，添加认证token
-      const token = localStorage.getItem('token');
+      const token = getToken();
       if (token && config.headers) {
         // 添加Authorization头
         config.headers.Authorization = `Bearer ${token}`;
@@ -115,8 +133,13 @@ export const errorConfig: RequestConfig = {
 
       // 统一标准：code !== 200 表示失败
       if (data?.code && data.code !== 200) {
-        // 如果是401未授权或token过期，不显示错误消息，让业务逻辑处理（跳转登录页）
+        // 如果是401未授权或token过期，清除token并跳转登录页
         if (data.code === 401 || data.code === 1000) {
+          clearToken();
+          localStorage.removeItem('userInfo');
+          if (window.location.pathname !== loginPath) {
+            history.push(loginPath);
+          }
           // 静默处理，不显示错误消息
           return response;
         }

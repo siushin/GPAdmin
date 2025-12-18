@@ -29,8 +29,9 @@ import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
-import { login } from '@/services/ant-design-pro/api';
-import { getFakeCaptcha } from '@/services/ant-design-pro/login';
+import { login, loginByCode } from '@/services/ant-design-pro/api';
+import { sendCaptcha } from '@/services/ant-design-pro/login';
+import { saveToken } from '@/utils/token';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {
@@ -224,9 +225,19 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: API.LoginParams) => {
     try {
-      // 登录
-      const msg = await login({ ...values, type });
-      console.log('登录响应:', msg);
+      // 根据登录类型调用不同的登录接口
+      let msg: any;
+      if (type === 'phone') {
+        // 手机号验证码登录
+        const formValues = values as any;
+        msg = await loginByCode({
+          phone: formValues.mobile || '',
+          code: formValues.captcha || '',
+        });
+      } else {
+        // 账号密码登录
+        msg = await login({ ...values, type });
+      }
 
       // 后端统一响应标准：code === 200 表示成功
       const isSuccess = (msg as any).code === 200;
@@ -234,14 +245,12 @@ const Login: React.FC = () => {
       if (isSuccess) {
         const responseData = (msg as any).data;
 
-        // 从响应中提取 access_token
-        // 响应格式：{ code: 200, data: { token: { access_token: "..." } } }
+        // 从响应中提取 access_token 和过期时间
+        // 响应格式：{ code: 200, data: { token: { access_token: "...", expires_in: 7200 } } }
         const tokenData = responseData?.token;
         if (tokenData?.access_token) {
-          localStorage.setItem('token', tokenData.access_token);
-          console.log('✓ Token已保存');
-        } else {
-          console.warn('⚠️ 响应中未找到 access_token');
+          const expiresIn = tokenData.expires_in || 7200; // 默认7200秒（2小时）
+          saveToken(tokenData.access_token, expiresIn);
         }
 
         // 直接使用登录接口返回的用户信息，转换为 CurrentUser 格式
@@ -255,14 +264,13 @@ const Login: React.FC = () => {
             (item: any) => item.social_type === 'email',
           )?.social_account,
           phone: userData.social_accounts?.find(
-            (item: any) => item.social_type === 'mobile',
+            (item: any) => item.social_type === 'phone',
           )?.social_account,
           access: userData.currentAuthority || userData.account_type,
         };
 
         // 保存用户信息到 localStorage，避免刷新后重新请求接口
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        console.log('✓ 用户信息已保存');
 
         // 直接设置用户信息到全局状态，不再请求 /api/currentUser
         flushSync(() => {
@@ -283,8 +291,11 @@ const Login: React.FC = () => {
         return;
       }
       // 登录失败，显示后端返回的错误信息
-      console.log('登录失败，响应信息:', msg);
-      const errorMsg = (msg as any).message || '登录失败，请检查用户名和密码';
+      const defaultErrorMsg =
+        type === 'phone'
+          ? '登录失败，请检查手机号和验证码'
+          : '登录失败，请检查用户名和密码';
+      const errorMsg = (msg as any).message || defaultErrorMsg;
       message.error(errorMsg);
       setUserLoginState({ ...msg, status: 'error' });
     } catch (error) {
@@ -292,7 +303,6 @@ const Login: React.FC = () => {
         id: 'pages.login.failure',
         defaultMessage: '登录失败，请重试！',
       });
-      console.error('登录错误:', error);
       message.error(defaultLoginFailureMessage);
     }
   };
@@ -369,7 +379,7 @@ const Login: React.FC = () => {
                   }),
                 },
                 {
-                  key: 'mobile',
+                  key: 'phone',
                   label: intl.formatMessage({
                     id: 'pages.login.phoneLogin.tab',
                     defaultMessage: '手机号登录',
@@ -435,10 +445,10 @@ const Login: React.FC = () => {
               </>
             )}
 
-            {status === 'error' && loginType === 'mobile' && (
+            {status === 'error' && loginType === 'phone' && (
               <LoginMessage content="验证码错误" />
             )}
-            {type === 'mobile' && (
+            {type === 'phone' && (
               <>
                 <ProFormText
                   fieldProps={{
@@ -479,6 +489,7 @@ const Login: React.FC = () => {
                   captchaProps={{
                     size: 'large',
                   }}
+                  phoneName="mobile"
                   placeholder={intl.formatMessage({
                     id: 'pages.login.captcha.placeholder',
                     defaultMessage: '请输入验证码',
@@ -508,13 +519,38 @@ const Login: React.FC = () => {
                     },
                   ]}
                   onGetCaptcha={async (phone) => {
-                    const result = await getFakeCaptcha({
-                      phone,
-                    });
-                    if (!result) {
-                      return;
+                    try {
+                      // phone 参数是表单中 phoneName="mobile" 字段的值
+                      const phoneNumber = phone || '';
+                      if (!phoneNumber) {
+                        message.error('请先输入手机号');
+                        return;
+                      }
+                      const result = await sendCaptcha({
+                        phone: phoneNumber,
+                        type: 'login',
+                      });
+                      // 后端返回格式：{ code: 200, message: '验证码发送成功', data: {} }
+                      if (result && (result as any).code === 200) {
+                        message.success(
+                          (result as any).message || '验证码发送成功',
+                        );
+                      } else {
+                        // 如果返回了message，显示message；否则显示默认错误信息
+                        const errorMsg =
+                          (result as any)?.message || '获取验证码失败，请重试';
+                        message.error(errorMsg);
+                      }
+                    } catch (error: any) {
+                      // 优先显示后端返回的message
+                      const errorMsg =
+                        error?.response?.data?.message ||
+                        error?.data?.message ||
+                        error?.message ||
+                        '获取验证码失败，请重试';
+                      message.error(errorMsg);
+                      throw error; // 重新抛出错误，让组件知道获取失败
                     }
-                    message.success('获取验证码成功！验证码为：1234');
                   }}
                 />
               </>
