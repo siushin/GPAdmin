@@ -71,6 +71,37 @@ export async function loginByCode(
   });
 }
 
+/** 注册接口 POST /api/register */
+export async function register(
+  body: {
+    username: string;
+    password: string;
+    confirm_password: string;
+    phone: string;
+    code: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: {
+      username: body.username,
+      password: body.password,
+      confirm_password: body.confirm_password,
+      phone: body.phone,
+      code: body.code,
+    },
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /api/notices */
 export async function getNotices(options?: { [key: string]: any }) {
   return request<API.NoticeIconList>('/api/notices', {

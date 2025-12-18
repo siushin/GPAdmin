@@ -20,6 +20,7 @@ import { loadSlim } from '@tsparticles/slim';
 import {
   FormattedMessage,
   Helmet,
+  history,
   SelectLang,
   useIntl,
   useModel,
@@ -64,9 +65,6 @@ const useStyles = createStyles(({ token }) => {
       height: '100vh',
       overflow: 'auto',
       position: 'relative',
-      backgroundImage:
-        "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
-      backgroundSize: '100% 100%',
     },
     particles: {
       position: 'absolute',
@@ -253,7 +251,6 @@ const Login: React.FC = () => {
           saveToken(tokenData.access_token, expiresIn);
         }
 
-        // 直接使用登录接口返回的用户信息，转换为 CurrentUser 格式
         const userData = responseData;
         const defaultAvatar = '/BiazfanxmamNRoxxVxka.png';
         const currentUser: API.CurrentUser = {
@@ -566,16 +563,27 @@ const Login: React.FC = () => {
                   defaultMessage="自动登录"
                 />
               </ProFormCheckbox>
-              <a
-                style={{
-                  float: 'right',
-                }}
-              >
-                <FormattedMessage
-                  id="pages.login.forgotPassword"
-                  defaultMessage="忘记密码"
-                />
-              </a>
+              <div style={{ float: 'right' }}>
+                <a
+                  style={{
+                    marginRight: 16,
+                  }}
+                  onClick={() => {
+                    history.push('/user/register');
+                  }}
+                >
+                  <FormattedMessage
+                    id="pages.login.register"
+                    defaultMessage="注册账号"
+                  />
+                </a>
+                <a>
+                  <FormattedMessage
+                    id="pages.login.forgotPassword"
+                    defaultMessage="忘记密码"
+                  />
+                </a>
+              </div>
             </div>
           </LoginForm>
         </div>
