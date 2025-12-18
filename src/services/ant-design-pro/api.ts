@@ -131,6 +131,18 @@ export async function resetPassword(
   });
 }
 
+/** 获取用户菜单列表 POST /api/getUserMenus */
+export async function getUserMenus(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/getUserMenus', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /api/notices */
 export async function getNotices(options?: { [key: string]: any }) {
   return request<API.NoticeIconList>('/api/notices', {

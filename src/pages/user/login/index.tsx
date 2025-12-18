@@ -30,7 +30,11 @@ import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
-import { login, loginByCode } from '@/services/ant-design-pro/api';
+import {
+  getUserMenus,
+  login,
+  loginByCode,
+} from '@/services/ant-design-pro/api';
 import { sendCaptcha } from '@/services/ant-design-pro/login';
 import { saveToken } from '@/utils/token';
 import Settings from '../../../../config/defaultSettings';
@@ -269,13 +273,41 @@ const Login: React.FC = () => {
         // 保存用户信息到 localStorage，避免刷新后重新请求接口
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
 
-        // 直接设置用户信息到全局状态，不再请求 /api/currentUser
-        flushSync(() => {
-          setInitialState((s) => ({
-            ...s,
-            currentUser: currentUser,
-          }));
-        });
+        // 获取用户菜单数据
+        try {
+          const menuResponse = await getUserMenus();
+          if (menuResponse && (menuResponse as any).code === 200) {
+            const menuData = (menuResponse as any).data || [];
+            // 保存菜单数据到 localStorage
+            localStorage.setItem('menuData', JSON.stringify(menuData));
+
+            // 直接设置用户信息和菜单数据到全局状态
+            flushSync(() => {
+              setInitialState((s) => ({
+                ...s,
+                currentUser: currentUser,
+                menuData: menuData,
+              }));
+            });
+          } else {
+            // 如果获取菜单失败，仍然设置用户信息
+            flushSync(() => {
+              setInitialState((s) => ({
+                ...s,
+                currentUser: currentUser,
+              }));
+            });
+          }
+        } catch (menuError) {
+          console.error('获取菜单失败:', menuError);
+          // 如果获取菜单失败，仍然设置用户信息
+          flushSync(() => {
+            setInitialState((s) => ({
+              ...s,
+              currentUser: currentUser,
+            }));
+          });
+        }
 
         // 显示欢迎消息
         const userName = currentUser.name || '用户';

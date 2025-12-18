@@ -1,4 +1,18 @@
-import { LinkOutlined } from '@ant-design/icons';
+import {
+  ApartmentOutlined,
+  AppstoreOutlined,
+  BellOutlined,
+  BlockOutlined,
+  BookOutlined,
+  FileTextOutlined,
+  LinkOutlined,
+  MessageOutlined,
+  NotificationOutlined,
+  ProfileOutlined,
+  SettingOutlined,
+  SoundOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
@@ -11,6 +25,85 @@ import { clearToken, isTokenExpired } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import '@ant-design/v5-patch-for-react-19';
+
+// 图标映射表，支持通过字符串名称获取图标组件
+const iconMap: Record<string, React.ComponentType<any>> = {
+  AppstoreOutlined,
+  BellOutlined,
+  SettingOutlined,
+  NotificationOutlined,
+  MessageOutlined,
+  SoundOutlined,
+  UserOutlined,
+  ProfileOutlined,
+  BlockOutlined,
+  ApartmentOutlined,
+  BookOutlined,
+  FileTextOutlined,
+};
+
+/**
+ * 根据字符串名称获取图标组件
+ * @param iconName 图标名称，如 'AppstoreOutlined'
+ * @returns 图标组件类型，如果不存在则返回 null
+ */
+const getIconComponent = (
+  iconName: string,
+): React.ComponentType<any> | null => {
+  // 从映射表中获取图标组件
+  const IconComponent = iconMap[iconName];
+
+  // React forward_ref 组件是对象类型，不是函数类型，所以需要检查是否是有效的 React 组件
+  if (IconComponent) {
+    // 检查是否是 React 组件（forward_ref 组件是对象类型）
+    const isReactComponent =
+      typeof IconComponent === 'function' ||
+      (typeof IconComponent === 'object' &&
+        IconComponent !== null &&
+        '$$typeof' in IconComponent);
+
+    if (isReactComponent) {
+      return IconComponent as React.ComponentType<any>;
+    }
+  }
+
+  return null;
+};
+
+// 转换菜单数据，将图标字符串转换为图标组件，并处理国际化
+const patchMenuIcon = (menuData: any[]): any[] => {
+  return menuData.map((item) => {
+    const newItem = { ...item };
+
+    // 转换图标：如果 icon 是字符串，获取对应的图标组件（先处理当前项）
+    if (typeof newItem.icon === 'string' && newItem.icon.trim() !== '') {
+      const IconComponent = getIconComponent(newItem.icon);
+      if (IconComponent) {
+        // 使用 React.createElement 创建图标元素（与一级菜单保持一致）
+        newItem.icon = React.createElement(IconComponent);
+      } else {
+        // 如果图标不存在，移除 icon 字段，避免显示错误
+        delete newItem.icon;
+      }
+    }
+
+    // 处理子菜单，确保子菜单的图标也被转换（后处理子菜单）
+    if (newItem.routes && Array.isArray(newItem.routes)) {
+      newItem.routes = patchMenuIcon(newItem.routes);
+    }
+
+    // 确保使用 name 字段作为 locale key 来查找翻译
+    // ProLayout 会使用 locale 字段（如果存在）来查找翻译
+    // 如果 name 存在，将 name 转换为 locale 格式（menu.前缀）
+    if (newItem.name) {
+      newItem.locale = `menu.${newItem.name}`;
+      // 移除 title 字段，让 ProLayout 使用 locale 来查找翻译
+      delete newItem.title;
+    }
+
+    return newItem;
+  });
+};
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
@@ -67,6 +160,7 @@ const WelcomeNotification: React.FC<{
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
   currentUser?: API.CurrentUser;
+  menuData?: any[];
   loading?: boolean;
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
@@ -110,29 +204,42 @@ export async function getInitialState(): Promise<{
       };
     }
 
-    // 有 token 且未过期时，从 localStorage 读取用户信息，不请求接口
+    // 有 token 且未过期时，从 localStorage 读取用户信息和菜单数据，不请求接口
     const userInfoStr = localStorage.getItem('userInfo');
+    const menuDataStr = localStorage.getItem('menuData');
     let currentUser: API.CurrentUser | undefined;
+    let menuData: any[] | undefined;
 
     if (userInfoStr) {
       try {
         currentUser = JSON.parse(userInfoStr);
+        // 解析菜单数据
+        if (menuDataStr) {
+          try {
+            menuData = JSON.parse(menuDataStr);
+          } catch (e) {
+            console.error('解析菜单数据失败:', e);
+          }
+        }
       } catch (e) {
         console.error('解析用户信息失败:', e);
         // 如果解析失败，清除 token 并跳转登录页
         clearToken();
         localStorage.removeItem('userInfo');
+        localStorage.removeItem('menuData');
         history.push(loginPath);
       }
     } else {
       // 如果没有用户信息，清除 token 并跳转登录页
       clearToken();
+      localStorage.removeItem('menuData');
       history.push(loginPath);
     }
 
     return {
       fetchUserInfo,
       currentUser,
+      menuData,
       settings: defaultSettings as Partial<LayoutSettings>,
     };
   }
@@ -158,6 +265,17 @@ export const layout: RunTimeLayoutConfig = ({
     },
     waterMarkProps: {
       content: initialState?.currentUser?.name,
+    },
+    menuDataRender: () => {
+      const menuData = initialState?.menuData || [];
+      // 转换图标字符串为图标组件
+      return patchMenuIcon(menuData);
+    },
+    // 自定义子菜单渲染，确保图标能够显示
+    subMenuItemRender: (menuItemProps: any, defaultDom: React.ReactNode) => {
+      // 如果有图标，确保图标被正确渲染
+      // defaultDom 已经包含了图标，直接返回即可
+      return defaultDom;
     },
     footerRender: () => <Footer />,
     onPageChange: () => {

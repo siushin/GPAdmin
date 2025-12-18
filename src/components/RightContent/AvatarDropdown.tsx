@@ -51,9 +51,10 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
    */
   const loginOut = async () => {
     await outLogin();
-    // 清除本地存储的 token、过期时间和用户信息
+    // 清除本地存储的 token、过期时间、用户信息和菜单数据
     clearToken();
     localStorage.removeItem('userInfo');
+    localStorage.removeItem('menuData');
     const { search, pathname } = window.location;
     const urlParams = new URL(window.location.href).searchParams;
     const searchParams = new URLSearchParams({
@@ -77,7 +78,11 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
     const { key } = event;
     if (key === 'logout') {
       flushSync(() => {
-        setInitialState((s) => ({ ...s, currentUser: undefined }));
+        setInitialState((s) => ({
+          ...s,
+          currentUser: undefined,
+          menuData: undefined,
+        }));
       });
       loginOut();
       return;
