@@ -46,22 +46,22 @@ export default [
       {
         path: '/user/account',
         name: 'user.account',
-        component: './User/Account',
+        component: './user/Account',
       },
       {
         path: '/user/user',
         name: 'user.user',
-        component: './User/User',
+        component: './user/User',
       },
       {
         path: '/user/profile',
         name: 'user.profile',
-        component: './User/Profile',
+        component: './user/Profile',
       },
       {
         path: '/user/social',
         name: 'user.social',
-        component: './User/Social',
+        component: './user/Social',
       },
     ],
   },
