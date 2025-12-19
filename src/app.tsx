@@ -294,43 +294,6 @@ export const layout: RunTimeLayoutConfig = ({
       // 转换图标字符串为图标组件
       return patchMenuIcon(menuData);
     },
-    // 菜单配置：默认展开所有菜单
-    menu: {
-      defaultOpenAll: true,
-      // 计算所有有子菜单的菜单项的 key，用于默认展开
-      defaultOpenKeys: (() => {
-        const menuData = initialState?.menuData || [];
-        if (!menuData || menuData.length === 0) {
-          return [];
-        }
-        const getParentKeys = (items: any[]): string[] => {
-          const keys: string[] = [];
-          items.forEach((item) => {
-            if (item.routes && item.routes.length > 0) {
-              // 使用 path 或 name 作为 key
-              const key = item.path || item.name;
-              if (key) {
-                keys.push(key);
-              }
-              // 递归获取子菜单的 key
-              keys.push(...getParentKeys(item.routes));
-            }
-          });
-          return keys;
-        };
-        return getParentKeys(menuData);
-      })(),
-    },
-    // 自定义子菜单渲染，确保图标能够显示
-    subMenuItemRender: (menuItemProps: any, defaultDom: React.ReactNode) => {
-      // 检查菜单项是否有图标
-      if (menuItemProps.icon && React.isValidElement(menuItemProps.icon)) {
-        // 如果 defaultDom 是数组或 Fragment，需要找到文本节点并添加图标
-        // 否则直接返回 defaultDom（ProLayout 应该已经处理了图标）
-        return defaultDom;
-      }
-      return defaultDom;
-    },
     footerRender: () => <Footer />,
     onPageChange: () => {
       const { location } = history;

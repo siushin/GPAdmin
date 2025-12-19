@@ -1,6 +1,6 @@
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Tabs } from 'antd';
+import { Tabs, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -20,6 +20,7 @@ import {
   getResponseCodeList,
   getSourceTypeList,
 } from '@/services/ant-design-pro/api';
+import { dateRangeFieldProps } from '@/utils/datePresets';
 
 type LogTabKey = 'operation' | 'login' | 'audit' | 'general';
 
@@ -275,12 +276,70 @@ const Log: React.FC = () => {
       width: 90,
     },
     {
-      title: '请求路径',
+      title: '请求URL',
       dataIndex: 'path',
       ellipsis: true,
       width: 200,
       fieldProps: {
-        placeholder: '请输入请求路径',
+        placeholder: '请输入请求URL',
+      },
+    },
+    {
+      title: '请求参数',
+      dataIndex: 'params',
+      hideInSearch: true,
+      width: 200,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.params) return '-';
+        let displayText = '';
+        let tooltipText = '';
+        try {
+          // 如果params是字符串，先尝试解析
+          const paramsData =
+            typeof record.params === 'string'
+              ? JSON.parse(record.params)
+              : record.params;
+          // 格式化JSON用于Tooltip显示
+          tooltipText = JSON.stringify(paramsData, null, 2);
+          // 单行JSON用于单元格显示
+          displayText = JSON.stringify(paramsData);
+        } catch (e) {
+          // 如果解析失败，直接返回原始值
+          tooltipText =
+            typeof record.params === 'string'
+              ? record.params
+              : JSON.stringify(record.params);
+          displayText = tooltipText;
+        }
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {tooltipText}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            overlayStyle={{ maxWidth: '600px' }}
+          >
+            <div
+              style={{
+                width: '200px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {displayText}
+            </div>
+          </Tooltip>
+        );
       },
     },
     {
@@ -340,10 +399,11 @@ const Log: React.FC = () => {
     {
       title: '操作时间',
       dataIndex: 'operated_at',
-      valueType: 'dateTimeRange',
+      valueType: 'dateRange',
       hideInTable: false,
       width: 180,
       sorter: true,
+      fieldProps: dateRangeFieldProps,
       render: (_, record) => {
         if (!record.operated_at) return '-';
         // 尝试格式化日期时间
@@ -359,10 +419,10 @@ const Log: React.FC = () => {
   // 登录日志列定义
   const loginLogColumns: ProColumns<any>[] = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      hideInSearch: true,
+      title: '序号',
+      valueType: 'index',
       width: 80,
+      hideInSearch: true,
     },
     {
       title: '用户名',
@@ -451,20 +511,21 @@ const Log: React.FC = () => {
     {
       title: '登录时间',
       dataIndex: 'login_at',
-      valueType: 'dateTimeRange',
+      valueType: 'dateRange',
       hideInTable: false,
       width: 180,
       sorter: true,
+      fieldProps: dateRangeFieldProps,
     },
   ];
 
   // 审计日志列定义
   const auditLogColumns: ProColumns<any>[] = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      hideInSearch: true,
+      title: '序号',
+      valueType: 'index',
       width: 80,
+      hideInSearch: true,
     },
     {
       title: '操作人',
@@ -536,20 +597,21 @@ const Log: React.FC = () => {
     {
       title: '审计时间',
       dataIndex: 'audited_at',
-      valueType: 'dateTimeRange',
+      valueType: 'dateRange',
       hideInTable: false,
       width: 180,
       sorter: true,
+      fieldProps: dateRangeFieldProps,
     },
   ];
 
   // 常规日志列定义
   const generalLogColumns: ProColumns<any>[] = [
     {
-      title: '日志ID',
-      dataIndex: 'log_id',
+      title: '序号',
+      valueType: 'index',
+      width: 80,
       hideInSearch: true,
-      width: 100,
     },
     {
       title: '操作人',
@@ -609,10 +671,11 @@ const Log: React.FC = () => {
     {
       title: '创建时间',
       dataIndex: 'created_at',
-      valueType: 'dateTimeRange',
+      valueType: 'dateRange',
       hideInTable: false,
       width: 180,
       sorter: true,
+      fieldProps: dateRangeFieldProps,
     },
   ];
 
@@ -637,7 +700,7 @@ const Log: React.FC = () => {
               Array.isArray(params.operated_at) &&
               params.operated_at.length === 2
             ) {
-              requestParams.time_range = `${params.operated_at[0]},${params.operated_at[1]}`;
+              requestParams.date_range = `${params.operated_at[0]},${params.operated_at[1]}`;
               delete requestParams.operated_at;
             }
 
@@ -674,7 +737,7 @@ const Log: React.FC = () => {
               Array.isArray(params.login_at) &&
               params.login_at.length === 2
             ) {
-              requestParams.time_range = `${params.login_at[0]},${params.login_at[1]}`;
+              requestParams.date_range = `${params.login_at[0]},${params.login_at[1]}`;
               delete requestParams.login_at;
             }
 
@@ -711,7 +774,7 @@ const Log: React.FC = () => {
               Array.isArray(params.audited_at) &&
               params.audited_at.length === 2
             ) {
-              requestParams.time_range = `${params.audited_at[0]},${params.audited_at[1]}`;
+              requestParams.date_range = `${params.audited_at[0]},${params.audited_at[1]}`;
               delete requestParams.audited_at;
             }
 
@@ -748,7 +811,7 @@ const Log: React.FC = () => {
               Array.isArray(params.created_at) &&
               params.created_at.length === 2
             ) {
-              requestParams.time_range = `${params.created_at[0]},${params.created_at[1]}`;
+              requestParams.date_range = `${params.created_at[0]},${params.created_at[1]}`;
               delete requestParams.created_at;
             }
 

@@ -39,6 +39,10 @@ export default [
     component: './Dashboard/Workplace',
   },
   {
+    path: '/workbench',
+    redirect: '/dashboard/workplace',
+  },
+  {
     path: '/user',
     name: 'user.management',
     icon: 'team',

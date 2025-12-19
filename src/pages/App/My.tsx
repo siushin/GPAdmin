@@ -57,8 +57,10 @@ const My: React.FC = () => {
                     height: '100%',
                     borderRadius: 8,
                   }}
-                  bodyStyle={{
-                    padding: 20,
+                  styles={{
+                    body: {
+                      padding: 20,
+                    },
                   }}
                 >
                   <div style={{ marginBottom: 12 }}>
