@@ -1,11 +1,261 @@
+import {
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Empty } from 'antd';
-import React from 'react';
+import {
+  Card,
+  Col,
+  Empty,
+  Form,
+  Input,
+  Pagination,
+  Row,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import StandardFormRow from './components/StandardFormRow';
+import TagSelect from './components/TagSelect';
+import { type AppItem, mockApps } from './mock';
+
+const { Title, Paragraph } = Typography;
+const FormItem = Form.Item;
 
 const Market: React.FC = () => {
+  const [form] = Form.useForm();
+  const [apps, setApps] = useState<AppItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(12);
+
+  useEffect(() => {
+    fetchApps();
+  }, []);
+
+  const fetchApps = async (keyword?: string) => {
+    try {
+      setLoading(true);
+      // 使用 mock 数据
+      let data = [...mockApps];
+
+      // 如果有搜索关键词，进行筛选
+      if (keyword !== undefined && keyword !== '') {
+        const keywordLower = keyword.toLowerCase();
+        data = data.filter((app) => {
+          const matchAlias = app.alias.toLowerCase().includes(keywordLower);
+          const matchName = app.name.toLowerCase().includes(keywordLower);
+          const matchDescription = app.description
+            .toLowerCase()
+            .includes(keywordLower);
+          const matchKeywords = app.keywords.some((kw) =>
+            kw.toLowerCase().includes(keywordLower),
+          );
+          return matchAlias || matchName || matchDescription || matchKeywords;
+        });
+      }
+
+      setApps(data);
+    } catch (error) {
+      console.error('获取应用列表失败:', error);
+      setApps(mockApps);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFormSubmit = (value: string) => {
+    setSearchKeyword(value);
+    setCurrentPage(1);
+    fetchApps(value);
+  };
+
+  // 获取所有可用的来源
+  const availableSources = useMemo(() => {
+    const sources = new Set<string>();
+    apps.forEach((app) => {
+      if (app.source) {
+        sources.add(app.source);
+      }
+    });
+    return Array.from(sources);
+  }, [apps]);
+
+  // 根据筛选条件过滤应用
+  const filteredApps = useMemo(() => {
+    let result = apps;
+    if (selectedSources.length > 0) {
+      result = apps.filter((app) => selectedSources.includes(app.source));
+    }
+    return result;
+  }, [apps, selectedSources]);
+
+  // 分页后的应用列表
+  const paginatedApps = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredApps.slice(start, end);
+  }, [filteredApps, currentPage, pageSize]);
+
+  const handleSourceChange = (values: (string | number)[]) => {
+    setSelectedSources(values as string[]);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page);
+    if (size) {
+      setPageSize(size);
+    }
+  };
+
   return (
     <PageContainer>
-      <Empty description="应用市场功能开发中..." />
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <Input.Search
+          placeholder="请输入"
+          enterButton="搜索"
+          size="large"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          onSearch={handleFormSubmit}
+          style={{ maxWidth: 522, width: '100%' }}
+        />
+      </div>
+      <Card variant="borderless">
+        <Form
+          layout="inline"
+          form={form}
+          onValuesChange={(changedValues, allValues) => {
+            handleSourceChange(allValues.source || []);
+          }}
+        >
+          <StandardFormRow title="应用来源" block style={{ paddingBottom: 11 }}>
+            <FormItem name="source">
+              <TagSelect expandable>
+                {availableSources.map((source) => (
+                  <TagSelect.Option value={source} key={source}>
+                    {source}
+                  </TagSelect.Option>
+                ))}
+              </TagSelect>
+            </FormItem>
+          </StandardFormRow>
+        </Form>
+      </Card>
+      <Card
+        style={{ marginTop: 24 }}
+        variant="borderless"
+        styles={{ body: { padding: '8px 32px 32px 32px' } }}
+      >
+        <Spin spinning={loading}>
+          {filteredApps.length === 0 && !loading ? (
+            <Empty description="暂无应用" />
+          ) : (
+            <>
+              <Row gutter={[16, 16]}>
+                {paginatedApps.map((app) => (
+                  <Col xs={24} sm={12} md={8} lg={6} xl={6} key={app.name}>
+                    <Card
+                      hoverable
+                      style={{
+                        height: '100%',
+                        borderRadius: 8,
+                      }}
+                      styles={{
+                        body: {
+                          padding: 20,
+                        },
+                      }}
+                    >
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginBottom: 8,
+                          }}
+                        >
+                          <AppstoreOutlined
+                            style={{
+                              fontSize: 24,
+                              color: app.enabled ? '#52c41a' : '#d9d9d9',
+                              marginRight: 8,
+                            }}
+                          />
+                          <Title level={5} style={{ margin: 0, flex: 1 }}>
+                            {app.alias}
+                          </Title>
+                          {app.enabled ? (
+                            <Tag icon={<CheckCircleOutlined />} color="success">
+                              已启用
+                            </Tag>
+                          ) : (
+                            <Tag icon={<CloseCircleOutlined />} color="default">
+                              未启用
+                            </Tag>
+                          )}
+                        </div>
+                        <Paragraph
+                          ellipsis={{ rows: 2, expandable: false }}
+                          style={{ margin: 0, color: '#666', fontSize: 14 }}
+                        >
+                          {app.description || '暂无描述'}
+                        </Paragraph>
+                      </div>
+                      {app.keywords && app.keywords.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                          {app.keywords.map((keyword) => (
+                            <Tag
+                              key={`${app.name}-${keyword}`}
+                              style={{ marginBottom: 4 }}
+                            >
+                              {keyword}
+                            </Tag>
+                          ))}
+                        </div>
+                      )}
+                      <div
+                        style={{ marginTop: 12, fontSize: 12, color: '#999' }}
+                      >
+                        模块名: {app.name}
+                      </div>
+                      {app.source && (
+                        <div style={{ marginTop: 8 }}>
+                          <Tag
+                            color={app.source === '官方' ? 'blue' : 'orange'}
+                          >
+                            {app.source}
+                          </Tag>
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+              {filteredApps.length > 0 && (
+                <div style={{ marginTop: 24, textAlign: 'right' }}>
+                  <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={filteredApps.length}
+                    showSizeChanger
+                    showQuickJumper
+                    showTotal={(total) => `共 ${total} 个应用`}
+                    onChange={handlePageChange}
+                    onShowSizeChange={handlePageChange}
+                    pageSizeOptions={['12', '24', '48', '96']}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </Spin>
+      </Card>
     </PageContainer>
   );
 };

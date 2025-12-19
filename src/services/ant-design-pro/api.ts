@@ -154,6 +154,7 @@ export async function getMyApps(options?: { [key: string]: any }) {
       description: string;
       keywords: string[];
       priority: number;
+      source: string;
       enabled: boolean;
       path: string;
     }>;

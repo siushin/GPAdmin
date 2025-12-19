@@ -26,7 +26,7 @@ type LogTabKey = 'operation' | 'login' | 'audit' | 'general';
 
 const Log: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LogTabKey>('operation');
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType | null>(null);
 
   // 下拉框选项数据
   const [sourceTypeOptions, setSourceTypeOptions] = useState<
@@ -229,12 +229,14 @@ const Log: React.FC = () => {
       valueType: 'index',
       width: 80,
       hideInSearch: true,
+      fixed: 'left',
     },
     {
       title: '操作人',
       dataIndex: 'username',
       hideInSearch: true,
       width: 150,
+      fixed: 'left',
     },
     {
       title: '模块名称',
@@ -324,7 +326,7 @@ const Log: React.FC = () => {
               </pre>
             }
             mouseEnterDelay={0.1}
-            overlayStyle={{ maxWidth: '600px' }}
+            styles={{ root: { maxWidth: '600px' } }}
           >
             <div
               style={{
@@ -346,6 +348,7 @@ const Log: React.FC = () => {
       title: 'IP地址',
       dataIndex: 'ip_address',
       width: 110,
+      fixed: 'right',
       fieldProps: {
         placeholder: '请输入IP地址',
       },
@@ -355,6 +358,7 @@ const Log: React.FC = () => {
       dataIndex: 'ip_location',
       hideInSearch: true,
       width: 120,
+      fixed: 'right',
     },
     {
       title: '响应状态码',
@@ -403,6 +407,7 @@ const Log: React.FC = () => {
       hideInTable: false,
       width: 180,
       sorter: true,
+      fixed: 'right',
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
         if (!record.operated_at) return '-';
@@ -423,11 +428,13 @@ const Log: React.FC = () => {
       valueType: 'index',
       width: 80,
       hideInSearch: true,
+      fixed: 'left',
     },
     {
       title: '用户名',
       dataIndex: 'username',
       width: 150,
+      fixed: 'left',
       fieldProps: {
         placeholder: '请输入用户名',
       },
@@ -437,6 +444,7 @@ const Log: React.FC = () => {
       dataIndex: 'account_username',
       hideInSearch: true,
       width: 150,
+      fixed: 'left',
     },
     {
       title: '登录状态',
@@ -447,11 +455,13 @@ const Log: React.FC = () => {
         0: { text: '失败', status: 'Error' },
       },
       width: 100,
+      fixed: 'left',
     },
     {
       title: 'IP地址',
       dataIndex: 'ip_address',
       width: 130,
+      fixed: 'right',
       fieldProps: {
         placeholder: '请输入IP地址',
       },
@@ -461,6 +471,26 @@ const Log: React.FC = () => {
       dataIndex: 'ip_location',
       hideInSearch: true,
       width: 150,
+      fixed: 'right',
+    },
+    {
+      title: '登录时间',
+      dataIndex: 'login_at',
+      valueType: 'dateRange',
+      hideInTable: false,
+      width: 180,
+      sorter: true,
+      fixed: 'right',
+      fieldProps: dateRangeFieldProps,
+      render: (_, record) => {
+        if (!record.login_at) return '-';
+        // 尝试格式化日期时间
+        try {
+          return dayjs(record.login_at).format('YYYY-MM-DD HH:mm:ss');
+        } catch (e) {
+          return record.login_at;
+        }
+      },
     },
     {
       title: '浏览器',
@@ -508,15 +538,6 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 200,
     },
-    {
-      title: '登录时间',
-      dataIndex: 'login_at',
-      valueType: 'dateRange',
-      hideInTable: false,
-      width: 180,
-      sorter: true,
-      fieldProps: dateRangeFieldProps,
-    },
   ];
 
   // 审计日志列定义
@@ -526,12 +547,14 @@ const Log: React.FC = () => {
       valueType: 'index',
       width: 80,
       hideInSearch: true,
+      fixed: 'left',
     },
     {
       title: '操作人',
       dataIndex: 'username',
       hideInSearch: true,
       width: 150,
+      fixed: 'left',
     },
     {
       title: '模块名称',
@@ -584,6 +607,7 @@ const Log: React.FC = () => {
       title: 'IP地址',
       dataIndex: 'ip_address',
       width: 130,
+      fixed: 'right',
       fieldProps: {
         placeholder: '请输入IP地址',
       },
@@ -593,6 +617,7 @@ const Log: React.FC = () => {
       dataIndex: 'ip_location',
       hideInSearch: true,
       width: 150,
+      fixed: 'right',
     },
     {
       title: '审计时间',
@@ -601,7 +626,17 @@ const Log: React.FC = () => {
       hideInTable: false,
       width: 180,
       sorter: true,
+      fixed: 'right',
       fieldProps: dateRangeFieldProps,
+      render: (_, record) => {
+        if (!record.audited_at) return '-';
+        // 尝试格式化日期时间
+        try {
+          return dayjs(record.audited_at).format('YYYY-MM-DD HH:mm:ss');
+        } catch (e) {
+          return record.audited_at;
+        }
+      },
     },
   ];
 
@@ -612,12 +647,14 @@ const Log: React.FC = () => {
       valueType: 'index',
       width: 80,
       hideInSearch: true,
+      fixed: 'left',
     },
     {
       title: '操作人',
       dataIndex: 'username',
       hideInSearch: true,
       width: 150,
+      fixed: 'left',
     },
     {
       title: '访问来源',
@@ -658,6 +695,7 @@ const Log: React.FC = () => {
       title: 'IP地址',
       dataIndex: 'ip',
       width: 130,
+      fixed: 'right',
       fieldProps: {
         placeholder: '请输入IP地址',
       },
@@ -667,6 +705,7 @@ const Log: React.FC = () => {
       dataIndex: 'ip_location',
       hideInSearch: true,
       width: 150,
+      fixed: 'right',
     },
     {
       title: '创建时间',
@@ -675,7 +714,17 @@ const Log: React.FC = () => {
       hideInTable: false,
       width: 180,
       sorter: true,
+      fixed: 'right',
       fieldProps: dateRangeFieldProps,
+      render: (_, record) => {
+        if (!record.created_at) return '-';
+        // 尝试格式化日期时间
+        try {
+          return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
+        } catch (e) {
+          return record.created_at;
+        }
+      },
     },
   ];
 
@@ -691,7 +740,7 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              page_size: params.pageSize || 20,
+              pageSize: params.pageSize || 20,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -728,7 +777,7 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              page_size: params.pageSize || 20,
+              pageSize: params.pageSize || 20,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -765,7 +814,7 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              page_size: params.pageSize || 20,
+              pageSize: params.pageSize || 20,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -802,7 +851,7 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              page_size: params.pageSize || 20,
+              pageSize: params.pageSize || 20,
             };
 
             // 处理时间范围 - 转换为字符串格式
