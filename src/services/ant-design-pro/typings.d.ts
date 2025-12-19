@@ -42,6 +42,32 @@ declare namespace API {
     pageSize?: number;
   };
 
+  /** 分页信息 */
+  type PageInfo = {
+    /** 总记录数 */
+    total: number;
+    /** 当前页码 */
+    currentPage: number;
+    /** 当前页记录数 */
+    currentCount: number;
+    /** 最后一页页码 */
+    lastPage: number;
+    /** 每页记录数 */
+    perPage: number;
+  };
+
+  /** 分页响应结构体 */
+  type PageResponse<T = any> = {
+    code: number;
+    message: string;
+    data: {
+      /** 数据数组 */
+      data: T[];
+      /** 分页信息 */
+      page: PageInfo;
+    };
+  };
+
   type RuleListItem = {
     key?: number;
     disabled?: boolean;
