@@ -420,3 +420,21 @@ export async function getResponseCodeList(options?: { [key: string]: any }) {
     ...(options || {}),
   });
 }
+
+/** 获取操作日志搜索框选项（整合接口） POST /api/admin/log/getOperationLogSearchOptions */
+export async function getOperationLogSearchOptions(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data: {
+      module: Array<{ label: string; value: string }>;
+      action: Array<{ label: string; value: string }>;
+      method: Array<{ label: string; value: string }>;
+      response_code: Array<{ label: string; value: number }>;
+      source_type: Array<{ label: string; value: string }>;
+    };
+  }>('/api/admin/log/getOperationLogSearchOptions', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}

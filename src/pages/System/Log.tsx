@@ -16,6 +16,7 @@ import {
   getOperatingSystemList,
   getOperationActionList,
   getOperationLogList,
+  getOperationLogSearchOptions,
   getResourceTypeList,
   getResponseCodeList,
   getSourceTypeList,
@@ -67,68 +68,49 @@ const Log: React.FC = () => {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [
-          sourceTypeRes,
-          actionRes,
-          operationActionRes,
-          httpMethodRes,
-          browserRes,
-          osRes,
-          deviceTypeRes,
-          auditActionRes,
-          resourceTypeRes,
-          moduleRes,
-          responseCodeRes,
-        ] = await Promise.all([
-          getSourceTypeList(),
-          getActionList(),
-          getOperationActionList(),
-          getHttpMethodList(),
-          getBrowserList(),
-          getOperatingSystemList(),
-          getDeviceTypeList(),
-          getAuditActionList(),
-          getResourceTypeList(),
-          getModuleList(),
-          getResponseCodeList(),
-        ]);
-
-        if (sourceTypeRes.code === 200) {
-          setSourceTypeOptions(
-            sourceTypeRes.data?.map((item: any) => ({
+        // 操作日志搜索框选项（整合接口）
+        const operationLogSearchOptionsRes =
+          await getOperationLogSearchOptions();
+        if (
+          operationLogSearchOptionsRes.code === 200 &&
+          operationLogSearchOptionsRes.data
+        ) {
+          const options = operationLogSearchOptionsRes.data;
+          // 设置模块名称
+          setModuleOptions(options.module || []);
+          // 设置操作类型（操作日志和审计日志共用）
+          const actionOptions = options.action || [];
+          setOperationActionOptions(actionOptions);
+          setAuditActionOptions(actionOptions);
+          // 设置HTTP方法
+          setHttpMethodOptions(options.method || []);
+          // 设置响应状态码
+          setResponseCodeOptions(
+            options.response_code?.map((item: any) => ({
               label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
+                typeof item === 'number'
+                  ? String(item)
+                  : item.label || String(item.value),
+              value: typeof item === 'number' ? item : item.value,
             })) || [],
           );
+          // 设置访问来源
+          setSourceTypeOptions(options.source_type || []);
         }
+
+        // 其他日志类型需要的选项（登录日志、审计日志、常规日志）
+        const [actionRes, browserRes, osRes, deviceTypeRes, resourceTypeRes] =
+          await Promise.all([
+            getActionList(),
+            getBrowserList(),
+            getOperatingSystemList(),
+            getDeviceTypeList(),
+            getResourceTypeList(),
+          ]);
+
         if (actionRes.code === 200) {
           setActionOptions(
             actionRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
-        if (operationActionRes.code === 200) {
-          setOperationActionOptions(
-            operationActionRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
-        if (httpMethodRes.code === 200) {
-          setHttpMethodOptions(
-            httpMethodRes.data?.map((item: any) => ({
               label:
                 typeof item === 'string'
                   ? item
@@ -170,17 +152,7 @@ const Log: React.FC = () => {
             })) || [],
           );
         }
-        if (auditActionRes.code === 200) {
-          setAuditActionOptions(
-            auditActionRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
+        // 审计日志的操作类型与操作日志相同，已在上面从整合接口设置
         if (resourceTypeRes.code === 200) {
           setResourceTypeOptions(
             resourceTypeRes.data?.map((item: any) => ({
@@ -189,28 +161,6 @@ const Log: React.FC = () => {
                   ? item
                   : item.label || item.value || item.name,
               value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
-        if (moduleRes.code === 200) {
-          setModuleOptions(
-            moduleRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
-        if (responseCodeRes.code === 200) {
-          setResponseCodeOptions(
-            responseCodeRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'number'
-                  ? String(item)
-                  : item.label || String(item.value || item.name),
-              value: typeof item === 'number' ? item : item.value || item.name,
             })) || [],
           );
         }
@@ -559,10 +509,15 @@ const Log: React.FC = () => {
     {
       title: '模块名称',
       dataIndex: 'module',
+      valueType: 'select',
+      valueEnum: moduleOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
       width: 120,
-      fieldProps: {
-        placeholder: '请输入模块名称',
-      },
     },
     {
       title: '操作类型',
@@ -594,7 +549,13 @@ const Log: React.FC = () => {
       title: '资源ID',
       dataIndex: 'resource_id',
       width: 100,
-      valueType: 'digit',
+      valueType: 'text',
+      render: (_, record) => {
+        if (record.resource_id === null || record.resource_id === undefined) {
+          return '-';
+        }
+        return String(record.resource_id);
+      },
     },
     {
       title: '操作描述',
