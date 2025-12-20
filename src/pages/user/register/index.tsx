@@ -19,8 +19,8 @@ import { Alert, App } from 'antd';
 import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { Footer } from '@/components';
-import { register } from '@/services/ant-design-pro/api';
 import { sendCaptcha } from '@/services/ant-design-pro/login';
+import { register } from '@/services/api/support/user';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {

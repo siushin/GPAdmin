@@ -12,7 +12,7 @@ import {
   getLogList,
   getOperationLogList,
   getOperationLogSearchData,
-} from '@/services/ant-design-pro/api';
+} from '@/services/api/support/system';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
@@ -994,7 +994,6 @@ const Log: React.FC = () => {
               delete requestParams.created_at;
             }
 
-            console.log('常规日志请求参数:', requestParams);
             const response = await getLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1033,7 +1032,6 @@ const Log: React.FC = () => {
               delete requestParams.operated_at;
             }
 
-            console.log('操作日志请求参数:', requestParams);
             const response = await getOperationLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1072,7 +1070,6 @@ const Log: React.FC = () => {
               delete requestParams.audited_at;
             }
 
-            console.log('审计日志请求参数:', requestParams);
             const response = await getAuditLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1111,7 +1108,6 @@ const Log: React.FC = () => {
               delete requestParams.login_at;
             }
 
-            console.log('登录日志请求参数:', requestParams);
             const response = await getLoginLogList(requestParams);
             if (response.code === 200) {
               return {

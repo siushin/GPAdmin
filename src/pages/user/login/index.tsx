@@ -30,12 +30,9 @@ import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
-import {
-  getUserMenus,
-  login,
-  loginByCode,
-} from '@/services/ant-design-pro/api';
-import { sendCaptcha } from '@/services/ant-design-pro/login';
+import { login } from '@/services/ant-design-pro/api';
+import { loginByCode, sendCaptcha } from '@/services/ant-design-pro/login';
+import { getUserMenus } from '@/services/api/support/user';
 import { saveToken } from '@/utils/token';
 import Settings from '../../../../config/defaultSettings';
 
