@@ -36,7 +36,7 @@ export default [
     path: '/dashboard/workplace',
     name: 'dashboard.workplace',
     icon: 'dashboard',
-    component: './dashboard/Workplace',
+    component: './support/dashboard/Workplace',
   },
   {
     path: '/workbench',
@@ -77,12 +77,12 @@ export default [
       {
         path: '/app/market',
         name: 'app.market',
-        component: './app/Market',
+        component: './support/app/Market',
       },
       {
         path: '/app/my',
         name: 'app.my',
-        component: './app/My',
+        component: './support/app/My',
       },
     ],
   },
@@ -94,17 +94,17 @@ export default [
       {
         path: '/notification/system',
         name: 'notification.system',
-        component: './notification/System',
+        component: './support/notification/System',
       },
       {
         path: '/notification/message',
         name: 'notification.message',
-        component: './notification/Message',
+        component: './support/notification/Message',
       },
       {
         path: '/notification/announcement',
         name: 'notification.announcement',
-        component: './notification/Announcement',
+        component: './support/notification/Announcement',
       },
     ],
   },
@@ -116,32 +116,32 @@ export default [
       {
         path: '/system/admin',
         name: 'system.admin',
-        component: './system/Admin',
+        component: './support/system/Admin',
       },
       {
         path: '/system/role',
         name: 'system.role',
-        component: './system/Role',
+        component: './support/system/Role',
       },
       {
         path: '/system/menu',
         name: 'system.menu',
-        component: './system/Menu',
+        component: './support/system/Menu',
       },
       {
         path: '/system/organization',
         name: 'system.organization',
-        component: './system/Organization',
+        component: './support/system/Organization',
       },
       {
         path: '/system/dict',
         name: 'system.dict',
-        component: './system/Dict',
+        component: './support/system/Dict',
       },
       {
         path: '/system/log',
         name: 'system.log',
-        component: './system/Log',
+        component: './support/system/Log',
       },
     ],
   },

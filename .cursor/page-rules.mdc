@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+scope:
+  filePatterns: ["*.ts", "*.tsx", "src/**/*.ts", "src/**/*.tsx"]  # 仅对前端项目的TypeScript/TSX文件生效
+  aiScenarios: ["generate", "refactor", "debug"]  # AI生成/重构/调试时都遵守
+  version: "1.0.0"  # 规则版本(便于迭代)
+---
+
+# 【页面】规则约束
+
+## 目录结构
+
+所有页面文件必须放在 `@/pages/support/` 目录下，并按功能模块分类：
+
+- `support/system/` - 系统管理相关页面
+- `support/app/` - 应用管理相关页面
+- `support/dashboard/` - 仪表盘相关页面
+- `support/notification/` - 通知相关页面
+- `support/[模块名]/` - 新增模块需创建对应目录
+
+## 规则
+
+- 所有新建页面必须放在 `support` 目录下的对应模块目录中
+- 如果模块目录不存在，需要先创建模块目录
+- 页面文件命名使用 PascalCase（如：`UserList.tsx`）
+- 路由配置中的 `component` 路径需使用 `./support/[模块]/[页面]` 格式
