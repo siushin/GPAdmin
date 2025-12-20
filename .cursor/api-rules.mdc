@@ -1,0 +1,42 @@
+---
+alwaysApply: true
+scope:
+  filePatterns: ["*.ts", "*.tsx", "src/**/*.ts", "src/**/*.tsx"]  # 仅对前端项目的TypeScript/TSX文件生效
+  aiScenarios: ["generate", "refactor", "debug"]  # AI生成/重构/调试时都遵守
+  version: "1.0.0"  # 规则版本(便于迭代)
+---
+
+# 【API接口模块】规则约束
+
+## 1. 搜索数据接口规范
+
+### 1.1 命名规则
+
+**重要**：所有列表页面，如果有搜索栏参数获取需求，必须统一使用以下命名规则：
+
+**`get + 列表接口方法名 + SearchData`**
+
+### 1.2 使用场景
+
+当列表页面需要获取搜索栏的下拉选项、枚举值等参数数据时，必须使用此命名规则。
+
+### 1.3 正确示例
+
+#### 示例1：常规日志列表
+
+```typescript
+// 列表接口
+export async function getLogList(params: any) {
+  return request('/api/admin/log/generalLog', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+// 搜索数据接口（必须遵循命名规则）
+export async function getGeneralLogSearchData() {
+  return request('/api/admin/log/getGeneralLogSearchData', {
+    method: 'POST',
+  });
+}
+```

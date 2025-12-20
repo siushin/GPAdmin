@@ -36,7 +36,7 @@ export default [
     path: '/dashboard/workplace',
     name: 'dashboard.workplace',
     icon: 'dashboard',
-    component: './Dashboard/Workplace',
+    component: './dashboard/Workplace',
   },
   {
     path: '/workbench',
@@ -77,12 +77,12 @@ export default [
       {
         path: '/app/market',
         name: 'app.market',
-        component: './App/Market',
+        component: './app/Market',
       },
       {
         path: '/app/my',
         name: 'app.my',
-        component: './App/My',
+        component: './app/My',
       },
     ],
   },
@@ -94,17 +94,17 @@ export default [
       {
         path: '/notification/system',
         name: 'notification.system',
-        component: './Notification/System',
+        component: './notification/System',
       },
       {
         path: '/notification/message',
         name: 'notification.message',
-        component: './Notification/Message',
+        component: './notification/Message',
       },
       {
         path: '/notification/announcement',
         name: 'notification.announcement',
-        component: './Notification/Announcement',
+        component: './notification/Announcement',
       },
     ],
   },
@@ -116,32 +116,32 @@ export default [
       {
         path: '/system/admin',
         name: 'system.admin',
-        component: './System/Admin',
+        component: './system/Admin',
       },
       {
         path: '/system/role',
         name: 'system.role',
-        component: './System/Role',
+        component: './system/Role',
       },
       {
         path: '/system/menu',
         name: 'system.menu',
-        component: './System/Menu',
+        component: './system/Menu',
       },
       {
         path: '/system/organization',
         name: 'system.organization',
-        component: './System/Organization',
+        component: './system/Organization',
       },
       {
         path: '/system/dict',
         name: 'system.dict',
-        component: './System/Dict',
+        component: './system/Dict',
       },
       {
         path: '/system/log',
         name: 'system.log',
-        component: './System/Log',
+        component: './system/Log',
       },
     ],
   },

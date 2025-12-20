@@ -4,29 +4,22 @@ import { Tabs, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  getActionList,
-  getAuditActionList,
   getAuditLogList,
-  getBrowserList,
-  getDeviceTypeList,
-  getHttpMethodList,
+  getAuditLogSearchData,
+  getGeneralLogSearchData,
   getLoginLogList,
+  getLoginLogSearchData,
   getLogList,
-  getModuleList,
-  getOperatingSystemList,
-  getOperationActionList,
   getOperationLogList,
-  getOperationLogSearchOptions,
-  getResourceTypeList,
-  getResponseCodeList,
-  getSourceTypeList,
+  getOperationLogSearchData,
 } from '@/services/ant-design-pro/api';
+import { TABLE_SIZE } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
 
 type LogTabKey = 'operation' | 'login' | 'audit' | 'general';
 
 const Log: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<LogTabKey>('operation');
+  const [activeTab, setActiveTab] = useState<LogTabKey>('general');
   const actionRef = useRef<ActionType | null>(null);
 
   // 下拉框选项数据
@@ -68,25 +61,57 @@ const Log: React.FC = () => {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        // 操作日志搜索框选项（整合接口）
-        const operationLogSearchOptionsRes =
-          await getOperationLogSearchOptions();
-        if (
-          operationLogSearchOptionsRes.code === 200 &&
-          operationLogSearchOptionsRes.data
-        ) {
-          const options = operationLogSearchOptionsRes.data;
-          // 设置模块名称
-          setModuleOptions(options.module || []);
-          // 设置操作类型（操作日志和审计日志共用）
-          const actionOptions = options.action || [];
+        // 并行加载所有日志类型的搜索数据
+        const [generalLogRes, operationLogRes, loginLogRes, auditLogRes] =
+          await Promise.all([
+            getGeneralLogSearchData(),
+            getOperationLogSearchData(),
+            getLoginLogSearchData(),
+            getAuditLogSearchData(),
+          ]);
+
+        // 常规日志搜索数据
+        if (generalLogRes.code === 200 && generalLogRes.data) {
+          const data = generalLogRes.data;
+          setActionOptions(
+            data.action_type?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
+            })) || [],
+          );
+          setSourceTypeOptions(
+            data.source_type?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
+            })) || [],
+          );
+        }
+
+        // 操作日志搜索数据
+        if (operationLogRes.code === 200 && operationLogRes.data) {
+          const data = operationLogRes.data;
+          setModuleOptions(
+            data.module?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
+            })) || [],
+          );
+          // 操作类型（操作日志和审计日志共用）
+          const actionOptions =
+            data.action?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
+            })) || [];
           setOperationActionOptions(actionOptions);
           setAuditActionOptions(actionOptions);
-          // 设置HTTP方法
-          setHttpMethodOptions(options.method || []);
-          // 设置响应状态码
+          setHttpMethodOptions(
+            data.method?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
+            })) || [],
+          );
           setResponseCodeOptions(
-            options.response_code?.map((item: any) => ({
+            data.response_code?.map((item: any) => ({
               label:
                 typeof item === 'number'
                   ? String(item)
@@ -94,73 +119,59 @@ const Log: React.FC = () => {
               value: typeof item === 'number' ? item : item.value,
             })) || [],
           );
-          // 设置访问来源
-          setSourceTypeOptions(options.source_type || []);
+          // 操作日志的访问来源也设置到 sourceTypeOptions（如果常规日志没有设置的话）
+          if (data.source_type && data.source_type.length > 0) {
+            setSourceTypeOptions(
+              data.source_type.map((item: any) => ({
+                label: item.label || item.value,
+                value: item.value,
+              })),
+            );
+          }
         }
 
-        // 其他日志类型需要的选项（登录日志、审计日志、常规日志）
-        const [actionRes, browserRes, osRes, deviceTypeRes, resourceTypeRes] =
-          await Promise.all([
-            getActionList(),
-            getBrowserList(),
-            getOperatingSystemList(),
-            getDeviceTypeList(),
-            getResourceTypeList(),
-          ]);
-
-        if (actionRes.code === 200) {
-          setActionOptions(
-            actionRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
-            })) || [],
-          );
-        }
-        if (browserRes.code === 200) {
+        // 登录日志搜索数据
+        if (loginLogRes.code === 200 && loginLogRes.data) {
+          const data = loginLogRes.data;
           setBrowserOptions(
-            browserRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
+            data.browser?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
             })) || [],
           );
-        }
-        if (osRes.code === 200) {
           setOsOptions(
-            osRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
+            data.operating_system?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
             })) || [],
           );
-        }
-        if (deviceTypeRes.code === 200) {
           setDeviceTypeOptions(
-            deviceTypeRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
+            data.device_type?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
             })) || [],
           );
         }
-        // 审计日志的操作类型与操作日志相同，已在上面从整合接口设置
-        if (resourceTypeRes.code === 200) {
+
+        // 审计日志搜索数据
+        if (auditLogRes.code === 200 && auditLogRes.data) {
+          const data = auditLogRes.data;
+          // 审计日志的模块名称（如果操作日志没有设置的话，使用审计日志的）
+          if (data.module && data.module.length > 0) {
+            setModuleOptions((prev) => {
+              // 如果已经有数据了，就不覆盖
+              if (prev.length > 0) return prev;
+              return data.module.map((item: any) => ({
+                label: item.label || item.value,
+                value: item.value,
+              }));
+            });
+          }
+          // 审计日志的操作类型与操作日志相同，已在上面从操作日志接口设置
           setResourceTypeOptions(
-            resourceTypeRes.data?.map((item: any) => ({
-              label:
-                typeof item === 'string'
-                  ? item
-                  : item.label || item.value || item.name,
-              value: typeof item === 'string' ? item : item.value || item.name,
+            data.resource_type?.map((item: any) => ({
+              label: item.label || item.value,
+              value: item.value,
             })) || [],
           );
         }
@@ -171,6 +182,98 @@ const Log: React.FC = () => {
 
     loadOptions();
   }, []);
+
+  // 常规日志列定义
+  const generalLogColumns: ProColumns<any>[] = [
+    {
+      title: '序号',
+      valueType: 'index',
+      width: 80,
+      hideInSearch: true,
+      fixed: 'left',
+    },
+    {
+      title: '操作人',
+      dataIndex: 'username',
+      hideInSearch: true,
+      width: 150,
+      fixed: 'left',
+    },
+    {
+      title: '访问来源',
+      dataIndex: 'source_type',
+      valueType: 'select',
+      valueEnum: sourceTypeOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
+      width: 120,
+    },
+    {
+      title: '操作类型',
+      dataIndex: 'action_type',
+      valueType: 'select',
+      valueEnum: actionOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
+      width: 150,
+    },
+    {
+      title: '日志内容',
+      dataIndex: 'keyword',
+      ellipsis: true,
+      width: 300,
+      formItemProps: {
+        label: '关键字',
+      },
+      fieldProps: {
+        placeholder: '日志内容、IP归属地',
+      },
+      render: (_, record) => record.content,
+    },
+    {
+      title: 'IP地址',
+      dataIndex: 'ip_address',
+      width: 130,
+      fixed: 'right',
+      fieldProps: {
+        placeholder: '请输入IP地址',
+      },
+    },
+    {
+      title: 'IP归属地',
+      dataIndex: 'ip_location',
+      hideInSearch: true,
+      width: 150,
+      fixed: 'right',
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      valueType: 'dateRange',
+      hideInTable: false,
+      width: 180,
+      sorter: true,
+      fixed: 'right',
+      fieldProps: dateRangeFieldProps,
+      render: (_, record) => {
+        if (!record.created_at) return '-';
+        // 尝试格式化日期时间
+        try {
+          return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
+        } catch (e) {
+          return record.created_at;
+        }
+      },
+    },
+  ];
 
   // 操作日志列定义
   const operationLogColumns: ProColumns<any>[] = [
@@ -331,6 +434,14 @@ const Log: React.FC = () => {
       },
     },
     {
+      title: '关键字',
+      dataIndex: 'keyword',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: '请求参数、IP归属地、User-Agent',
+      },
+    },
+    {
       title: '执行耗时(ms)',
       dataIndex: 'execution_time',
       hideInSearch: true,
@@ -349,6 +460,44 @@ const Log: React.FC = () => {
         {} as Record<string, { text: string }>,
       ),
       width: 120,
+    },
+    {
+      title: 'User-Agent',
+      dataIndex: 'user_agent',
+      hideInSearch: true,
+      width: 250,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.user_agent) return '-';
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {record.user_agent}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            styles={{ root: { maxWidth: '600px' } }}
+          >
+            <div
+              style={{
+                width: '250px',
+                maxWidth: '250px',
+                minWidth: '250px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {record.user_agent}
+            </div>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '操作时间',
@@ -371,6 +520,280 @@ const Log: React.FC = () => {
     },
   ];
 
+  // 审计日志列定义
+  const auditLogColumns: ProColumns<any>[] = [
+    {
+      title: '序号',
+      valueType: 'index',
+      width: 80,
+      hideInSearch: true,
+      fixed: 'left',
+    },
+    {
+      title: '操作人',
+      dataIndex: 'username',
+      hideInSearch: true,
+      width: 150,
+      fixed: 'left',
+    },
+    {
+      title: '资源ID',
+      dataIndex: 'resource_id',
+      width: 100,
+      valueType: 'text',
+      fixed: 'left',
+      render: (_, record) => {
+        if (record.resource_id === null || record.resource_id === undefined) {
+          return '-';
+        }
+        return String(record.resource_id);
+      },
+    },
+    {
+      title: '模块名称',
+      dataIndex: 'module',
+      valueType: 'select',
+      valueEnum: moduleOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
+      width: 120,
+    },
+    {
+      title: '操作类型',
+      dataIndex: 'action',
+      valueType: 'select',
+      valueEnum: auditActionOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
+      width: 150,
+    },
+    {
+      title: '资源类型',
+      dataIndex: 'resource_type',
+      valueType: 'select',
+      valueEnum: resourceTypeOptions.reduce(
+        (acc, item) => {
+          acc[item.value] = { text: item.label };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
+      width: 120,
+    },
+    {
+      title: '关键字',
+      dataIndex: 'keyword',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: '变更前数据、变更后数据、操作描述',
+      },
+    },
+    {
+      title: '操作描述',
+      dataIndex: 'description',
+      ellipsis: true,
+      hideInSearch: true,
+      width: 200,
+    },
+    {
+      title: '变更前数据',
+      dataIndex: 'before_data',
+      hideInSearch: true,
+      width: 200,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.before_data) return '-';
+        let displayText = '';
+        let tooltipText = '';
+        try {
+          // 如果before_data是字符串，先尝试解析
+          const beforeData =
+            typeof record.before_data === 'string'
+              ? JSON.parse(record.before_data)
+              : record.before_data;
+          // 格式化JSON用于Tooltip显示
+          tooltipText = JSON.stringify(beforeData, null, 2);
+          // 单行JSON用于单元格显示
+          displayText = JSON.stringify(beforeData);
+        } catch (e) {
+          // 如果解析失败，直接返回原始值
+          tooltipText =
+            typeof record.before_data === 'string'
+              ? record.before_data
+              : JSON.stringify(record.before_data);
+          displayText = tooltipText;
+        }
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {tooltipText}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            styles={{ root: { maxWidth: '600px' } }}
+          >
+            <div
+              style={{
+                width: '200px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {displayText}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: '变更后数据',
+      dataIndex: 'after_data',
+      hideInSearch: true,
+      width: 200,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.after_data) return '-';
+        let displayText = '';
+        let tooltipText = '';
+        try {
+          // 如果after_data是字符串，先尝试解析
+          const afterData =
+            typeof record.after_data === 'string'
+              ? JSON.parse(record.after_data)
+              : record.after_data;
+          // 格式化JSON用于Tooltip显示
+          tooltipText = JSON.stringify(afterData, null, 2);
+          // 单行JSON用于单元格显示
+          displayText = JSON.stringify(afterData);
+        } catch (e) {
+          // 如果解析失败，直接返回原始值
+          tooltipText =
+            typeof record.after_data === 'string'
+              ? record.after_data
+              : JSON.stringify(record.after_data);
+          displayText = tooltipText;
+        }
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {tooltipText}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            styles={{ root: { maxWidth: '600px' } }}
+          >
+            <div
+              style={{
+                width: '200px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {displayText}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'IP地址',
+      dataIndex: 'ip_address',
+      width: 130,
+      fixed: 'right',
+      fieldProps: {
+        placeholder: '请输入IP地址',
+      },
+    },
+    {
+      title: 'IP归属地',
+      dataIndex: 'ip_location',
+      hideInSearch: true,
+      width: 150,
+      fixed: 'right',
+    },
+    {
+      title: 'User-Agent',
+      dataIndex: 'user_agent',
+      hideInSearch: true,
+      width: 250,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.user_agent) return '-';
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {record.user_agent}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            styles={{ root: { maxWidth: '600px' } }}
+          >
+            <div
+              style={{
+                width: '250px',
+                maxWidth: '250px',
+                minWidth: '250px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {record.user_agent}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: '审计时间',
+      dataIndex: 'audited_at',
+      valueType: 'dateRange',
+      hideInTable: false,
+      width: 180,
+      sorter: true,
+      fixed: 'right',
+      fieldProps: dateRangeFieldProps,
+      render: (_, record) => {
+        if (!record.audited_at) return '-';
+        // 尝试格式化日期时间
+        try {
+          return dayjs(record.audited_at).format('YYYY-MM-DD HH:mm:ss');
+        } catch (e) {
+          return record.audited_at;
+        }
+      },
+    },
+  ];
+
   // 登录日志列定义
   const loginLogColumns: ProColumns<any>[] = [
     {
@@ -381,13 +804,19 @@ const Log: React.FC = () => {
       fixed: 'left',
     },
     {
+      title: '关键字',
+      dataIndex: 'keyword',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: '用户名、IP归属地、登录信息',
+      },
+    },
+    {
       title: '用户名',
       dataIndex: 'username',
       width: 150,
       fixed: 'left',
-      fieldProps: {
-        placeholder: '请输入用户名',
-      },
+      hideInSearch: true,
     },
     {
       title: '账号',
@@ -456,6 +885,12 @@ const Log: React.FC = () => {
       width: 120,
     },
     {
+      title: '浏览器版本',
+      dataIndex: 'browser_version',
+      hideInSearch: true,
+      width: 120,
+    },
+    {
       title: '操作系统',
       dataIndex: 'operating_system',
       valueType: 'select',
@@ -482,6 +917,44 @@ const Log: React.FC = () => {
       width: 120,
     },
     {
+      title: 'User-Agent',
+      dataIndex: 'user_agent',
+      hideInSearch: true,
+      width: 250,
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (_, record) => {
+        if (!record.user_agent) return '-';
+        return (
+          <Tooltip
+            title={
+              <pre
+                style={{ margin: 0, whiteSpace: 'pre-wrap', maxWidth: '500px' }}
+              >
+                {record.user_agent}
+              </pre>
+            }
+            mouseEnterDelay={0.1}
+            styles={{ root: { maxWidth: '600px' } }}
+          >
+            <div
+              style={{
+                width: '250px',
+                maxWidth: '250px',
+                minWidth: '250px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {record.user_agent}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: '登录信息',
       dataIndex: 'message',
       ellipsis: true,
@@ -490,208 +963,46 @@ const Log: React.FC = () => {
     },
   ];
 
-  // 审计日志列定义
-  const auditLogColumns: ProColumns<any>[] = [
-    {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
-    },
-    {
-      title: '操作人',
-      dataIndex: 'username',
-      hideInSearch: true,
-      width: 150,
-      fixed: 'left',
-    },
-    {
-      title: '模块名称',
-      dataIndex: 'module',
-      valueType: 'select',
-      valueEnum: moduleOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<string, { text: string }>,
-      ),
-      width: 120,
-    },
-    {
-      title: '操作类型',
-      dataIndex: 'action',
-      valueType: 'select',
-      valueEnum: auditActionOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<string, { text: string }>,
-      ),
-      width: 150,
-    },
-    {
-      title: '资源类型',
-      dataIndex: 'resource_type',
-      valueType: 'select',
-      valueEnum: resourceTypeOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<string, { text: string }>,
-      ),
-      width: 120,
-    },
-    {
-      title: '资源ID',
-      dataIndex: 'resource_id',
-      width: 100,
-      valueType: 'text',
-      render: (_, record) => {
-        if (record.resource_id === null || record.resource_id === undefined) {
-          return '-';
-        }
-        return String(record.resource_id);
-      },
-    },
-    {
-      title: '操作描述',
-      dataIndex: 'description',
-      ellipsis: true,
-      hideInSearch: true,
-      width: 200,
-    },
-    {
-      title: 'IP地址',
-      dataIndex: 'ip_address',
-      width: 130,
-      fixed: 'right',
-      fieldProps: {
-        placeholder: '请输入IP地址',
-      },
-    },
-    {
-      title: 'IP归属地',
-      dataIndex: 'ip_location',
-      hideInSearch: true,
-      width: 150,
-      fixed: 'right',
-    },
-    {
-      title: '审计时间',
-      dataIndex: 'audited_at',
-      valueType: 'dateRange',
-      hideInTable: false,
-      width: 180,
-      sorter: true,
-      fixed: 'right',
-      fieldProps: dateRangeFieldProps,
-      render: (_, record) => {
-        if (!record.audited_at) return '-';
-        // 尝试格式化日期时间
-        try {
-          return dayjs(record.audited_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
-          return record.audited_at;
-        }
-      },
-    },
-  ];
-
-  // 常规日志列定义
-  const generalLogColumns: ProColumns<any>[] = [
-    {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
-    },
-    {
-      title: '操作人',
-      dataIndex: 'username',
-      hideInSearch: true,
-      width: 150,
-      fixed: 'left',
-    },
-    {
-      title: '访问来源',
-      dataIndex: 'source_type',
-      valueType: 'select',
-      valueEnum: sourceTypeOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<string, { text: string }>,
-      ),
-      width: 120,
-    },
-    {
-      title: '操作类型',
-      dataIndex: 'action_type',
-      valueType: 'select',
-      valueEnum: actionOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<string, { text: string }>,
-      ),
-      width: 150,
-    },
-    {
-      title: '日志内容',
-      dataIndex: 'content',
-      ellipsis: true,
-      width: 300,
-      fieldProps: {
-        placeholder: '请输入关键字',
-      },
-    },
-    {
-      title: 'IP地址',
-      dataIndex: 'ip',
-      width: 130,
-      fixed: 'right',
-      fieldProps: {
-        placeholder: '请输入IP地址',
-      },
-    },
-    {
-      title: 'IP归属地',
-      dataIndex: 'ip_location',
-      hideInSearch: true,
-      width: 150,
-      fixed: 'right',
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      valueType: 'dateRange',
-      hideInTable: false,
-      width: 180,
-      sorter: true,
-      fixed: 'right',
-      fieldProps: dateRangeFieldProps,
-      render: (_, record) => {
-        if (!record.created_at) return '-';
-        // 尝试格式化日期时间
-        try {
-          return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
-          return record.created_at;
-        }
-      },
-    },
-  ];
-
   // 根据Tab类型获取对应的列和请求函数
   const getConfigByTab = (tab: LogTabKey) => {
     switch (tab) {
+      case 'general':
+        return {
+          columns: generalLogColumns,
+          rowKey: 'log_id',
+          request: async (params: any) => {
+            // 处理时间范围参数
+            const requestParams: any = {
+              ...params,
+              page: params.current || 1,
+              pageSize: params.pageSize || 20,
+            };
+
+            // 处理时间范围 - 转换为字符串格式
+            if (
+              params.created_at &&
+              Array.isArray(params.created_at) &&
+              params.created_at.length === 2
+            ) {
+              requestParams.date_range = `${params.created_at[0]},${params.created_at[1]}`;
+              delete requestParams.created_at;
+            }
+
+            const response = await getLogList(requestParams);
+            if (response.code === 200) {
+              return {
+                data: response.data?.data || [],
+                success: true,
+                total: response.data?.page?.total || 0,
+              };
+            }
+            return {
+              data: [],
+              success: false,
+              total: 0,
+            };
+          },
+        };
       case 'operation':
         return {
           columns: operationLogColumns,
@@ -715,43 +1026,6 @@ const Log: React.FC = () => {
             }
 
             const response = await getOperationLogList(requestParams);
-            if (response.code === 200) {
-              return {
-                data: response.data?.data || [],
-                success: true,
-                total: response.data?.page?.total || 0,
-              };
-            }
-            return {
-              data: [],
-              success: false,
-              total: 0,
-            };
-          },
-        };
-      case 'login':
-        return {
-          columns: loginLogColumns,
-          rowKey: 'id',
-          request: async (params: any) => {
-            // 处理时间范围参数
-            const requestParams: any = {
-              ...params,
-              page: params.current || 1,
-              pageSize: params.pageSize || 20,
-            };
-
-            // 处理时间范围 - 转换为字符串格式
-            if (
-              params.login_at &&
-              Array.isArray(params.login_at) &&
-              params.login_at.length === 2
-            ) {
-              requestParams.date_range = `${params.login_at[0]},${params.login_at[1]}`;
-              delete requestParams.login_at;
-            }
-
-            const response = await getLoginLogList(requestParams);
             if (response.code === 200) {
               return {
                 data: response.data?.data || [],
@@ -803,10 +1077,10 @@ const Log: React.FC = () => {
             };
           },
         };
-      case 'general':
+      case 'login':
         return {
-          columns: generalLogColumns,
-          rowKey: 'log_id',
+          columns: loginLogColumns,
+          rowKey: 'id',
           request: async (params: any) => {
             // 处理时间范围参数
             const requestParams: any = {
@@ -817,15 +1091,15 @@ const Log: React.FC = () => {
 
             // 处理时间范围 - 转换为字符串格式
             if (
-              params.created_at &&
-              Array.isArray(params.created_at) &&
-              params.created_at.length === 2
+              params.login_at &&
+              Array.isArray(params.login_at) &&
+              params.login_at.length === 2
             ) {
-              requestParams.date_range = `${params.created_at[0]},${params.created_at[1]}`;
-              delete requestParams.created_at;
+              requestParams.date_range = `${params.login_at[0]},${params.login_at[1]}`;
+              delete requestParams.login_at;
             }
 
-            const response = await getLogList(requestParams);
+            const response = await getLoginLogList(requestParams);
             if (response.code === 200) {
               return {
                 data: response.data?.data || [],
@@ -859,6 +1133,34 @@ const Log: React.FC = () => {
         }}
         items={[
           {
+            key: 'general',
+            label: '常规日志',
+            children: (() => {
+              const config = getConfigByTab('general');
+              return (
+                <ProTable<any>
+                  actionRef={actionRef}
+                  rowKey={config.rowKey}
+                  size={TABLE_SIZE}
+                  search={{
+                    labelWidth: 120,
+                    defaultCollapsed: false,
+                  }}
+                  request={config.request}
+                  columns={config.columns}
+                  pagination={{
+                    defaultPageSize: 20,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                  }}
+                  dateFormatter="string"
+                  headerTitle="常规日志列表"
+                  scroll={{ x: 'max-content' }}
+                />
+              );
+            })(),
+          },
+          {
             key: 'operation',
             label: '操作日志',
             children: (() => {
@@ -867,6 +1169,7 @@ const Log: React.FC = () => {
                 <ProTable<any>
                   actionRef={actionRef}
                   rowKey={config.rowKey}
+                  size={TABLE_SIZE}
                   search={{
                     labelWidth: 120,
                     defaultCollapsed: false,
@@ -886,33 +1189,6 @@ const Log: React.FC = () => {
             })(),
           },
           {
-            key: 'login',
-            label: '登录日志',
-            children: (() => {
-              const config = getConfigByTab('login');
-              return (
-                <ProTable<any>
-                  actionRef={actionRef}
-                  rowKey={config.rowKey}
-                  search={{
-                    labelWidth: 120,
-                    defaultCollapsed: false,
-                  }}
-                  request={config.request}
-                  columns={config.columns}
-                  pagination={{
-                    defaultPageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                  }}
-                  dateFormatter="string"
-                  headerTitle="登录日志列表"
-                  scroll={{ x: 'max-content' }}
-                />
-              );
-            })(),
-          },
-          {
             key: 'audit',
             label: '审计日志',
             children: (() => {
@@ -921,6 +1197,7 @@ const Log: React.FC = () => {
                 <ProTable<any>
                   actionRef={actionRef}
                   rowKey={config.rowKey}
+                  size={TABLE_SIZE}
                   search={{
                     labelWidth: 120,
                     defaultCollapsed: false,
@@ -940,14 +1217,15 @@ const Log: React.FC = () => {
             })(),
           },
           {
-            key: 'general',
-            label: '常规日志',
+            key: 'login',
+            label: '登录日志',
             children: (() => {
-              const config = getConfigByTab('general');
+              const config = getConfigByTab('login');
               return (
                 <ProTable<any>
                   actionRef={actionRef}
                   rowKey={config.rowKey}
+                  size={TABLE_SIZE}
                   search={{
                     labelWidth: 120,
                     defaultCollapsed: false,
@@ -960,7 +1238,7 @@ const Log: React.FC = () => {
                     showQuickJumper: true,
                   }}
                   dateFormatter="string"
-                  headerTitle="常规日志列表"
+                  headerTitle="登录日志列表"
                   scroll={{ x: 'max-content' }}
                 />
               );

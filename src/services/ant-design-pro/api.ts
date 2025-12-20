@@ -225,7 +225,7 @@ export async function removeRule(options?: { [key: string]: any }) {
   });
 }
 
-/** 常规日志列表 POST /api/admin/log/index */
+/** 常规日志列表 POST /api/admin/log/generalLog */
 export async function getLogList(
   params: {
     current?: number;
@@ -234,7 +234,7 @@ export async function getLogList(
   },
   options?: { [key: string]: any },
 ) {
-  return request<API.PageResponse>('/api/admin/log/index', {
+  return request<API.PageResponse>('/api/admin/log/generalLog', {
     method: 'POST',
     data: params,
     ...(options || {}),
@@ -421,8 +421,23 @@ export async function getResponseCodeList(options?: { [key: string]: any }) {
   });
 }
 
-/** 获取操作日志搜索框选项（整合接口） POST /api/admin/log/getOperationLogSearchOptions */
-export async function getOperationLogSearchOptions(options?: { [key: string]: any }) {
+/** 获取常规日志搜索数据 POST /api/admin/log/getGeneralLogSearchData */
+export async function getGeneralLogSearchData(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data: {
+      action_type: Array<{ label: string; value: string }>;
+      source_type: Array<{ label: string; value: string }>;
+    };
+  }>('/api/admin/log/getGeneralLogSearchData', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
+/** 获取操作日志搜索数据 POST /api/admin/log/getOperationLogSearchData */
+export async function getOperationLogSearchData(options?: { [key: string]: any }) {
   return request<{
     code: number;
     message: string;
@@ -433,7 +448,40 @@ export async function getOperationLogSearchOptions(options?: { [key: string]: an
       response_code: Array<{ label: string; value: number }>;
       source_type: Array<{ label: string; value: string }>;
     };
-  }>('/api/admin/log/getOperationLogSearchOptions', {
+  }>('/api/admin/log/getOperationLogSearchData', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
+/** 获取登录日志搜索数据 POST /api/admin/log/getLoginLogSearchData */
+export async function getLoginLogSearchData(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data: {
+      browser: Array<{ label: string; value: string }>;
+      operating_system: Array<{ label: string; value: string }>;
+      device_type: Array<{ label: string; value: string }>;
+      status: Array<{ label: string; value: number }>;
+    };
+  }>('/api/admin/log/getLoginLogSearchData', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
+/** 获取审计日志搜索数据 POST /api/admin/log/getAuditLogSearchData */
+export async function getAuditLogSearchData(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data: {
+      module: Array<{ label: string; value: string }>;
+      action: Array<{ label: string; value: string }>;
+      resource_type: Array<{ label: string; value: string }>;
+    };
+  }>('/api/admin/log/getAuditLogSearchData', {
     method: 'POST',
     ...(options || {}),
   });
