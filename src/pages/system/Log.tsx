@@ -13,7 +13,11 @@ import {
   getOperationLogList,
   getOperationLogSearchData,
 } from '@/services/ant-design-pro/api';
-import { TABLE_SIZE } from '@/utils/constants';
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGINATION,
+  TABLE_SIZE,
+} from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
 
 type LogTabKey = 'operation' | 'login' | 'audit' | 'general';
@@ -21,6 +25,7 @@ type LogTabKey = 'operation' | 'login' | 'audit' | 'general';
 const Log: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LogTabKey>('general');
   const actionRef = useRef<ActionType | null>(null);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   // 下拉框选项数据
   const [sourceTypeOptions, setSourceTypeOptions] = useState<
@@ -975,7 +980,8 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              pageSize: params.pageSize || 20,
+              // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -988,6 +994,7 @@ const Log: React.FC = () => {
               delete requestParams.created_at;
             }
 
+            console.log('常规日志请求参数:', requestParams);
             const response = await getLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1012,7 +1019,8 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              pageSize: params.pageSize || 20,
+              // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -1025,6 +1033,7 @@ const Log: React.FC = () => {
               delete requestParams.operated_at;
             }
 
+            console.log('操作日志请求参数:', requestParams);
             const response = await getOperationLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1049,7 +1058,8 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              pageSize: params.pageSize || 20,
+              // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -1062,6 +1072,7 @@ const Log: React.FC = () => {
               delete requestParams.audited_at;
             }
 
+            console.log('审计日志请求参数:', requestParams);
             const response = await getAuditLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1086,7 +1097,8 @@ const Log: React.FC = () => {
             const requestParams: any = {
               ...params,
               page: params.current || 1,
-              pageSize: params.pageSize || 20,
+              // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
 
             // 处理时间范围 - 转换为字符串格式
@@ -1099,6 +1111,7 @@ const Log: React.FC = () => {
               delete requestParams.login_at;
             }
 
+            console.log('登录日志请求参数:', requestParams);
             const response = await getLoginLogList(requestParams);
             if (response.code === 200) {
               return {
@@ -1149,9 +1162,11 @@ const Log: React.FC = () => {
                   request={config.request}
                   columns={config.columns}
                   pagination={{
-                    defaultPageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
+                    ...DEFAULT_PAGINATION,
+                    pageSize,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                    },
                   }}
                   dateFormatter="string"
                   headerTitle="常规日志列表"
@@ -1177,9 +1192,11 @@ const Log: React.FC = () => {
                   request={config.request}
                   columns={config.columns}
                   pagination={{
-                    defaultPageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
+                    ...DEFAULT_PAGINATION,
+                    pageSize,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                    },
                   }}
                   dateFormatter="string"
                   headerTitle="操作日志列表"
@@ -1205,9 +1222,11 @@ const Log: React.FC = () => {
                   request={config.request}
                   columns={config.columns}
                   pagination={{
-                    defaultPageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
+                    ...DEFAULT_PAGINATION,
+                    pageSize,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                    },
                   }}
                   dateFormatter="string"
                   headerTitle="审计日志列表"
@@ -1233,9 +1252,11 @@ const Log: React.FC = () => {
                   request={config.request}
                   columns={config.columns}
                   pagination={{
-                    defaultPageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
+                    ...DEFAULT_PAGINATION,
+                    pageSize,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                    },
                   }}
                   dateFormatter="string"
                   headerTitle="登录日志列表"
