@@ -1138,7 +1138,10 @@ const Log: React.FC = () => {
         activeKey={activeTab}
         onChange={(key) => {
           setActiveTab(key as LogTabKey);
-          actionRef.current?.reload();
+          // 延迟调用 reload，确保新的 Tab 已经渲染完成
+          setTimeout(() => {
+            actionRef.current?.reload();
+          }, 0);
         }}
         items={[
           {
@@ -1148,7 +1151,8 @@ const Log: React.FC = () => {
               const config = getConfigByTab('general');
               return (
                 <ProTable<any>
-                  actionRef={actionRef}
+                  key="general-log-table"
+                  actionRef={activeTab === 'general' ? actionRef : undefined}
                   rowKey={config.rowKey}
                   size={TABLE_SIZE}
                   search={{
@@ -1178,7 +1182,8 @@ const Log: React.FC = () => {
               const config = getConfigByTab('operation');
               return (
                 <ProTable<any>
-                  actionRef={actionRef}
+                  key="operation-log-table"
+                  actionRef={activeTab === 'operation' ? actionRef : undefined}
                   rowKey={config.rowKey}
                   size={TABLE_SIZE}
                   search={{
@@ -1208,7 +1213,8 @@ const Log: React.FC = () => {
               const config = getConfigByTab('audit');
               return (
                 <ProTable<any>
-                  actionRef={actionRef}
+                  key="audit-log-table"
+                  actionRef={activeTab === 'audit' ? actionRef : undefined}
                   rowKey={config.rowKey}
                   size={TABLE_SIZE}
                   search={{
@@ -1238,7 +1244,8 @@ const Log: React.FC = () => {
               const config = getConfigByTab('login');
               return (
                 <ProTable<any>
-                  actionRef={actionRef}
+                  key="login-log-table"
+                  actionRef={activeTab === 'login' ? actionRef : undefined}
                   rowKey={config.rowKey}
                   size={TABLE_SIZE}
                   search={{
