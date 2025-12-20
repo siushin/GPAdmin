@@ -19,7 +19,7 @@ import { dateRangeFieldProps } from '@/utils/datePresets';
 import AdminForm from './components/AdminForm';
 
 const Admin: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -36,7 +36,7 @@ const Admin: React.FC = () => {
 
   const handleDelete = async (record: any) => {
     try {
-      const res = await deleteAdmin({ id: record.id });
+      const res = await deleteAdmin({ id: record.id || record.user_id });
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
@@ -54,7 +54,7 @@ const Admin: React.FC = () => {
       if (editingRecord) {
         res = await updateAdmin({
           ...values,
-          id: editingRecord.id,
+          id: editingRecord.id || editingRecord.user_id,
         });
       } else {
         res = await addAdmin(values);
