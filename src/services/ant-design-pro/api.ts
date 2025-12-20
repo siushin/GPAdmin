@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error
 /* eslint-disable */
 import { request } from '@umijs/max';
 
@@ -39,7 +39,10 @@ export async function refreshToken(options?: { [key: string]: any }) {
 }
 
 /** 登录接口 POST /api/login/account */
-export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
+export async function login(
+  body: API.LoginParams,
+  options?: { [key: string]: any },
+) {
   return request<API.LoginResult>('/api/login/account', {
     method: 'POST',
     headers: {
@@ -164,14 +167,6 @@ export async function getMyApps(options?: { [key: string]: any }) {
   });
 }
 
-/** 此处后端没有提供注释 GET /api/notices */
-export async function getNotices(options?: { [key: string]: any }) {
-  return request<API.NoticeIconList>('/api/notices', {
-    method: 'GET',
-    ...(options || {}),
-  });
-}
-
 /** 获取规则列表 GET /api/rule */
 export async function rule(
   params: {
@@ -289,140 +284,10 @@ export async function getAuditLogList(
   });
 }
 
-/** 获取来源类型列表 POST /api/admin/log/getSourceTypeList */
-export async function getSourceTypeList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getSourceTypeList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取常规日志操作类型列表 POST /api/admin/log/getActionList */
-export async function getActionList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getActionList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取操作日志操作类型列表 POST /api/admin/log/getOperationActionList */
-export async function getOperationActionList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getOperationActionList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取HTTP方法列表 POST /api/admin/log/getHttpMethodList */
-export async function getHttpMethodList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getHttpMethodList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取浏览器列表 POST /api/admin/log/getBrowserList */
-export async function getBrowserList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getBrowserList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取操作系统列表 POST /api/admin/log/getOperatingSystemList */
-export async function getOperatingSystemList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getOperatingSystemList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取设备类型列表 POST /api/admin/log/getDeviceTypeList */
-export async function getDeviceTypeList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getDeviceTypeList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取审计操作类型列表 POST /api/admin/log/getAuditActionList */
-export async function getAuditActionList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getAuditActionList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取资源类型列表 POST /api/admin/log/getResourceTypeList */
-export async function getResourceTypeList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getResourceTypeList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取操作日志模块名称列表 POST /api/admin/log/getModuleList */
-export async function getModuleList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: string }>;
-  }>('/api/admin/log/getModuleList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 获取操作日志响应状态码列表 POST /api/admin/log/getResponseCodeList */
-export async function getResponseCodeList(options?: { [key: string]: any }) {
-  return request<{
-    code: number;
-    message: string;
-    data: Array<{ label: string; value: number }>;
-  }>('/api/admin/log/getResponseCodeList', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
 /** 获取常规日志搜索数据 POST /api/admin/log/getGeneralLogSearchData */
-export async function getGeneralLogSearchData(options?: { [key: string]: any }) {
+export async function getGeneralLogSearchData(options?: {
+  [key: string]: any;
+}) {
   return request<{
     code: number;
     message: string;
@@ -437,7 +302,9 @@ export async function getGeneralLogSearchData(options?: { [key: string]: any }) 
 }
 
 /** 获取操作日志搜索数据 POST /api/admin/log/getOperationLogSearchData */
-export async function getOperationLogSearchData(options?: { [key: string]: any }) {
+export async function getOperationLogSearchData(options?: {
+  [key: string]: any;
+}) {
   return request<{
     code: number;
     message: string;
