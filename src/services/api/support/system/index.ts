@@ -1,6 +1,480 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
+// ========== 管理员管理 API ==========
+
+/** 管理员列表 POST /api/admin/admin/index */
+export async function getAdminList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/admin/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 新增管理员 POST /api/admin/admin/add */
+export async function addAdmin(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/admin/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新管理员 POST /api/admin/admin/update */
+export async function updateAdmin(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/admin/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除管理员 POST /api/admin/admin/delete */
+export async function deleteAdmin(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/admin/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 角色管理 API ==========
+
+/** 角色列表 POST /api/admin/role/index */
+export async function getRoleList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/role/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 新增角色 POST /api/admin/role/add */
+export async function addRole(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/role/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新角色 POST /api/admin/role/update */
+export async function updateRole(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/role/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除角色 POST /api/admin/role/delete */
+export async function deleteRole(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/role/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 菜单管理 API ==========
+
+/** 菜单列表 POST /api/admin/menu/index */
+export async function getMenuList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/menu/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 菜单树形列表 POST /api/admin/menu/tree */
+export async function getMenuTree(
+  params?: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/admin/menu/tree', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
+/** 新增菜单 POST /api/admin/menu/add */
+export async function addMenu(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/menu/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新菜单 POST /api/admin/menu/update */
+export async function updateMenu(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/menu/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除菜单 POST /api/admin/menu/delete */
+export async function deleteMenu(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/menu/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 组织架构管理 API ==========
+
+/** 组织架构列表（树形） POST /api/admin/organization/index */
+export async function getOrganizationList(
+  params?: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/admin/organization/index', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
+/** 新增组织架构 POST /api/admin/organization/add */
+export async function addOrganization(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新组织架构 POST /api/admin/organization/update */
+export async function updateOrganization(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除组织架构 POST /api/admin/organization/delete */
+export async function deleteOrganization(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 移动组织架构 POST /api/admin/organization/move */
+export async function moveOrganization(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/move', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 数据字典分类管理 API ==========
+
+/** 数据字典分类列表 POST /api/admin/DictionaryCategory/index */
+export async function getDictionaryCategoryList(
+  params?: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/admin/DictionaryCategory/index', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
+// ========== 数据字典管理 API ==========
+
+/** 数据字典列表 POST /api/admin/dictionary/index */
+export async function getDictionaryList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/dictionary/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 数据字典全部列表 POST /api/admin/dictionary/all */
+export async function getDictionaryAll(
+  params?: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/admin/dictionary/all', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
+/** 新增数据字典 POST /api/admin/dictionary/add */
+export async function addDictionary(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/dictionary/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新数据字典 POST /api/admin/dictionary/update */
+export async function updateDictionary(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/dictionary/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除数据字典 POST /api/admin/dictionary/delete */
+export async function deleteDictionary(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/dictionary/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 批量删除数据字典 POST /api/admin/dictionary/batchDelete */
+export async function batchDeleteDictionary(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/dictionary/batchDelete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取数据字典父级数据 POST /api/admin/dictionary/getPidData */
+export async function getDictionaryPidData(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any[];
+  }>('/api/admin/dictionary/getPidData', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 日志相关 API ==========
+
 /** 常规日志列表 POST /api/admin/log/generalLog */
 export async function getLogList(
   params: {

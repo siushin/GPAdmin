@@ -273,7 +273,7 @@ const Log: React.FC = () => {
         // 尝试格式化日期时间
         try {
           return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
+        } catch (_e) {
           return record.created_at;
         }
       },
@@ -366,7 +366,7 @@ const Log: React.FC = () => {
           tooltipText = JSON.stringify(paramsData, null, 2);
           // 单行JSON用于单元格显示
           displayText = JSON.stringify(paramsData);
-        } catch (e) {
+        } catch (_e) {
           // 如果解析失败，直接返回原始值
           tooltipText =
             typeof record.params === 'string'
@@ -518,7 +518,7 @@ const Log: React.FC = () => {
         // 尝试格式化日期时间
         try {
           return dayjs(record.operated_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
+        } catch (_e) {
           return record.operated_at;
         }
       },
@@ -630,7 +630,7 @@ const Log: React.FC = () => {
           tooltipText = JSON.stringify(beforeData, null, 2);
           // 单行JSON用于单元格显示
           displayText = JSON.stringify(beforeData);
-        } catch (e) {
+        } catch (_e) {
           // 如果解析失败，直接返回原始值
           tooltipText =
             typeof record.before_data === 'string'
@@ -688,7 +688,7 @@ const Log: React.FC = () => {
           tooltipText = JSON.stringify(afterData, null, 2);
           // 单行JSON用于单元格显示
           displayText = JSON.stringify(afterData);
-        } catch (e) {
+        } catch (_e) {
           // 如果解析失败，直接返回原始值
           tooltipText =
             typeof record.after_data === 'string'
@@ -792,7 +792,7 @@ const Log: React.FC = () => {
         // 尝试格式化日期时间
         try {
           return dayjs(record.audited_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
+        } catch (_e) {
           return record.audited_at;
         }
       },
@@ -871,7 +871,7 @@ const Log: React.FC = () => {
         // 尝试格式化日期时间
         try {
           return dayjs(record.login_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (e) {
+        } catch (_e) {
           return record.login_at;
         }
       },
@@ -1164,7 +1164,7 @@ const Log: React.FC = () => {
                   pagination={{
                     ...DEFAULT_PAGINATION,
                     pageSize,
-                    onShowSizeChange: (current, size) => {
+                    onShowSizeChange: (_current, size) => {
                       setPageSize(size);
                     },
                   }}
@@ -1195,7 +1195,7 @@ const Log: React.FC = () => {
                   pagination={{
                     ...DEFAULT_PAGINATION,
                     pageSize,
-                    onShowSizeChange: (current, size) => {
+                    onShowSizeChange: (_current, size) => {
                       setPageSize(size);
                     },
                   }}
@@ -1226,7 +1226,7 @@ const Log: React.FC = () => {
                   pagination={{
                     ...DEFAULT_PAGINATION,
                     pageSize,
-                    onShowSizeChange: (current, size) => {
+                    onShowSizeChange: (_current, size) => {
                       setPageSize(size);
                     },
                   }}
@@ -1257,7 +1257,7 @@ const Log: React.FC = () => {
                   pagination={{
                     ...DEFAULT_PAGINATION,
                     pageSize,
-                    onShowSizeChange: (current, size) => {
+                    onShowSizeChange: (_current, size) => {
                       setPageSize(size);
                     },
                   }}
