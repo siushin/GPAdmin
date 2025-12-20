@@ -5,6 +5,7 @@ import {
   BlockOutlined,
   BookOutlined,
   FileTextOutlined,
+  GithubOutlined,
   IdcardOutlined,
   LinkOutlined,
   MessageOutlined,
@@ -18,7 +19,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
-import { SettingDrawer } from '@ant-design/pro-components';
+import { ProConfigProvider, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import { App } from 'antd';
@@ -31,6 +32,7 @@ import {
   SettingButton,
 } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants';
 import { setNotificationInstance } from '@/utils/notification';
 import { clearToken, isTokenExpired } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
@@ -276,6 +278,22 @@ export const layout: RunTimeLayoutConfig = ({
 
   return {
     actionsRender: () => [
+      <a
+        key="github"
+        href="https://github.com/siushin/gpadmin"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 30,
+          height: 30,
+          color: 'inherit',
+        }}
+      >
+        <GithubOutlined style={{ fontSize: 18 }} />
+      </a>,
       <SelectLang key="SelectLang" />,
       <SettingButton key="SettingButton" onClick={handleSettingClick} />,
     ],
@@ -337,22 +355,24 @@ export const layout: RunTimeLayoutConfig = ({
     childrenRender: (children) => {
       // if (initialState?.loading) return <PageLoading />;
       return (
-        <App>
-          <WelcomeNotification currentUser={initialState?.currentUser}>
-            {children}
-          </WelcomeNotification>
-          <SettingDrawer
-            disableUrlParams
-            enableDarkTheme
-            settings={initialState?.settings}
-            onSettingChange={(settings) => {
-              setInitialState((preInitialState: any) => ({
-                ...preInitialState,
-                settings,
-              }));
-            }}
-          />
-        </App>
+        <ProConfigProvider valueTypeMap={{}}>
+          <App>
+            <WelcomeNotification currentUser={initialState?.currentUser}>
+              {children}
+            </WelcomeNotification>
+            <SettingDrawer
+              disableUrlParams
+              enableDarkTheme
+              settings={initialState?.settings}
+              onSettingChange={(settings) => {
+                setInitialState((preInitialState: any) => ({
+                  ...preInitialState,
+                  settings,
+                }));
+              }}
+            />
+          </App>
+        </ProConfigProvider>
       );
     },
     ...initialState?.settings,

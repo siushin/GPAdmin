@@ -7,7 +7,12 @@ export const SelectLang: React.FC = () => {
   return (
     <UmiSelectLang
       style={{
-        padding: 4,
+        width: 30,
+        height: 30,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
       }}
     />
   );

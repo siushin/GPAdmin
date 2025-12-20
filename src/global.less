@@ -104,3 +104,67 @@ ol {
   padding-inline-start: 0 !important;
   padding-inline-end: 0 !important;
 }
+
+// 统一左下角图标容器宽度为 30px
+.ant-pro-sider-actions-list-item {
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 30px !important;
+
+  // 内部链接和按钮
+  a,
+  button,
+  span {
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    min-width: 30px !important;
+  }
+
+  // 图标本身
+  .anticon {
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+  }
+}
+
+// 统一 SettingDrawer 内部图标宽度为 30px
+.ant-pro-setting-drawer {
+  // 所有图标容器
+  .ant-pro-setting-drawer-content-item,
+  .ant-pro-setting-drawer-block-checkbox,
+  .ant-pro-setting-drawer-theme-color {
+    // 图标按钮
+    a,
+    button,
+    span[role="button"] {
+      width: 30px !important;
+      height: 30px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      min-width: 30px !important;
+    }
+
+    // 图标本身
+    .anticon {
+      width: 30px !important;
+      height: 30px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 18px !important;
+    }
+  }
+}
