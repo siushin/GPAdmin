@@ -235,6 +235,114 @@ export async function deleteMenu(
   });
 }
 
+// ========== 用户角色关联 API ==========
+
+/** 用户角色关联列表 POST /api/admin/userRole/index */
+export async function getUserRoleList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/userRole/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 新增用户角色关联 POST /api/admin/userRole/add */
+export async function addUserRole(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/userRole/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除用户角色关联 POST /api/admin/userRole/delete */
+export async function deleteUserRole(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/userRole/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+// ========== 角色菜单关联 API ==========
+
+/** 角色菜单关联列表 POST /api/admin/roleMenu/index */
+export async function getRoleMenuList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/roleMenu/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 新增角色菜单关联 POST /api/admin/roleMenu/add */
+export async function addRoleMenu(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/roleMenu/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除角色菜单关联 POST /api/admin/roleMenu/delete */
+export async function deleteRoleMenu(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/roleMenu/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 // ========== 组织架构管理 API ==========
 
 /** 组织架构列表（树形） POST /api/admin/organization/index */
