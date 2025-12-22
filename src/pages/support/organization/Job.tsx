@@ -8,7 +8,7 @@ import {
   deleteJob,
   getJobList,
   updateJob,
-} from '@/services/api/support/organization';
+} from '@/services/api/organization';
 import { TABLE_SIZE } from '@/utils/constants';
 import JobForm from './components/JobForm';
 

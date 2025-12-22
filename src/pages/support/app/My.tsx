@@ -17,7 +17,7 @@ import {
   Typography,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
-import { getMyApps } from '@/services/api/support/app';
+import { getMyApps } from '@/services/api/app';
 import StandardFormRow from './components/StandardFormRow';
 import TagSelect from './components/TagSelect';
 

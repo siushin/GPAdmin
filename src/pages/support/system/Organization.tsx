@@ -2,7 +2,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, Card, Col, message, Popconfirm, Row, Space } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   addDictionary,
   deleteDictionary,
@@ -10,7 +10,7 @@ import {
   getDictionaryList,
   getDictionaryPidData,
   updateDictionary,
-} from '@/services/api/support/system';
+} from '@/services/api/system';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
@@ -21,7 +21,7 @@ import DictionaryForm from './components/DictionaryForm';
 const Organization: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categoryList, setCategoryList] = useState<any[]>([]);
-  const [actionRef, setActionRef] = useState<ActionType | null>(null);
+  const actionRef = useRef<ActionType | null>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -47,7 +47,7 @@ const Organization: React.FC = () => {
 
   const handleCategorySelect = (categoryId: number) => {
     setSelectedCategory(categoryId);
-    actionRef?.current?.reload();
+    actionRef.current?.reload();
   };
 
   const handleAdd = () => {
@@ -71,7 +71,7 @@ const Organization: React.FC = () => {
       });
       if (res.code === 200) {
         message.success('删除成功');
-        actionRef?.current?.reload();
+        actionRef.current?.reload();
       } else {
         message.error(res.message || '删除失败');
       }
@@ -98,7 +98,7 @@ const Organization: React.FC = () => {
         message.success(editingRecord ? '更新成功' : '新增成功');
         setFormVisible(false);
         setEditingRecord(null);
-        actionRef?.current?.reload();
+        actionRef.current?.reload();
       } else {
         message.error(res.message || (editingRecord ? '更新失败' : '新增失败'));
       }
@@ -217,7 +217,7 @@ const Organization: React.FC = () => {
       <Row gutter={16}>
         {/* 左侧：数据字典分类卡片 */}
         <Col span={6}>
-          <Card title="数据字典类型" bordered>
+          <Card title="数据字典类型" variant="outlined">
             {categoryList.map((category) => (
               <Card
                 key={category.category_id}
@@ -246,7 +246,7 @@ const Organization: React.FC = () => {
         {/* 右侧：数据字典列表 */}
         <Col span={18}>
           <ProTable<any>
-            actionRef={setActionRef}
+            actionRef={actionRef}
             rowKey="dictionary_id"
             size={TABLE_SIZE}
             search={{

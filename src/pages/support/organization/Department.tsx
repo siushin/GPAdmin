@@ -8,7 +8,7 @@ import {
   deleteDepartment,
   getDepartmentList,
   updateDepartment,
-} from '@/services/api/support/organization';
+} from '@/services/api/organization';
 import { TABLE_SIZE } from '@/utils/constants';
 import DepartmentForm from './components/DepartmentForm';
 

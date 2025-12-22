@@ -10,7 +10,7 @@ import {
   getMenuList,
   getMenuTree,
   updateMenu,
-} from '@/services/api/support/system';
+} from '@/services/api/system';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,

@@ -20,7 +20,7 @@ import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { Footer } from '@/components';
 import { sendCaptcha } from '@/services/ant-design-pro/login';
-import { register } from '@/services/api/support/user';
+import { register } from '@/services/api/user';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {

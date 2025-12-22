@@ -8,7 +8,7 @@ import {
   deleteCompany,
   getCompanyList,
   updateCompany,
-} from '@/services/api/support/organization';
+} from '@/services/api/organization';
 import { TABLE_SIZE } from '@/utils/constants';
 import CompanyForm from './components/CompanyForm';
 

@@ -1,7 +1,7 @@
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
 import { message } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { addRoleMenu } from '@/services/api/support/system';
+import { addRoleMenu } from '@/services/api/system';
 
 interface RoleMenuFormProps {
   visible: boolean;

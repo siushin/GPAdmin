@@ -129,11 +129,6 @@ export default [
         component: './support/system/Menu',
       },
       {
-        path: '/system/organization',
-        name: 'system.organization',
-        component: './support/system/Organization',
-      },
-      {
         path: '/system/dict',
         name: 'system.dict',
         component: './support/system/Dict',
@@ -142,6 +137,38 @@ export default [
         path: '/system/log',
         name: 'system.log',
         component: './support/system/Log',
+      },
+    ],
+  },
+  {
+    path: '/organization',
+    name: 'organization.management',
+    icon: 'apartment',
+    routes: [
+      {
+        path: '/organization/organization',
+        name: 'organization.organization',
+        component: './support/system/Organization',
+      },
+      {
+        path: '/organization/company',
+        name: 'organization.company',
+        component: './support/organization/Company',
+      },
+      {
+        path: '/organization/department',
+        name: 'organization.department',
+        component: './support/organization/Department',
+      },
+      {
+        path: '/organization/position',
+        name: 'organization.position',
+        component: './support/organization/Position',
+      },
+      {
+        path: '/organization/job',
+        name: 'organization.job',
+        component: './support/organization/Job',
       },
     ],
   },

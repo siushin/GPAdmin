@@ -88,7 +88,7 @@ const getIconComponent = (
 };
 
 // 转换菜单数据，将图标字符串转换为图标组件，并处理国际化
-const patchMenuIcon = (menuData: any[]): any[] => {
+const patchMenuIcon = (menuData: any[], parentName?: string): any[] => {
   return menuData.map((item) => {
     const newItem = { ...item };
 
@@ -104,18 +104,40 @@ const patchMenuIcon = (menuData: any[]): any[] => {
       }
     }
 
-    // 处理子菜单，确保子菜单的图标也被转换（后处理子菜单）
-    if (newItem.routes && Array.isArray(newItem.routes)) {
-      newItem.routes = patchMenuIcon(newItem.routes);
-    }
-
     // 确保使用 name 字段作为 locale key 来查找翻译
     // ProLayout 会使用 locale 字段（如果存在）来查找翻译
     // 如果 name 存在，将 name 转换为 locale 格式（menu.前缀）
+    // 注意：ProLayout 在处理嵌套路由时可能会自动拼接父路由的 name 和子路由的 name
+    // 为了避免重复拼接，我们需要确保 locale 是完整的，并且明确设置
+    const originalName = newItem.name; // 保存原始 name，用于传递给子菜单
     if (newItem.name) {
+      // 根据后端返回的数据，name 已经是完整的 menu_key（如 organization.organization）
+      // 直接使用，不需要拼接父路由的 name
       newItem.locale = `menu.${newItem.name}`;
       // 移除 title 字段，让 ProLayout 使用 locale 来查找翻译
       delete newItem.title;
+
+      // 如果 ProLayout 会自动拼接父路由的 name，我们需要调整子路由的 name
+      // 如果子路由的 name 以父路由的 name 开头，移除父路由的 name 前缀
+      // 这样 ProLayout 拼接后就能得到正确的完整路径
+      if (parentName && newItem.name.startsWith(parentName + '.')) {
+        // 子路由的 name 已经包含父路由的 name，为了避免 ProLayout 重复拼接
+        // 我们只保留相对于父路由的部分
+        const relativeName = newItem.name.substring(parentName.length + 1);
+        newItem.name = relativeName;
+        // 但 locale 仍然使用完整的 menu_key，这样即使 ProLayout 拼接 name，locale 也能正确使用
+      }
+      // 注意：如果子路由的 name 不包含父路由的 name 前缀（如父路由 name = "organization.management"，子路由 name = "organization.organization"）
+      // ProLayout 可能会拼接成 "organization.management.organization"
+      // 但实际的 menu_key 是 "organization.organization"
+      // 在这种情况下，我们已经设置了 locale 为 "menu.organization.organization"
+      // 如果 ProLayout 仍然使用拼接后的 name，我们已经在语言包中添加了这些键作为后备
+    }
+
+    // 处理子菜单，确保子菜单的图标也被转换（后处理子菜单）
+    // 传递当前项的原始完整 name（在修改前）给子菜单，以便处理嵌套情况
+    if (newItem.routes && Array.isArray(newItem.routes)) {
+      newItem.routes = patchMenuIcon(newItem.routes, originalName);
     }
 
     return newItem;
@@ -342,9 +364,9 @@ export const layout: RunTimeLayoutConfig = ({
     ],
     links: isDev
       ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
+          <Link key="doc" to="//doc.gpadmin.siushin.com/" target="_blank">
             <LinkOutlined />
-            <span>OpenAPI 文档</span>
+            <span>GPAdmin开发手册</span>
           </Link>,
         ]
       : [],

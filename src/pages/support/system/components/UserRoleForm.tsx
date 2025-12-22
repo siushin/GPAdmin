@@ -1,7 +1,7 @@
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
 import { message } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { addUserRole } from '@/services/api/support/system';
+import { addUserRole } from '@/services/api/system';
 
 interface UserRoleFormProps {
   visible: boolean;

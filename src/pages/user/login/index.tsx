@@ -32,7 +32,7 @@ import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
 import { login } from '@/services/ant-design-pro/api';
 import { loginByCode, sendCaptcha } from '@/services/ant-design-pro/login';
-import { getUserMenus } from '@/services/api/support/user';
+import { getUserMenus } from '@/services/api/user';
 import { saveToken } from '@/utils/token';
 import Settings from '../../../../config/defaultSettings';
 

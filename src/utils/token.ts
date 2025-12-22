@@ -1,5 +1,5 @@
 import { history } from '@umijs/max';
-import { refreshToken } from '@/services/api/support/user';
+import { refreshToken } from '@/services/api/user';
 
 const TOKEN_KEY = 'token';
 const TOKEN_EXPIRE_TIME_KEY = 'tokenExpireTime';
