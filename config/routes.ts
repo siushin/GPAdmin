@@ -148,7 +148,7 @@ export default [
       {
         path: '/organization/organization',
         name: 'organization.organization',
-        component: './system/Organization',
+        component: './organization/Organization',
       },
       {
         path: '/organization/company',

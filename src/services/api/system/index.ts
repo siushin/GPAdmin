@@ -345,6 +345,20 @@ export async function deleteRoleMenu(
 
 // ========== 组织架构管理 API ==========
 
+/** 获取组织架构类型列表 POST /api/admin/organization/getOrganizationTypeList */
+export async function getOrganizationTypeList(options?: {
+  [key: string]: any;
+}) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{ key: string; value: string }>;
+  }>('/api/admin/organization/getOrganizationTypeList', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 组织架构列表（树形） POST /api/admin/organization/index */
 export async function getOrganizationList(
   params?: {
