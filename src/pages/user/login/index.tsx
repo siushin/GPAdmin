@@ -313,7 +313,8 @@ const Login: React.FC = () => {
         // 标记已登录，用于显示欢迎弹窗
         sessionStorage.setItem('justLoggedIn', 'true');
         const urlParams = new URL(window.location.href).searchParams;
-        window.location.href = urlParams.get('redirect') || '/';
+        // 直接跳转到工作台，避免通过根路径重定向导致的问题
+        window.location.href = urlParams.get('redirect') || '/workbench';
         return;
       }
       // 登录失败，显示后端返回的错误信息

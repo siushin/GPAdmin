@@ -136,6 +136,26 @@ export const errorConfig: RequestConfig = {
       if (data?.code && data.code !== 200) {
         // 如果是401未授权或token过期，清除token并跳转登录页
         if (data.code === 401 || data.code === 1000) {
+          // 检查是否是 getUserMenus 请求（通过 URL 判断，如果无法获取则通过其他方式判断）
+          const requestUrl =
+            (response as any).config?.url ||
+            (response as any).request?.responseURL ||
+            '';
+          const isGetUserMenusRequest =
+            requestUrl.includes('/api/getUserMenus') ||
+            requestUrl.includes('getUserMenus');
+
+          // 如果是 getUserMenus 请求，且 localStorage 中有用户信息和 token，可能是刚登录 token 还未完全生效
+          // 这种情况下不立即跳转，让调用方处理（getInitialState 中会使用 skipErrorHandler）
+          if (
+            isGetUserMenusRequest &&
+            localStorage.getItem('userInfo') &&
+            localStorage.getItem('token')
+          ) {
+            console.warn('获取菜单时 token 可能还未生效，跳过自动跳转');
+            return response;
+          }
+
           clearToken();
           localStorage.removeItem('userInfo');
           if (window.location.pathname !== loginPath) {

@@ -210,10 +210,33 @@ export async function getInitialState(): Promise<{
   if (location.pathname === '/') {
     const token = localStorage.getItem('token');
     if (token && !isTokenExpired()) {
-      // 已登录，重定向到 /workbench
+      // 已登录，从 localStorage 读取用户信息和菜单数据
+      const userInfoStr = localStorage.getItem('userInfo');
+      const menuDataStr = localStorage.getItem('menuData');
+      let currentUser: API.CurrentUser | undefined;
+      let menuData: any[] | undefined;
+
+      if (userInfoStr) {
+        try {
+          currentUser = JSON.parse(userInfoStr);
+          if (menuDataStr) {
+            try {
+              menuData = JSON.parse(menuDataStr);
+            } catch (e) {
+              console.error('解析菜单数据失败:', e);
+            }
+          }
+        } catch (e) {
+          console.error('解析用户信息失败:', e);
+        }
+      }
+
+      // 重定向到 /workbench，并返回用户信息和菜单数据
       history.replace('/workbench');
       return {
         fetchUserInfo,
+        currentUser,
+        menuData,
         settings: defaultSettings as Partial<LayoutSettings>,
       };
     }
@@ -267,15 +290,29 @@ export async function getInitialState(): Promise<{
         // 如果没有菜单数据，尝试获取
         if (!menuData || menuData.length === 0) {
           try {
-            const menuResponse = await getUserMenus();
+            // 使用 skipErrorHandler 避免响应拦截器在获取菜单失败时跳转到登录页
+            const menuResponse = await getUserMenus({ skipErrorHandler: true });
             if (menuResponse && (menuResponse as any).code === 200) {
               menuData = (menuResponse as any).data || [];
               localStorage.setItem('menuData', JSON.stringify(menuData));
               // 重新加载页面以应用新路由
               window.location.reload();
+            } else {
+              // 如果获取菜单失败（非 401 错误），记录错误但不跳转
+              console.error('获取菜单失败:', menuResponse);
             }
-          } catch (menuError) {
-            console.error('获取菜单失败:', menuError);
+          } catch (menuError: any) {
+            // 如果是 401 错误，可能是 token 还未生效，等待一下再重试
+            if (
+              menuError?.response?.status === 401 ||
+              menuError?.info?.errorCode === 401 ||
+              menuError?.info?.errorCode === 1000
+            ) {
+              console.warn('获取菜单时 token 可能还未生效，稍后重试');
+              // 不跳转到登录页，让用户继续使用，菜单数据会在下次刷新时获取
+            } else {
+              console.error('获取菜单失败:', menuError);
+            }
           }
         }
       } catch (e) {
