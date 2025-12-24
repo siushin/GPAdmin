@@ -2,37 +2,39 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Space, Tag } from 'antd';
-import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
-  addUserRole,
-  deleteUserRole,
-  getAdminList,
+  addRole,
+  deleteRole,
   getRoleList,
-  getUserRoleList,
+  updateRole,
 } from '@/services/api/system';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
   TABLE_SIZE,
 } from '@/utils/constants';
-import { dateRangeFieldProps } from '@/utils/datePresets';
-import UserRoleForm from './components/UserRoleForm';
+import RoleForm from '../system/components/RoleForm';
 
-const UserRole: React.FC = () => {
+const Role: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
 
   const handleAdd = () => {
+    setEditingRecord(null);
+    setFormVisible(true);
+  };
+
+  const handleEdit = (record: any) => {
+    setEditingRecord(record);
     setFormVisible(true);
   };
 
   const handleDelete = async (record: any) => {
     try {
-      const res = await deleteUserRole({
-        id: record.id || record.user_role_id,
-      });
+      const res = await deleteRole({ id: record.id || record.role_id });
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
@@ -44,9 +46,28 @@ const UserRole: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = async () => {
-    setFormVisible(false);
-    actionRef.current?.reload();
+  const handleFormSubmit = async (values: any) => {
+    try {
+      let res: { code: number; message: string; data?: any };
+      if (editingRecord) {
+        res = await updateRole({
+          ...values,
+          id: editingRecord.id || editingRecord.role_id,
+        });
+      } else {
+        res = await addRole(values);
+      }
+      if (res.code === 200) {
+        message.success(editingRecord ? '更新成功' : '新增成功');
+        setFormVisible(false);
+        setEditingRecord(null);
+        actionRef.current?.reload();
+      } else {
+        message.error(res.message || (editingRecord ? '更新失败' : '新增失败'));
+      }
+    } catch (_error) {
+      message.error(editingRecord ? '更新失败' : '新增失败');
+    }
   };
 
   const columns: ProColumns<any>[] = [
@@ -56,26 +77,6 @@ const UserRole: React.FC = () => {
       width: 80,
       hideInSearch: true,
       fixed: 'left',
-    },
-    {
-      title: '用户ID',
-      dataIndex: 'user_id',
-      width: 120,
-      hideInSearch: true,
-    },
-    {
-      title: '用户名',
-      dataIndex: 'username',
-      width: 150,
-      fieldProps: {
-        placeholder: '请输入用户名',
-      },
-    },
-    {
-      title: '角色ID',
-      dataIndex: 'role_id',
-      width: 120,
-      hideInSearch: true,
     },
     {
       title: '角色名称',
@@ -89,46 +90,67 @@ const UserRole: React.FC = () => {
       title: '角色编码',
       dataIndex: 'role_code',
       width: 150,
-      hideInSearch: true,
-    },
-    {
-      title: '关键字',
-      dataIndex: 'keyword',
-      hideInTable: true,
       fieldProps: {
-        placeholder: '用户名、角色名称',
+        placeholder: '请输入角色编码',
       },
     },
     {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      valueType: 'dateRange',
-      hideInTable: false,
-      width: 180,
-      fieldProps: dateRangeFieldProps,
-      render: (_, record) => {
-        if (!record.created_at) return '-';
-        try {
-          return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.created_at;
-        }
+      title: '账号类型',
+      dataIndex: 'account_type',
+      valueType: 'select',
+      valueEnum: {
+        admin: { text: '管理员', status: 'Success' },
+        user: { text: '用户', status: 'Default' },
       },
+      width: 120,
+    },
+    {
+      title: '角色描述',
+      dataIndex: 'description',
+      hideInSearch: true,
+      width: 200,
+      ellipsis: true,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '启用', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
+      },
+      width: 100,
+      render: (_, record) => (
+        <Tag color={record.status === 1 ? 'success' : 'error'}>
+          {record.status === 1 ? '启用' : '禁用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '排序',
+      dataIndex: 'sort',
+      hideInSearch: true,
+      width: 80,
     },
     {
       title: '操作',
       valueType: 'option',
-      width: 120,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
-        <Popconfirm
-          title="确定要删除这条关联吗？"
-          onConfirm={() => handleDelete(record)}
-        >
-          <Button type="link" size="small" danger>
-            删除
+        <Space>
+          <Button type="link" size="small" onClick={() => handleEdit(record)}>
+            编辑
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title="确定要删除这条数据吗？"
+            onConfirm={() => handleDelete(record)}
+          >
+            <Button type="link" size="small" danger>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -149,7 +171,7 @@ const UserRole: React.FC = () => {
             page: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
-          const response = await getUserRoleList(requestParams);
+          const response = await getRoleList(requestParams);
           if (response.code === 200) {
             return {
               data: response.data?.data || [],
@@ -172,7 +194,7 @@ const UserRole: React.FC = () => {
           },
         }}
         dateFormatter="string"
-        headerTitle="用户角色关联列表"
+        headerTitle="角色列表"
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button
@@ -185,17 +207,17 @@ const UserRole: React.FC = () => {
           </Button>,
         ]}
       />
-      <UserRoleForm
+      <RoleForm
         visible={formVisible}
+        editingRecord={editingRecord}
         onCancel={() => {
           setFormVisible(false);
+          setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
-        getAdminList={getAdminList}
-        getRoleList={getRoleList}
       />
     </PageContainer>
   );
 };
 
-export default UserRole;
+export default Role;

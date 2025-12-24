@@ -32,172 +32,168 @@ export default [
       },
     ],
   },
-  {
-    path: '/dashboard/workplace',
-    name: 'dashboard.workplace',
-    icon: 'dashboard',
-    component: './dashboard/Workplace',
-  },
-  {
-    path: '/workbench',
-    redirect: '/dashboard/workplace',
-  },
-  {
-    path: '/user',
-    name: 'user.management',
-    icon: 'team',
-    routes: [
-      {
-        path: '/user/account',
-        name: 'user.account',
-        component: './user/Account',
-      },
-      {
-        path: '/user/user',
-        name: 'user.user',
-        component: './user/User',
-      },
-      {
-        path: '/user/profile',
-        name: 'user.profile',
-        component: './user/Profile',
-      },
-      {
-        path: '/user/social',
-        name: 'user.social',
-        component: './user/Social',
-      },
-    ],
-  },
-  {
-    path: '/app',
-    name: 'app.management',
-    icon: 'appstore',
-    routes: [
-      {
-        path: '/app/market',
-        name: 'app.market',
-        component: './app/Market',
-      },
-      {
-        path: '/app/my',
-        name: 'app.my',
-        component: './app/My',
-      },
-    ],
-  },
-  {
-    path: '/notification',
-    name: 'notification.management',
-    icon: 'bell',
-    routes: [
-      {
-        path: '/notification/system',
-        name: 'notification.system',
-        component: './notification/System',
-      },
-      {
-        path: '/notification/message',
-        name: 'notification.message',
-        component: './notification/Message',
-      },
-      {
-        path: '/notification/announcement',
-        name: 'notification.announcement',
-        component: './notification/Announcement',
-      },
-    ],
-  },
-  {
-    path: '/system',
-    name: 'system.management',
-    icon: 'setting',
-    routes: [
-      {
-        path: '/system/admin',
-        name: 'system.admin',
-        component: './system/Admin',
-      },
-      {
-        path: '/system/role',
-        name: 'system.role',
-        component: './system/Role',
-      },
-      {
-        path: '/system/menu',
-        name: 'system.menu',
-        component: './system/Menu',
-      },
-      {
-        path: '/system/dict',
-        name: 'system.dict',
-        component: './system/Dict',
-      },
-      {
-        path: '/system/dict/tree',
-        name: 'system.dict.tree',
-        component: './system/DictTree',
-      },
-      {
-        path: '/system/log',
-        name: 'system.log',
-        component: './system/Log',
-      },
-    ],
-  },
-  {
-    path: '/organization',
-    name: 'organization.management',
-    icon: 'apartment',
-    routes: [
-      {
-        path: '/organization/company',
-        name: 'organization.company',
-        component: './organization/Company',
-      },
-      {
-        path: '/organization/department',
-        name: 'organization.department',
-        component: './organization/Department',
-      },
-      {
-        path: '/organization/position',
-        name: 'organization.position',
-        component: './organization/Position',
-      },
-      {
-        path: '/organization/job',
-        name: 'organization.job',
-        component: './organization/Job',
-      },
-    ],
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
-    routes: [
-      {
-        path: '/admin',
-        redirect: '/admin/sub-page',
-      },
-      {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
-      },
-    ],
-  },
-  {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './table-list',
-  },
+
   {
     path: '/',
-    redirect: '/dashboard/workplace',
+    component: './index',
+  },
+
+  // 工作台
+  {
+    path: '/workbench',
+    name: 'workbench',
+    component: './dashboard/Workplace',
+    access: 'canAdmin',
+  },
+
+  // 用户管理
+  {
+    path: '/user',
+    name: 'user',
+    redirect: '/user/list',
+    access: 'canAdmin',
+  },
+  {
+    path: '/user/list',
+    name: 'user.list',
+    component: './user/User',
+    access: 'canAdmin',
+  },
+  {
+    path: '/user/pending',
+    name: 'user.pending',
+    component: './user/Pending',
+    access: 'canAdmin',
+  },
+
+  // 通知管理
+  {
+    path: '/notification',
+    name: 'notif',
+    redirect: '/notification/system',
+    access: 'canAdmin',
+  },
+  {
+    path: '/notification/system',
+    name: 'notif.system',
+    component: './notification/System',
+    access: 'canAdmin',
+  },
+  {
+    path: '/notification/message',
+    name: 'notif.message',
+    component: './notification/Message',
+    access: 'canAdmin',
+  },
+  {
+    path: '/notification/announcement',
+    name: 'notif.announcement',
+    component: './notification/Announcement',
+    access: 'canAdmin',
+  },
+
+  // 应用管理
+  {
+    path: '/app',
+    name: 'app',
+    redirect: '/app/market',
+    access: 'canAdmin',
+  },
+  {
+    path: '/app/market',
+    name: 'app.market',
+    component: './app/Market',
+    access: 'canAdmin',
+  },
+  {
+    path: '/app/my',
+    name: 'app.my',
+    component: './app/My',
+    access: 'canAdmin',
+  },
+
+  // 组织架构管理
+  {
+    path: '/organization',
+    name: 'org',
+    redirect: '/organization/company',
+    access: 'canAdmin',
+  },
+  {
+    path: '/organization/company',
+    name: 'org.company',
+    component: './organization/Company',
+    access: 'canAdmin',
+  },
+  {
+    path: '/organization/department',
+    name: 'org.dept',
+    component: './organization/Department',
+    access: 'canAdmin',
+  },
+  {
+    path: '/organization/position',
+    name: 'org.position',
+    component: './organization/Position',
+    access: 'canAdmin',
+  },
+  {
+    path: '/organization/job',
+    name: 'org.job',
+    component: './organization/Job',
+    access: 'canAdmin',
+  },
+
+  // 菜单管理
+  {
+    path: '/menu',
+    name: 'menu',
+    redirect: '/menu/role',
+    access: 'canAdmin',
+  },
+  {
+    path: '/menu/role',
+    name: 'menu.role',
+    component: './menu/Role',
+    access: 'canAdmin',
+  },
+  {
+    path: '/menu/menu',
+    name: 'menu.menu',
+    component: './menu/Menu',
+    access: 'canAdmin',
+  },
+
+  // 系统管理
+  {
+    path: '/system',
+    name: 'system',
+    redirect: '/system/admin',
+    access: 'canAdmin',
+  },
+  {
+    path: '/system/admin',
+    name: 'system.admin',
+    component: './system/Admin',
+    access: 'canAdmin',
+  },
+  {
+    path: '/system/dict',
+    name: 'system.dict',
+    component: './system/Dict',
+    access: 'canAdmin',
+  },
+  {
+    path: '/system/dict/tree',
+    name: 'system.dict.tree',
+    component: './system/DictTree',
+    access: 'canAdmin',
+  },
+  {
+    path: '/system/log',
+    name: 'system.log',
+    component: './system/Log',
+    access: 'canAdmin',
   },
   {
     path: '*',

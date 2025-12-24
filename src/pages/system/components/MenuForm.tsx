@@ -57,7 +57,7 @@ const MenuForm: React.FC<MenuFormProps> = ({
         name="menu_key"
         label="菜单Key"
         fieldProps={{
-          placeholder: '请输入菜单Key（用于国际化，如：dashboard.workplace）',
+          placeholder: '请输入菜单Key（用于国际化，如：workbench）',
         }}
       />
       <ProFormText

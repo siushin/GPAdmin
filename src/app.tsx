@@ -32,6 +32,7 @@ import {
   SettingButton,
 } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { getUserMenus } from '@/services/api/user';
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants';
 import { setNotificationInstance } from '@/utils/notification';
 import { clearToken, isTokenExpired } from '@/utils/token';
@@ -204,6 +205,20 @@ export async function getInitialState(): Promise<{
 
   // 如果不是登录页面，检查是否有 token
   const { location } = history;
+
+  // 如果访问根路径且已登录，重定向到 /workbench
+  if (location.pathname === '/') {
+    const token = localStorage.getItem('token');
+    if (token && !isTokenExpired()) {
+      // 已登录，重定向到 /workbench
+      history.replace('/workbench');
+      return {
+        fetchUserInfo,
+        settings: defaultSettings as Partial<LayoutSettings>,
+      };
+    }
+  }
+
   if (
     ![loginPath, '/user/register', '/user/register-result'].includes(
       location.pathname,
@@ -230,7 +245,7 @@ export async function getInitialState(): Promise<{
       };
     }
 
-    // 有 token 且未过期时，从 localStorage 读取用户信息和菜单数据，不请求接口
+    // 有 token 且未过期时，从 localStorage 读取用户信息和菜单数据
     const userInfoStr = localStorage.getItem('userInfo');
     const menuDataStr = localStorage.getItem('menuData');
     let currentUser: API.CurrentUser | undefined;
@@ -245,6 +260,22 @@ export async function getInitialState(): Promise<{
             menuData = JSON.parse(menuDataStr);
           } catch (e) {
             console.error('解析菜单数据失败:', e);
+            localStorage.removeItem('menuData');
+          }
+        }
+
+        // 如果没有菜单数据，尝试获取
+        if (!menuData || menuData.length === 0) {
+          try {
+            const menuResponse = await getUserMenus();
+            if (menuResponse && (menuResponse as any).code === 200) {
+              menuData = (menuResponse as any).data || [];
+              localStorage.setItem('menuData', JSON.stringify(menuData));
+              // 重新加载页面以应用新路由
+              window.location.reload();
+            }
+          } catch (menuError) {
+            console.error('获取菜单失败:', menuError);
           }
         }
       } catch (e) {
@@ -340,6 +371,11 @@ export const layout: RunTimeLayoutConfig = ({
       // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(loginPath);
+        return;
+      }
+      // 如果访问根路径，重定向到 /workbench
+      if (location.pathname === '/') {
+        history.replace('/workbench');
       }
     },
     bgLayoutImgList: [

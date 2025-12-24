@@ -2,7 +2,6 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Space, Tag } from 'antd';
-import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   addMenu,
@@ -16,11 +15,10 @@ import {
   DEFAULT_PAGINATION,
   TABLE_SIZE,
 } from '@/utils/constants';
-import { dateRangeFieldProps } from '@/utils/datePresets';
-import MenuForm from './components/MenuForm';
+import MenuForm from '../system/components/MenuForm';
 
 const Menu: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -29,32 +27,37 @@ const Menu: React.FC = () => {
   >([]);
 
   useEffect(() => {
-    loadParentMenuOptions();
-  }, []);
-
-  const loadParentMenuOptions = async () => {
-    try {
-      const res = await getMenuTree();
-      if (res.code === 200 && res.data) {
-        const formatOptions = (data: any[], level = 0): any[] => {
-          return data.flatMap((item) => {
-            const prefix = '  '.repeat(level);
-            const option = {
-              label: `${prefix}${item.menu_name}`,
-              value: item.menu_id,
+    const loadParentMenus = async () => {
+      try {
+        const res = await getMenuTree();
+        if (res.code === 200 && res.data) {
+          const formatOptions = (
+            menus: any[],
+          ): Array<{ label: string; value: number }> => {
+            const options: Array<{ label: string; value: number }> = [];
+            const traverse = (items: any[], level = 0) => {
+              items.forEach((item) => {
+                const prefix = '  '.repeat(level);
+                options.push({
+                  label: `${prefix}${item.menu_name}`,
+                  value: item.id || item.menu_id,
+                });
+                if (item.children && item.children.length > 0) {
+                  traverse(item.children, level + 1);
+                }
+              });
             };
-            if (item.children && item.children.length > 0) {
-              return [option, ...formatOptions(item.children, level + 1)];
-            }
-            return [option];
-          });
-        };
-        setParentMenuOptions(formatOptions(res.data));
+            traverse(menus);
+            return options;
+          };
+          setParentMenuOptions(formatOptions(res.data));
+        }
+      } catch (error) {
+        console.error('加载父菜单列表失败:', error);
       }
-    } catch (error) {
-      console.error('加载父级菜单失败:', error);
-    }
-  };
+    };
+    loadParentMenus();
+  }, []);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -68,11 +71,34 @@ const Menu: React.FC = () => {
 
   const handleDelete = async (record: any) => {
     try {
-      const res = await deleteMenu({ menu_id: record.menu_id });
+      const res = await deleteMenu({ id: record.id || record.menu_id });
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
-        loadParentMenuOptions();
+        // 重新加载父菜单选项
+        const treeRes = await getMenuTree();
+        if (treeRes.code === 200 && treeRes.data) {
+          const formatOptions = (
+            menus: any[],
+          ): Array<{ label: string; value: number }> => {
+            const options: Array<{ label: string; value: number }> = [];
+            const traverse = (items: any[], level = 0) => {
+              items.forEach((item) => {
+                const prefix = '  '.repeat(level);
+                options.push({
+                  label: `${prefix}${item.menu_name}`,
+                  value: item.id || item.menu_id,
+                });
+                if (item.children && item.children.length > 0) {
+                  traverse(item.children, level + 1);
+                }
+              });
+            };
+            traverse(menus);
+            return options;
+          };
+          setParentMenuOptions(formatOptions(treeRes.data));
+        }
       } else {
         message.error(res.message || '删除失败');
       }
@@ -87,7 +113,7 @@ const Menu: React.FC = () => {
       if (editingRecord) {
         res = await updateMenu({
           ...values,
-          menu_id: editingRecord.menu_id,
+          id: editingRecord.id || editingRecord.menu_id,
         });
       } else {
         res = await addMenu(values);
@@ -97,7 +123,30 @@ const Menu: React.FC = () => {
         setFormVisible(false);
         setEditingRecord(null);
         actionRef.current?.reload();
-        loadParentMenuOptions();
+        // 重新加载父菜单选项
+        const treeRes = await getMenuTree();
+        if (treeRes.code === 200 && treeRes.data) {
+          const formatOptions = (
+            menus: any[],
+          ): Array<{ label: string; value: number }> => {
+            const options: Array<{ label: string; value: number }> = [];
+            const traverse = (items: any[], level = 0) => {
+              items.forEach((item) => {
+                const prefix = '  '.repeat(level);
+                options.push({
+                  label: `${prefix}${item.menu_name}`,
+                  value: item.id || item.menu_id,
+                });
+                if (item.children && item.children.length > 0) {
+                  traverse(item.children, level + 1);
+                }
+              });
+            };
+            traverse(menus);
+            return options;
+          };
+          setParentMenuOptions(formatOptions(treeRes.data));
+        }
       } else {
         message.error(res.message || (editingRecord ? '更新失败' : '新增失败'));
       }
@@ -157,40 +206,12 @@ const Menu: React.FC = () => {
         button: { text: '按钮', status: 'Default' },
       },
       width: 100,
-      render: (_, record) => (
-        <Tag color={record.menu_type === 'menu' ? 'blue' : 'default'}>
-          {record.menu_type === 'menu' ? '菜单' : '按钮'}
-        </Tag>
-      ),
-    },
-    {
-      title: '父菜单',
-      dataIndex: 'parent_id',
-      valueType: 'select',
-      valueEnum: parentMenuOptions.reduce(
-        (acc, item) => {
-          acc[item.value] = { text: item.label };
-          return acc;
-        },
-        {} as Record<number, { text: string }>,
-      ),
-      hideInTable: true,
-      fieldProps: {
-        placeholder: '请选择父菜单',
-      },
     },
     {
       title: '图标',
       dataIndex: 'menu_icon',
       hideInSearch: true,
-      width: 100,
-    },
-    {
-      title: '组件路径',
-      dataIndex: 'component',
-      hideInSearch: true,
-      width: 200,
-      ellipsis: true,
+      width: 150,
     },
     {
       title: '状态',
@@ -212,31 +233,6 @@ const Menu: React.FC = () => {
       dataIndex: 'sort',
       hideInSearch: true,
       width: 80,
-      sorter: true,
-    },
-    {
-      title: '关键字',
-      dataIndex: 'keyword',
-      hideInTable: true,
-      fieldProps: {
-        placeholder: '菜单名称、菜单Key、路由路径',
-      },
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      valueType: 'dateRange',
-      hideInTable: false,
-      width: 180,
-      fieldProps: dateRangeFieldProps,
-      render: (_, record) => {
-        if (!record.created_at) return '-';
-        try {
-          return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.created_at;
-        }
-      },
     },
     {
       title: '操作',
@@ -265,7 +261,7 @@ const Menu: React.FC = () => {
     <PageContainer>
       <ProTable<any>
         actionRef={actionRef}
-        rowKey="menu_id"
+        rowKey="id"
         size={TABLE_SIZE}
         search={{
           labelWidth: 120,
