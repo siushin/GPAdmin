@@ -1,19 +1,29 @@
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  InfoCircleOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Menu, message, Popconfirm, Space } from 'antd';
+import { Button, Menu, message, Popconfirm, Space, Tooltip } from 'antd';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
+  addDictionary,
   addOrganization,
+  deleteDictionary,
   deleteOrganization,
   getOrganizationList,
   getOrganizationTypeList,
   moveOrganization,
+  updateDictionary,
   updateOrganization,
 } from '@/services/api/system';
 import { TABLE_SIZE } from '@/utils/constants';
 import OrganizationForm from '../organization/components/OrganizationForm';
 import useStyles from '../organization/style.style';
+import DictionaryTypeForm from './components/DictionaryTypeForm';
 
 const DictTree: React.FC = () => {
   const { styles } = useStyles();
@@ -23,6 +33,7 @@ const DictTree: React.FC = () => {
       dictionary_id: number;
       dictionary_name: string;
       dictionary_value: string;
+      dictionary_desc?: string;
     }>
   >([]);
   const actionRef = useRef<ActionType | null>(null);
@@ -31,6 +42,13 @@ const DictTree: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [isAddChild, setIsAddChild] = useState(false);
   const [movingRecord, setMovingRecord] = useState<any>(null);
+  const [typeFormVisible, setTypeFormVisible] = useState(false);
+  const [editingTypeRecord, setEditingTypeRecord] = useState<{
+    dictionary_id: number;
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+  } | null>(null);
   const dom = useRef<HTMLDivElement>(null);
   const [initConfig, setInitConfig] = useState<{
     mode: 'inline' | 'horizontal';
@@ -39,21 +57,22 @@ const DictTree: React.FC = () => {
   });
 
   // 加载组织架构类型列表
-  useEffect(() => {
-    const loadTypes = async () => {
-      try {
-        const res = await getOrganizationTypeList();
-        if (res.code === 200 && res.data) {
-          setTypeList(res.data);
-          // 默认选中第一个
-          if (res.data.length > 0 && selectedType === 0) {
-            setSelectedType(res.data[0].dictionary_id);
-          }
+  const loadTypes = async () => {
+    try {
+      const res = await getOrganizationTypeList();
+      if (res.code === 200 && res.data) {
+        setTypeList(res.data);
+        // 默认选中第一个
+        if (res.data.length > 0 && selectedType === 0) {
+          setSelectedType(res.data[0].dictionary_id);
         }
-      } catch (error) {
-        console.error('加载组织架构类型失败:', error);
       }
-    };
+    } catch (error) {
+      console.error('加载组织架构类型失败:', error);
+    }
+  };
+
+  useEffect(() => {
     loadTypes();
   }, []);
 
@@ -192,18 +211,155 @@ const DictTree: React.FC = () => {
     }
   };
 
+  // 处理字典类型新增
+  const handleTypeAdd = () => {
+    setEditingTypeRecord(null);
+    setTypeFormVisible(true);
+  };
+
+  // 处理字典类型编辑
+  const handleTypeEdit = (record: {
+    dictionary_id: number;
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+  }) => {
+    setEditingTypeRecord(record);
+    setTypeFormVisible(true);
+  };
+
+  // 处理字典类型删除
+  const handleTypeDelete = async (record: {
+    dictionary_id: number;
+    dictionary_name: string;
+    dictionary_value: string;
+  }) => {
+    try {
+      const res = await deleteDictionary({
+        dictionary_id: record.dictionary_id,
+      });
+      if (res.code === 200) {
+        message.success('删除成功');
+        // 如果删除的是当前选中的类型，清空选中状态
+        if (selectedType === record.dictionary_id) {
+          setSelectedType(0);
+        }
+        // 重新加载类型列表
+        await loadTypes();
+      } else {
+        message.error(res.message || '删除失败');
+      }
+    } catch (_error) {
+      message.error('删除失败');
+    }
+  };
+
+  // 处理字典类型表单提交
+  const handleTypeFormSubmit = async (values: {
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+    dictionary_id?: number;
+  }) => {
+    try {
+      let res: { code: number; message: string; data?: any };
+      if (editingTypeRecord) {
+        // 编辑
+        res = await updateDictionary({
+          dictionary_id: editingTypeRecord.dictionary_id,
+          dictionary_name: values.dictionary_name,
+          dictionary_value: values.dictionary_value,
+          dictionary_desc: values.dictionary_desc || '',
+        });
+      } else {
+        // 新增
+        res = await addDictionary({
+          dictionary_name: values.dictionary_name,
+          dictionary_value: values.dictionary_value,
+          dictionary_desc: values.dictionary_desc || '',
+        });
+      }
+      if (res.code === 200) {
+        message.success(editingTypeRecord ? '更新成功' : '新增成功');
+        setTypeFormVisible(false);
+        setEditingTypeRecord(null);
+        // 重新加载类型列表
+        await loadTypes();
+      } else {
+        message.error(
+          res.message || (editingTypeRecord ? '更新失败' : '新增失败'),
+        );
+      }
+    } catch (_error) {
+      message.error(editingTypeRecord ? '更新失败' : '新增失败');
+    }
+  };
+
   const menuItems = typeList.map((type) => ({
     key: String(type.dictionary_id),
-    label: type.dictionary_value,
+    label: (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+        }}
+        onClick={(e) => {
+          // 如果点击的是按钮区域，不触发菜单选中
+          const target = e.target as HTMLElement;
+          if (target.closest('button') || target.closest('.ant-popconfirm')) {
+            e.stopPropagation();
+          }
+        }}
+      >
+        <span style={{ flex: 1 }}>{type.dictionary_value}</span>
+        <Space
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTypeEdit(type);
+            }}
+            style={{ padding: '0 4px' }}
+          />
+          <Popconfirm
+            title="确定要删除这个字典类型吗？"
+            onConfirm={() => handleTypeDelete(type)}
+            onCancel={() => {
+              // Popconfirm 的 onCancel 不需要事件参数
+            }}
+          >
+            <Button
+              type="text"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              style={{ padding: '0 4px' }}
+            />
+          </Popconfirm>
+        </Space>
+      </div>
+    ),
   }));
 
   const columns: ProColumns<any>[] = [
     {
-      title: '组织名称',
+      title: '字典名称',
       dataIndex: 'organization_name',
       width: 300,
       fieldProps: {
-        placeholder: '请输入组织名称',
+        placeholder: '请输入字典名称',
       },
     },
     {
@@ -252,6 +408,15 @@ const DictTree: React.FC = () => {
         }}
       >
         <div className={styles.leftMenu}>
+          <div style={{ padding: '12px', borderBottom: '1px solid #f0f0f0' }}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleTypeAdd}
+            >
+              新增
+            </Button>
+          </div>
           <Menu
             mode={initConfig.mode}
             selectedKeys={selectedType ? [String(selectedType)] : []}
@@ -316,6 +481,39 @@ const DictTree: React.FC = () => {
                 >
                   导入
                 </Button>
+                {(() => {
+                  const selectedTypeItem = typeList.find(
+                    (item) => item.dictionary_id === selectedType,
+                  );
+                  const dictionaryDesc = selectedTypeItem?.dictionary_desc;
+                  return dictionaryDesc ? (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        maxWidth: 400,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: 'rgba(0, 0, 0, 0.65)',
+                        fontSize: 14,
+                        fontWeight: 'normal',
+                        gap: 4,
+                      }}
+                    >
+                      <Tooltip title={dictionaryDesc}>
+                        <InfoCircleOutlined
+                          style={{
+                            color: '#1890ff',
+                            fontSize: 14,
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </Tooltip>
+                      {dictionaryDesc}
+                    </span>
+                  ) : null;
+                })()}
               </Space>
             }
             scroll={{ x: 'max-content' }}
@@ -357,6 +555,16 @@ const DictTree: React.FC = () => {
           selectedTypeForFilter={String(selectedType)}
         />
       )}
+
+      <DictionaryTypeForm
+        visible={typeFormVisible}
+        editingRecord={editingTypeRecord}
+        onCancel={() => {
+          setTypeFormVisible(false);
+          setEditingTypeRecord(null);
+        }}
+        onSubmit={handleTypeFormSubmit}
+      />
     </PageContainer>
   );
 };

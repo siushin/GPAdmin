@@ -1,0 +1,132 @@
+import {
+  ModalForm,
+  ProFormText,
+  ProFormTextArea,
+} from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
+import { message } from 'antd';
+import React, { useEffect } from 'react';
+
+interface DictionaryTypeFormProps {
+  visible: boolean;
+  editingRecord?: {
+    dictionary_id: number;
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+  } | null;
+  onCancel: () => void;
+  onSubmit: (values: {
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+    dictionary_id?: number;
+  }) => Promise<void>;
+}
+
+const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
+  visible,
+  editingRecord,
+  onCancel,
+  onSubmit,
+}) => {
+  const formRef = React.useRef<FormInstance>();
+
+  useEffect(() => {
+    if (visible && formRef.current) {
+      if (editingRecord) {
+        // 使用 setTimeout 确保表单已渲染
+        setTimeout(() => {
+          formRef.current?.setFieldsValue({
+            dictionary_name: editingRecord.dictionary_name,
+            dictionary_value: editingRecord.dictionary_value,
+            dictionary_desc: editingRecord.dictionary_desc || '',
+          });
+        }, 0);
+      } else {
+        formRef.current?.resetFields();
+      }
+    }
+  }, [visible, editingRecord]);
+
+  const handleFinish = async (values: {
+    dictionary_name: string;
+    dictionary_value: string;
+    dictionary_desc?: string;
+  }) => {
+    try {
+      await onSubmit({
+        ...values,
+        ...(editingRecord
+          ? { dictionary_id: editingRecord.dictionary_id }
+          : {}),
+      });
+      formRef.current?.resetFields();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  return (
+    <ModalForm
+      formRef={formRef}
+      title={editingRecord ? '编辑字典类型' : '新增字典类型'}
+      open={visible}
+      width={520}
+      layout="horizontal"
+      labelCol={{ span: 6 }}
+      wrapperCol={{ span: 18 }}
+      initialValues={
+        editingRecord
+          ? {
+              dictionary_name: editingRecord.dictionary_name,
+              dictionary_value: editingRecord.dictionary_value,
+              dictionary_desc: editingRecord.dictionary_desc || '',
+            }
+          : undefined
+      }
+      modalProps={{
+        onCancel: () => {
+          formRef.current?.resetFields();
+          onCancel();
+        },
+        destroyOnClose: true,
+      }}
+      onFinish={handleFinish}
+    >
+      <ProFormText
+        name="dictionary_name"
+        label="字典名称"
+        rules={[
+          {
+            required: true,
+            message: '请输入字典名称',
+          },
+        ]}
+        placeholder="请输入字典名称"
+      />
+      <ProFormText
+        name="dictionary_value"
+        label="字典值"
+        rules={[
+          {
+            required: true,
+            message: '请输入字典值',
+          },
+        ]}
+        placeholder="请输入字典值"
+      />
+      <ProFormTextArea
+        name="dictionary_desc"
+        label="描述"
+        placeholder="请输入描述（可选）"
+        fieldProps={{
+          rows: 3,
+        }}
+      />
+    </ModalForm>
+  );
+};
+
+export default DictionaryTypeForm;
