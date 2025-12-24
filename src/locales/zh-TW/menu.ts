@@ -42,7 +42,7 @@ export default {
   'menu.system': '系統管理',
   'menu.system.admin': '管理員管理',
   'menu.system.dict': '數據字典',
-  'menu.system.dict.tree': '數據字典（樹狀）',
+  'menu.system.dictTree': '數據字典（樹狀）',
   'menu.system.log': '系統日誌',
 
   // 組織架構管理

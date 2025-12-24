@@ -184,8 +184,8 @@ export default [
     access: 'canAdmin',
   },
   {
-    path: '/system/dict/tree',
-    name: 'system.dict.tree',
+    path: '/system/dictTree',
+    name: 'system.dictTree',
     component: './system/DictTree',
     access: 'canAdmin',
   },
