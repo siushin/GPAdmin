@@ -41,7 +41,7 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
   const loadParentOptions = async () => {
     try {
       const res = await getOrganizationList({
-        organization_type: selectedTypeForFilter,
+        organization_tid: Number(selectedTypeForFilter),
       });
       if (res.code === 200 && res.data) {
         // 将树形数据转换为扁平列表

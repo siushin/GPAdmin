@@ -12,14 +12,18 @@ import {
   updateOrganization,
 } from '@/services/api/system';
 import { TABLE_SIZE } from '@/utils/constants';
-import OrganizationForm from './components/OrganizationForm';
-import useStyles from './style.style';
+import OrganizationForm from '../organization/components/OrganizationForm';
+import useStyles from '../organization/style.style';
 
-const Organization: React.FC = () => {
+const DictTree: React.FC = () => {
   const { styles } = useStyles();
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<number>(0);
   const [typeList, setTypeList] = useState<
-    Array<{ key: string; value: string }>
+    Array<{
+      dictionary_id: number;
+      dictionary_name: string;
+      dictionary_value: string;
+    }>
   >([]);
   const actionRef = useRef<ActionType | null>(null);
   const [formVisible, setFormVisible] = useState(false);
@@ -42,8 +46,8 @@ const Organization: React.FC = () => {
         if (res.code === 200 && res.data) {
           setTypeList(res.data);
           // 默认选中第一个
-          if (res.data.length > 0 && !selectedType) {
-            setSelectedType(res.data[0].key);
+          if (res.data.length > 0 && selectedType === 0) {
+            setSelectedType(res.data[0].dictionary_id);
           }
         }
       } catch (error) {
@@ -83,12 +87,12 @@ const Organization: React.FC = () => {
   }, []);
 
   const handleTypeSelect = (typeKey: string) => {
-    setSelectedType(typeKey);
-    // key 的变化会自动导致 ProTable 重新挂载并请求数据，同时清空搜索表单
+    setSelectedType(Number(typeKey));
+    // dictionary_id 的变化会自动导致 ProTable 重新挂载并请求数据，同时清空搜索表单
   };
 
   const handleAdd = () => {
-    if (!selectedType) {
+    if (!selectedType || selectedType === 0) {
       message.warning('请先选择组织架构类型');
       return;
     }
@@ -147,7 +151,7 @@ const Organization: React.FC = () => {
           : { ...values, organization_pid: values.organization_pid || 0 };
         res = await addOrganization({
           ...submitValues,
-          organization_type: selectedType,
+          organization_tid: selectedType,
         });
       }
       if (res.code === 200) {
@@ -189,8 +193,8 @@ const Organization: React.FC = () => {
   };
 
   const menuItems = typeList.map((type) => ({
-    key: type.key,
-    label: type.value,
+    key: String(type.dictionary_id),
+    label: type.dictionary_value,
   }));
 
   const columns: ProColumns<any>[] = [
@@ -250,7 +254,7 @@ const Organization: React.FC = () => {
         <div className={styles.leftMenu}>
           <Menu
             mode={initConfig.mode}
-            selectedKeys={selectedType ? [selectedType] : []}
+            selectedKeys={selectedType ? [String(selectedType)] : []}
             onClick={({ key }) => {
               handleTypeSelect(key as string);
             }}
@@ -259,7 +263,7 @@ const Organization: React.FC = () => {
         </div>
         <div className={styles.right}>
           <ProTable<any>
-            key={selectedType}
+            key={String(selectedType)}
             actionRef={actionRef}
             rowKey="organization_id"
             size={TABLE_SIZE}
@@ -268,7 +272,7 @@ const Organization: React.FC = () => {
               defaultCollapsed: false,
             }}
             request={async (params) => {
-              if (!selectedType) {
+              if (!selectedType || selectedType === 0) {
                 return {
                   data: [],
                   success: true,
@@ -277,7 +281,7 @@ const Organization: React.FC = () => {
               }
               const requestParams: any = {
                 ...params,
-                organization_type: selectedType,
+                organization_tid: selectedType,
                 organization_name: params.organization_name,
               };
               const response = await getOrganizationList(requestParams);
@@ -302,11 +306,14 @@ const Organization: React.FC = () => {
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={handleAdd}
-                  disabled={!selectedType}
+                  disabled={!selectedType || selectedType === 0}
                 >
                   新增
                 </Button>
-                <Button icon={<UploadOutlined />} disabled={!selectedType}>
+                <Button
+                  icon={<UploadOutlined />}
+                  disabled={!selectedType || selectedType === 0}
+                >
                   导入
                 </Button>
               </Space>
@@ -324,7 +331,7 @@ const Organization: React.FC = () => {
         visible={formVisible}
         editingRecord={editingRecord}
         isAddChild={isAddChild}
-        selectedType={selectedType}
+        selectedType={String(selectedType)}
         onCancel={() => {
           setFormVisible(false);
           setEditingRecord(null);
@@ -332,7 +339,7 @@ const Organization: React.FC = () => {
         }}
         onSubmit={handleFormSubmit}
         getOrganizationList={getOrganizationList}
-        selectedTypeForFilter={selectedType}
+        selectedTypeForFilter={String(selectedType)}
       />
 
       {moveFormVisible && (
@@ -340,18 +347,18 @@ const Organization: React.FC = () => {
           visible={moveFormVisible}
           editingRecord={movingRecord}
           isMove={true}
-          selectedType={selectedType}
+          selectedType={String(selectedType)}
           onCancel={() => {
             setMoveFormVisible(false);
             setMovingRecord(null);
           }}
           onSubmit={handleMoveSubmit}
           getOrganizationList={getOrganizationList}
-          selectedTypeForFilter={selectedType}
+          selectedTypeForFilter={String(selectedType)}
         />
       )}
     </PageContainer>
   );
 };
 
-export default Organization;
+export default DictTree;

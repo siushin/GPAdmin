@@ -134,6 +134,11 @@ export default [
         component: './system/Dict',
       },
       {
+        path: '/system/dict/tree',
+        name: 'system.dict.tree',
+        component: './system/DictTree',
+      },
+      {
         path: '/system/log',
         name: 'system.log',
         component: './system/Log',
@@ -145,11 +150,6 @@ export default [
     name: 'organization.management',
     icon: 'apartment',
     routes: [
-      {
-        path: '/organization/organization',
-        name: 'organization.organization',
-        component: './organization/Organization',
-      },
       {
         path: '/organization/company',
         name: 'organization.company',

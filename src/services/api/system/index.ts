@@ -352,7 +352,11 @@ export async function getOrganizationTypeList(options?: {
   return request<{
     code: number;
     message: string;
-    data?: Array<{ key: string; value: string }>;
+    data?: Array<{
+      dictionary_id: number;
+      dictionary_name: string;
+      dictionary_value: string;
+    }>;
   }>('/api/admin/organization/getOrganizationTypeList', {
     method: 'POST',
     ...(options || {}),
