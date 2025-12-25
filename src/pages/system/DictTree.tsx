@@ -3,7 +3,6 @@ import {
   EditOutlined,
   InfoCircleOutlined,
   PlusOutlined,
-  UploadOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
@@ -14,6 +13,7 @@ import {
   addOrganizationType,
   deleteOrganization,
   deleteOrganizationType,
+  getFullTreeDataForHtml,
   getOrganizationList,
   getOrganizationTypeList,
   moveOrganization,
@@ -162,15 +162,24 @@ const DictTree: React.FC = () => {
       let res: { code: number; message: string; data?: any };
       if (editingRecord && !isAddChild) {
         // 编辑
-        res = await updateOrganization({
+        const submitValues: any = {
           ...values,
           organization_id: editingRecord.organization_id,
-        });
+        };
+        // 如果 organization_pid 未定义或为空，默认为 0（顶级组织架构）
+        submitValues.organization_pid = values.organization_pid ?? 0;
+        res = await updateOrganization(submitValues);
       } else {
         // 新增或添加下级
-        const submitValues = isAddChild
-          ? { ...values, organization_pid: editingRecord?.organization_id || 0 }
-          : { ...values, organization_pid: values.organization_pid || 0 };
+        const submitValues: any = { ...values };
+        if (isAddChild) {
+          // 添加下级时，使用当前记录的ID作为上级
+          submitValues.organization_pid = editingRecord?.organization_id || 0;
+        } else {
+          // 新增时，如果未选择上级组织架构，传递 0（表示顶级）
+          // 但前端表单不显示默认值 0，让用户明确选择或不选择
+          submitValues.organization_pid = values.organization_pid ?? 0;
+        }
         res = await addOrganization({
           ...submitValues,
           organization_tid: selectedType,
@@ -198,7 +207,7 @@ const DictTree: React.FC = () => {
     try {
       const res = await moveOrganization({
         organization_id: movingRecord.organization_id,
-        belong_organization_id: values.belong_organization_id,
+        belong_organization_id: values.belong_organization_id ?? 0,
       });
       if (res.code === 200) {
         message.success('移动成功');
@@ -556,12 +565,6 @@ const DictTree: React.FC = () => {
                 >
                   新增
                 </Button>
-                <Button
-                  icon={<UploadOutlined />}
-                  disabled={!selectedType || selectedType === 0}
-                >
-                  导入
-                </Button>
                 {(() => {
                   const selectedTypeItem = typeList.find(
                     (item) => item.dictionary_id === selectedType,
@@ -572,7 +575,7 @@ const DictTree: React.FC = () => {
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        maxWidth: 400,
+                        maxWidth: 600,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',

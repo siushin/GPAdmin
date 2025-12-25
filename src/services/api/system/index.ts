@@ -440,6 +440,27 @@ export async function getOrganizationList(
   });
 }
 
+/** 获取组织架构树状Html数据 POST /api/admin/organization/getFullTreeDataForHtml */
+export async function getFullTreeDataForHtml(
+  params?: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      organization_name: string;
+      organization_pid: number;
+    }>;
+  }>('/api/admin/organization/getFullTreeDataForHtml', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
 /** 新增组织架构 POST /api/admin/organization/add */
 export async function addOrganization(
   body: {

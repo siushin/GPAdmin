@@ -4,6 +4,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import React, { useEffect, useState } from 'react';
+import { getFullTreeDataForHtml } from '@/services/api/system';
 
 interface OrganizationFormProps {
   visible: boolean;
@@ -40,63 +41,38 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
 
   const loadParentOptions = async () => {
     try {
-      const res = await getOrganizationList({
+      // 使用新的接口获取扁平化的组织架构数据（带占位符）
+      const res = await getFullTreeDataForHtml({
         organization_tid: Number(selectedTypeForFilter),
+        fields: 'organization_id,organization_name',
       });
       if (res.code === 200 && res.data) {
-        // 将树形数据转换为扁平列表
-        const flattenData = (data: any[], excludeId?: number): any[] => {
-          const result: any[] = [];
-          data.forEach((item) => {
-            // 如果是移动操作，排除自己和子级
-            if (isMove && editingRecord) {
-              const excludeIds = [editingRecord.organization_id];
-              // 检查是否是子级（通过 full_organization_pid 判断）
-              if (
-                editingRecord.full_organization_pid &&
-                item.full_organization_pid?.includes(
-                  `${editingRecord.organization_id},`,
-                )
-              ) {
-                return;
-              }
-              if (excludeIds.includes(item.organization_id)) {
-                return;
-              }
-            }
-            // 如果是编辑操作，排除自己和子级
-            if (!isMove && !isAddChild && editingRecord) {
-              const excludeIds = [editingRecord.organization_id];
-              if (
-                editingRecord.full_organization_pid &&
-                item.full_organization_pid?.includes(
-                  `${editingRecord.organization_id},`,
-                )
-              ) {
-                return;
-              }
-              if (excludeIds.includes(item.organization_id)) {
-                return;
-              }
-            }
-            // 如果是添加下级，排除自己
-            if (isAddChild && editingRecord) {
-              const excludeIds = [editingRecord.organization_id];
-              if (excludeIds.includes(item.organization_id)) {
-                return;
-              }
-            }
-            result.push({
-              label: item.organization_name,
-              value: item.organization_id,
-            });
-            if (item.children && item.children.length > 0) {
-              result.push(...flattenData(item.children, excludeId));
-            }
-          });
-          return result;
-        };
-        const options = flattenData(res.data);
+        // 新接口返回的数据已经是扁平化的，直接处理
+        let options = res.data.map((item: any) => ({
+          label: item.organization_name,
+          // 兼容 organization_id 和 organization_pid 两种字段名
+          value: item.organization_id ?? item.organization_pid,
+        }));
+
+        // 如果是移动操作，排除自己（无法排除子级，因为新接口没有提供层级信息）
+        if (isMove && editingRecord) {
+          options = options.filter(
+            (option) => option.value !== editingRecord.organization_id,
+          );
+        }
+        // 如果是编辑操作，排除自己
+        if (!isMove && !isAddChild && editingRecord) {
+          options = options.filter(
+            (option) => option.value !== editingRecord.organization_id,
+          );
+        }
+        // 如果是添加下级，排除自己
+        if (isAddChild && editingRecord) {
+          options = options.filter(
+            (option) => option.value !== editingRecord.organization_id,
+          );
+        }
+
         setParentOptions(options);
       }
     } catch (error) {
@@ -116,9 +92,15 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
 
   const getInitialValues = () => {
     if (isMove) {
-      return {
-        belong_organization_id: editingRecord?.organization_pid,
-      };
+      const initialValues: any = {};
+      // 只有当 organization_pid 有值（非0）时，才设置初始值
+      if (
+        editingRecord?.organization_pid &&
+        editingRecord.organization_pid !== 0
+      ) {
+        initialValues.belong_organization_id = editingRecord.organization_pid;
+      }
+      return initialValues;
     }
     if (isAddChild) {
       // 添加下级时，默认上级为当前记录的ID
@@ -128,15 +110,20 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
     }
     if (editingRecord) {
       // 编辑时
-      return {
+      const initialValues: any = {
         organization_name: editingRecord.organization_name,
-        organization_pid: editingRecord.organization_pid,
       };
+      // 只有当 organization_pid 有值（非0）时，才设置初始值
+      if (
+        editingRecord.organization_pid &&
+        editingRecord.organization_pid !== 0
+      ) {
+        initialValues.organization_pid = editingRecord.organization_pid;
+      }
+      return initialValues;
     }
-    // 新增时
-    return {
-      organization_pid: 0,
-    };
+    // 新增时，不设置默认值
+    return {};
   };
 
   return (
@@ -160,13 +147,22 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
         <ProFormSelect
           name="belong_organization_id"
           label="目标组织架构"
-          rules={[{ required: true, message: '请选择目标组织架构' }]}
           options={parentOptions}
           fieldProps={{
-            placeholder: '请选择目标组织架构',
+            placeholder: '请选择目标组织架构（不选则移动到顶级）',
             showSearch: true,
+            allowClear: true,
+            filterOption: (input, option) => {
+              // 支持搜索，移除占位符后进行匹配
+              const label = option?.label as string;
+              if (!label) return false;
+              // 移除占位符符号（├─、└─、│等）和空格，只保留实际的组织名称
+              const cleanLabel = label.replace(/[├└│─\s]/g, '').toLowerCase();
+              const cleanInput = input.trim().toLowerCase();
+              return cleanLabel.includes(cleanInput);
+            },
           }}
-          extra="选择要将此组织架构移动到的目标组织架构"
+          extra="选择要将此组织架构移动到的目标组织架构，不选择则移动到顶级"
         />
       ) : (
         <div>
@@ -189,6 +185,15 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
                 : '请选择上级组织架构（不选则为顶级）',
               showSearch: true,
               disabled: isAddChild,
+              filterOption: (input, option) => {
+                // 支持搜索，移除占位符后进行匹配
+                const label = option?.label as string;
+                if (!label) return false;
+                // 移除占位符符号（├─、└─、│等）和空格，只保留实际的组织名称
+                const cleanLabel = label.replace(/[├└│─\s]/g, '').toLowerCase();
+                const cleanInput = input.trim().toLowerCase();
+                return cleanLabel.includes(cleanInput);
+              },
             }}
             extra={
               isAddChild
