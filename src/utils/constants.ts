@@ -32,3 +32,14 @@ export const CanDeleteEnum = {
   DISABLE: 0, // 禁止删除
   ALLOWED: 1, // 允许删除
 } as const;
+
+/**
+ * 弹窗尺寸常量
+ */
+export const MODAL_WIDTH = {
+  SMALL: 400, // 小尺寸弹窗
+  SMALL_MEDIUM: 500, // 中小尺寸弹窗
+  MEDIUM: 600, // 中等尺寸弹窗
+  LARGE: 800, // 大尺寸弹窗
+  XLARGE: 1000, // 超大尺寸弹窗
+} as const;

@@ -1,7 +1,11 @@
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import type {
+  ActionType,
+  ProColumns,
+  ProFormInstance,
+} from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space } from 'antd';
+import { App, Button, Popconfirm, Space, theme } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
   addDictionary,
@@ -13,6 +17,7 @@ import {
   updateDictionary,
 } from '@/services/api/system';
 import {
+  CanDeleteEnum,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
   TABLE_SIZE,
@@ -20,28 +25,43 @@ import {
 import DictionaryForm from './components/DictionaryForm';
 
 const Dict: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const { message } = App.useApp();
+  const { token } = theme.useToken();
+  const actionRef = useRef<ActionType | null>(null);
+  const formRef = useRef<ProFormInstance | undefined>(undefined);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<
+    number | undefined
+  >(undefined);
 
   // 加载数据字典分类选项
   const [categoryOptions, setCategoryOptions] = useState<
-    Array<{ label: string; value: number }>
+    Array<{ label: string; value: number; category_code: string }>
   >([]);
+  const [categoryCodeMap, setCategoryCodeMap] = useState<
+    Record<number, string>
+  >({});
 
   React.useEffect(() => {
     const loadCategoryOptions = async () => {
       try {
         const res = await getDictionaryCategoryList();
-        if (res.code === 200 && res.data) {
-          setCategoryOptions(
-            res.data.map((item: any) => ({
-              label: item.category_name,
-              value: item.category_id,
-            })),
-          );
+        if (res.code === 200 && res.data && res.data.length > 0) {
+          const options = res.data.map((item: any) => ({
+            label: item.category_name,
+            value: item.category_id,
+            category_code: item.category_code,
+          }));
+          setCategoryOptions(options);
+          // 建立 category_id 到 category_code 的映射
+          const codeMap: Record<number, string> = {};
+          res.data.forEach((item: any) => {
+            codeMap[item.category_id] = item.category_code;
+          });
+          setCategoryCodeMap(codeMap);
         }
       } catch (error) {
         console.error('加载数据字典分类失败:', error);
@@ -49,6 +69,20 @@ const Dict: React.FC = () => {
     };
     loadCategoryOptions();
   }, []);
+
+  // 当分类选项加载完成后，设置默认值并触发查询
+  React.useEffect(() => {
+    if (categoryOptions.length > 0 && formRef.current) {
+      const firstCategoryId = categoryOptions[0].value;
+      // 使用 setTimeout 确保表单已经渲染完成
+      setTimeout(() => {
+        formRef.current?.setFieldsValue({ category_id: firstCategoryId });
+        setSelectedCategoryId(firstCategoryId);
+        // 触发查询
+        actionRef.current?.reload();
+      }, 0);
+    }
+  }, [categoryOptions]);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -133,6 +167,17 @@ const Dict: React.FC = () => {
       title: '字典分类',
       dataIndex: 'category_id',
       valueType: 'select',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: '请选择字典分类',
+        options: categoryOptions,
+        allowClear: true,
+        onChange: (value: number | undefined) => {
+          setSelectedCategoryId(value);
+          // 如果取消选择，清空表格数据；如果选中，触发查询
+          actionRef.current?.reload();
+        },
+      },
       valueEnum: categoryOptions.reduce(
         (acc, item) => {
           acc[item.value] = { text: item.label };
@@ -140,9 +185,8 @@ const Dict: React.FC = () => {
         },
         {} as Record<number, { text: string }>,
       ),
-      width: 150,
-      fieldProps: {
-        placeholder: '请选择字典分类',
+      formItemProps: {
+        preserve: true,
       },
     },
     {
@@ -166,6 +210,7 @@ const Dict: React.FC = () => {
       dataIndex: 'parent_id',
       valueType: 'select',
       hideInTable: true,
+      hideInSearch: true,
       request: async (params) => {
         try {
           const res = await getDictionaryPidData({
@@ -188,30 +233,47 @@ const Dict: React.FC = () => {
       },
     },
     {
-      title: '关键字',
-      dataIndex: 'keyword',
-      hideInTable: true,
+      title: '字典描述',
+      dataIndex: 'dictionary_desc',
+      width: 200,
+      ellipsis: true,
       fieldProps: {
-        placeholder: '字典名称、字典值',
+        placeholder: '请输入字典描述',
       },
     },
     {
-      title: '扩展数据',
-      dataIndex: 'extend_data',
+      title: '排序',
+      dataIndex: 'sort',
       hideInSearch: true,
-      width: 200,
-      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: '可删除',
+      dataIndex: 'can_delete',
+      valueType: 'select',
+      width: 100,
+      valueEnum: {
+        [CanDeleteEnum.ALLOWED]: { text: '是' },
+        [CanDeleteEnum.DISABLE]: { text: '否' },
+      },
+      fieldProps: {
+        placeholder: '请选择可删除',
+        options: [
+          { label: '是', value: CanDeleteEnum.ALLOWED },
+          { label: '否', value: CanDeleteEnum.DISABLE },
+        ],
+      },
       render: (_, record) => {
-        if (!record.extend_data) return '-';
-        try {
-          const data =
-            typeof record.extend_data === 'string'
-              ? JSON.parse(record.extend_data)
-              : record.extend_data;
-          return JSON.stringify(data);
-        } catch (_e) {
-          return record.extend_data;
-        }
+        const canDelete = record.can_delete === CanDeleteEnum.ALLOWED;
+        return (
+          <span
+            style={{
+              color: canDelete ? token.colorSuccess : token.colorError,
+            }}
+          >
+            {canDelete ? '是' : '否'}
+          </span>
+        );
       },
     },
     {
@@ -241,31 +303,93 @@ const Dict: React.FC = () => {
     <PageContainer>
       <ProTable<any>
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="dictionary_id"
         size={TABLE_SIZE}
         search={{
           labelWidth: 120,
           defaultCollapsed: false,
         }}
-        request={async (params) => {
-          const requestParams: any = {
-            ...params,
-            page: params.current || 1,
-            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-          };
-          const response = await getDictionaryList(requestParams);
-          if (response.code === 200) {
+        beforeSearchSubmit={(params) => {
+          // 在提交搜索前，如果字典分类为空，不设置默认值，让用户明确选择
+          return params;
+        }}
+        request={async (params, sort, filter) => {
+          try {
+            // 从表单获取所有搜索参数，确保分页切换时参数不丢失
+            const formValues = formRef.current?.getFieldsValue() || {};
+
+            // 合并表单值和 params，表单值优先级更高
+            const allParams = {
+              ...params,
+              ...formValues,
+            };
+
+            // 根据 category_id 获取对应的 category_code
+            const categoryId = allParams.category_id;
+            const categoryCode = categoryId
+              ? categoryCodeMap[categoryId]
+              : undefined;
+
+            // 如果没有获取到 category_code，直接返回空数据，不发起请求
+            if (!categoryCode) {
+              return {
+                data: [],
+                success: true,
+                total: 0,
+              };
+            }
+
+            const requestParams: any = {
+              page: params.current || 1,
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+              // 传递搜索表单的参数
+              dictionary_name: allParams.dictionary_name,
+              dictionary_value: allParams.dictionary_value,
+              dictionary_desc: allParams.dictionary_desc,
+              can_delete: allParams.can_delete,
+              category_code: categoryCode,
+            };
+
+            // 移除空值参数
+            Object.keys(requestParams).forEach((key) => {
+              if (
+                requestParams[key] === undefined ||
+                requestParams[key] === null ||
+                requestParams[key] === ''
+              ) {
+                delete requestParams[key];
+              }
+            });
+
+            const response = await getDictionaryList(requestParams);
+            if (response.code === 200) {
+              return {
+                data: response.data?.data || [],
+                success: true,
+                total: response.data?.page?.total || 0,
+              };
+            }
+            // 接口返回错误时显示错误信息
+            message.error(response.message || '查询失败');
             return {
-              data: response.data?.data || [],
-              success: true,
-              total: response.data?.page?.total || 0,
+              data: [],
+              success: false,
+              total: 0,
+            };
+          } catch (error: any) {
+            // 捕获异常并显示错误信息
+            const errorMessage =
+              error?.response?.data?.message ||
+              error?.message ||
+              '查询失败，请稍后重试';
+            message.error(errorMessage);
+            return {
+              data: [],
+              success: false,
+              total: 0,
             };
           }
-          return {
-            data: [],
-            success: false,
-            total: 0,
-          };
         }}
         columns={columns}
         pagination={{
@@ -296,6 +420,7 @@ const Dict: React.FC = () => {
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleAdd}
+            disabled={!selectedCategoryId}
           >
             新增
           </Button>,
@@ -304,13 +429,16 @@ const Dict: React.FC = () => {
       <DictionaryForm
         visible={formVisible}
         editingRecord={editingRecord}
-        categoryOptions={categoryOptions}
+        defaultCategoryId={
+          editingRecord
+            ? editingRecord.category_id
+            : formRef.current?.getFieldValue('category_id')
+        }
         onCancel={() => {
           setFormVisible(false);
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
-        getDictionaryPidData={getDictionaryPidData}
       />
     </PageContainer>
   );
