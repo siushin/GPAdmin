@@ -7,18 +7,18 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Menu, message, Popconfirm, Space, Tooltip } from 'antd';
+import { App, Button, Menu, Popconfirm, Space, Tooltip } from 'antd';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  addDictionary,
   addOrganization,
-  deleteDictionary,
+  addOrganizationType,
   deleteOrganization,
+  deleteOrganizationType,
   getOrganizationList,
   getOrganizationTypeList,
   moveOrganization,
-  updateDictionary,
   updateOrganization,
+  updateOrganizationType,
 } from '@/services/api/system';
 import { TABLE_SIZE } from '@/utils/constants';
 import OrganizationForm from '../organization/components/OrganizationForm';
@@ -26,6 +26,7 @@ import useStyles from '../organization/style.style';
 import DictionaryTypeForm from './components/DictionaryTypeForm';
 
 const DictTree: React.FC = () => {
+  const { message } = App.useApp();
   const { styles } = useStyles();
   const [selectedType, setSelectedType] = useState<number>(0);
   const [typeList, setTypeList] = useState<
@@ -34,6 +35,7 @@ const DictTree: React.FC = () => {
       dictionary_name: string;
       dictionary_value: string;
       dictionary_desc?: string;
+      can_delete?: number;
     }>
   >([]);
   const actionRef = useRef<ActionType | null>(null);
@@ -48,6 +50,7 @@ const DictTree: React.FC = () => {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
+    can_delete?: number;
   } | null>(null);
   const dom = useRef<HTMLDivElement>(null);
   const [initConfig, setInitConfig] = useState<{
@@ -223,6 +226,7 @@ const DictTree: React.FC = () => {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
+    can_delete?: number;
   }) => {
     setEditingTypeRecord(record);
     setTypeFormVisible(true);
@@ -235,17 +239,44 @@ const DictTree: React.FC = () => {
     dictionary_value: string;
   }) => {
     try {
-      const res = await deleteDictionary({
+      const res = await deleteOrganizationType({
         dictionary_id: record.dictionary_id,
       });
       if (res.code === 200) {
         message.success('删除成功');
-        // 如果删除的是当前选中的类型，清空选中状态
+        // 如果删除的是当前选中的类型，找到最近的那个类型并选中
         if (selectedType === record.dictionary_id) {
-          setSelectedType(0);
+          // 先计算删除后的列表
+          const filteredList = typeList.filter(
+            (item) => item.dictionary_id !== record.dictionary_id,
+          );
+          // 如果还有剩余的类型，选中最近的那个
+          if (filteredList.length > 0) {
+            // 找到被删除项在原列表中的索引
+            const deletedIndex = typeList.findIndex(
+              (item) => item.dictionary_id === record.dictionary_id,
+            );
+            // 优先选择前一个，如果删除的是第一个，则选择后一个（即原列表中的下一个）
+            let targetIndex = deletedIndex > 0 ? deletedIndex - 1 : 0;
+            // 确保索引在过滤后的列表中有效
+            if (targetIndex >= filteredList.length) {
+              targetIndex = filteredList.length - 1;
+            }
+            setSelectedType(filteredList[targetIndex].dictionary_id);
+          } else {
+            // 如果没有剩余类型，清空选中状态
+            setSelectedType(0);
+          }
+          // 更新列表
+          setTypeList(filteredList);
+        } else {
+          // 如果删除的不是当前选中的类型，直接移除
+          setTypeList((prevList) =>
+            prevList.filter(
+              (item) => item.dictionary_id !== record.dictionary_id,
+            ),
+          );
         }
-        // 重新加载类型列表
-        await loadTypes();
       } else {
         message.error(res.message || '删除失败');
       }
@@ -261,37 +292,71 @@ const DictTree: React.FC = () => {
     dictionary_desc?: string;
     dictionary_id?: number;
   }) => {
-    try {
-      let res: { code: number; message: string; data?: any };
-      if (editingTypeRecord) {
-        // 编辑
-        res = await updateDictionary({
-          dictionary_id: editingTypeRecord.dictionary_id,
-          dictionary_name: values.dictionary_name,
-          dictionary_value: values.dictionary_value,
-          dictionary_desc: values.dictionary_desc || '',
-        });
-      } else {
-        // 新增
-        res = await addDictionary({
-          dictionary_name: values.dictionary_name,
-          dictionary_value: values.dictionary_value,
-          dictionary_desc: values.dictionary_desc || '',
-        });
-      }
+    let res: { code: number; message: string; data?: any };
+    if (editingTypeRecord) {
+      // 编辑
+      res = await updateOrganizationType({
+        dictionary_id: editingTypeRecord.dictionary_id,
+        dictionary_name: values.dictionary_name,
+        dictionary_value: values.dictionary_value,
+        dictionary_desc: values.dictionary_desc || '',
+      });
       if (res.code === 200) {
-        message.success(editingTypeRecord ? '更新成功' : '新增成功');
+        message.success('更新成功');
         setTypeFormVisible(false);
         setEditingTypeRecord(null);
-        // 重新加载类型列表
-        await loadTypes();
-      } else {
-        message.error(
-          res.message || (editingTypeRecord ? '更新失败' : '新增失败'),
+        // 直接根据表单数据更新 typeList
+        setTypeList((prevList) =>
+          prevList.map((item) =>
+            item.dictionary_id === editingTypeRecord.dictionary_id
+              ? {
+                  ...item,
+                  dictionary_name: values.dictionary_name,
+                  dictionary_value: values.dictionary_value,
+                  dictionary_desc: values.dictionary_desc,
+                  can_delete: editingTypeRecord.can_delete,
+                }
+              : item,
+          ),
         );
+      } else {
+        // 报错时，不清空表单，不关闭弹窗，抛出错误让表单组件处理
+        message.error(res.message || '更新失败');
+        throw new Error(res.message || '更新失败');
       }
-    } catch (_error) {
-      message.error(editingTypeRecord ? '更新失败' : '新增失败');
+    } else {
+      // 新增
+      res = await addOrganizationType({
+        dictionary_name: values.dictionary_name,
+        dictionary_value: values.dictionary_value,
+        dictionary_desc: values.dictionary_desc || '',
+      });
+      if (res.code === 200) {
+        message.success('新增成功');
+        setTypeFormVisible(false);
+        setEditingTypeRecord(null);
+        // 使用返回的数据追加到 typeList
+        if (res.data) {
+          setTypeList((prevList) => [
+            ...prevList,
+            {
+              dictionary_id: Number(res.data.dictionary_id),
+              dictionary_name: res.data.dictionary_name,
+              dictionary_value: res.data.dictionary_value,
+              dictionary_desc: res.data.dictionary_desc,
+              can_delete: res.data.can_delete ?? 1,
+            },
+          ]);
+          // 如果当前没有选中类型，自动选中新增的类型
+          if (selectedType === 0 && res.data.dictionary_id) {
+            setSelectedType(Number(res.data.dictionary_id));
+          }
+        }
+      } else {
+        // 报错时，不清空表单，不关闭弹窗，抛出错误让表单组件处理
+        message.error(res.message || '新增失败');
+        throw new Error(res.message || '新增失败');
+      }
     }
   };
 
@@ -330,24 +395,40 @@ const DictTree: React.FC = () => {
             }}
             style={{ padding: '0 4px' }}
           />
-          <Popconfirm
-            title="确定要删除这个字典类型吗？"
-            onConfirm={() => handleTypeDelete(type)}
-            onCancel={() => {
-              // Popconfirm 的 onCancel 不需要事件参数
-            }}
-          >
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
+          {type.can_delete === 0 ? (
+            <Tooltip title="系统支撑数据，禁止删除">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                style={{ padding: '0 4px' }}
+              />
+            </Tooltip>
+          ) : (
+            <Popconfirm
+              title="确定要删除这个字典类型吗？"
+              onConfirm={() => handleTypeDelete(type)}
+              onCancel={() => {
+                // Popconfirm 的 onCancel 不需要事件参数
               }}
-              style={{ padding: '0 4px' }}
-            />
-          </Popconfirm>
+            >
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                style={{ padding: '0 4px' }}
+              />
+            </Popconfirm>
+          )}
         </Space>
       </div>
     ),
@@ -559,6 +640,7 @@ const DictTree: React.FC = () => {
       <DictionaryTypeForm
         visible={typeFormVisible}
         editingRecord={editingTypeRecord}
+        canDelete={editingTypeRecord?.can_delete}
         onCancel={() => {
           setTypeFormVisible(false);
           setEditingTypeRecord(null);

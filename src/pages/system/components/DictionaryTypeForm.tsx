@@ -4,7 +4,6 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
-import { message } from 'antd';
 import React, { useEffect } from 'react';
 
 interface DictionaryTypeFormProps {
@@ -14,7 +13,9 @@ interface DictionaryTypeFormProps {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
+    can_delete?: number;
   } | null;
+  canDelete?: number;
   onCancel: () => void;
   onSubmit: (values: {
     dictionary_name: string;
@@ -27,6 +28,7 @@ interface DictionaryTypeFormProps {
 const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
   visible,
   editingRecord,
+  canDelete,
   onCancel,
   onSubmit,
 }) => {
@@ -61,9 +63,11 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
           ? { dictionary_id: editingRecord.dictionary_id }
           : {}),
       });
+      // 只有成功时才清空表单
       formRef.current?.resetFields();
       return true;
     } catch (error) {
+      // 失败时返回 false，不清空表单，不关闭弹窗
       return false;
     }
   };
@@ -88,10 +92,11 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
       }
       modalProps={{
         onCancel: () => {
-          formRef.current?.resetFields();
+          // 点击取消按钮时，不清空表单，只关闭弹窗
           onCancel();
         },
-        destroyOnClose: true,
+        destroyOnHidden: false,
+        maskClosable: false,
       }}
       onFinish={handleFinish}
     >
@@ -105,6 +110,10 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
           },
         ]}
         placeholder="请输入字典名称"
+        disabled={canDelete === 0}
+        fieldProps={{
+          title: canDelete === 0 ? '系统支撑数据，禁止修改' : undefined,
+        }}
       />
       <ProFormText
         name="dictionary_value"

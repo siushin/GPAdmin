@@ -363,6 +363,65 @@ export async function getOrganizationTypeList(options?: {
   });
 }
 
+/** 新增组织架构类型 POST /api/admin/organization/addOrganizationType */
+export async function addOrganizationType(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      dictionary_id: string;
+      dictionary_name: string;
+      dictionary_value: string;
+      dictionary_desc?: string;
+    };
+  }>('/api/admin/organization/addOrganizationType', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新组织架构类型 POST /api/admin/organization/updateOrganizationType */
+export async function updateOrganizationType(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/updateOrganizationType', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除组织架构类型 POST /api/admin/organization/deleteOrganizationType */
+export async function deleteOrganizationType(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/organization/deleteOrganizationType', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 组织架构列表（树形） POST /api/admin/organization/index */
 export async function getOrganizationList(
   params?: {
