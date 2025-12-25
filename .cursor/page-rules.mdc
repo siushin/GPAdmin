@@ -24,3 +24,11 @@ scope:
 - 如果模块目录不存在，需要先创建模块目录
 - 页面文件命名使用 PascalCase（如：`UserList.tsx`）
 - 路由配置中的 `component` 路径需使用 `./support/[模块]/[页面]` 格式
+
+## 常量使用规范
+
+- 禁止删除标识（`can_delete`）的判断必须使用 `CanDeleteEnum` 常量：
+  - `CanDeleteEnum.DISABLE = 0` // 禁止删除
+  - `CanDeleteEnum.ALLOWED = 1` // 允许删除
+- 禁止在代码中直接使用数字 `0` 或 `1` 进行 `can_delete` 的判断比较
+- 常量定义在 `@/utils/constants.ts` 中

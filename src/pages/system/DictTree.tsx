@@ -20,7 +20,7 @@ import {
   updateOrganization,
   updateOrganizationType,
 } from '@/services/api/system';
-import { TABLE_SIZE } from '@/utils/constants';
+import { CanDeleteEnum, TABLE_SIZE } from '@/utils/constants';
 import OrganizationForm from '../organization/components/OrganizationForm';
 import useStyles from '../organization/style.style';
 import DictionaryTypeForm from './components/DictionaryTypeForm';
@@ -344,7 +344,7 @@ const DictTree: React.FC = () => {
               dictionary_name: res.data.dictionary_name,
               dictionary_value: res.data.dictionary_value,
               dictionary_desc: res.data.dictionary_desc,
-              can_delete: res.data.can_delete ?? 1,
+              can_delete: res.data.can_delete ?? CanDeleteEnum.ALLOWED,
             },
           ]);
           // 如果当前没有选中类型，自动选中新增的类型
@@ -395,7 +395,7 @@ const DictTree: React.FC = () => {
             }}
             style={{ padding: '0 4px' }}
           />
-          {type.can_delete === 0 ? (
+          {type.can_delete === CanDeleteEnum.DISABLE ? (
             <Tooltip title="系统支撑数据，禁止删除">
               <Button
                 type="text"

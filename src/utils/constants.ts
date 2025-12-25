@@ -24,3 +24,11 @@ export const DEFAULT_PAGINATION = {
   showQuickJumper: true,
   pageSizeOptions: ['10', '20', '50', '100'],
 };
+
+/**
+ * 禁止删除标识枚举
+ */
+export const CanDeleteEnum = {
+  DISABLE: 0, // 禁止删除
+  ALLOWED: 1, // 允许删除
+} as const;

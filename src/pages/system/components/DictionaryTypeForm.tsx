@@ -5,6 +5,7 @@ import {
 } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import React, { useEffect } from 'react';
+import { CanDeleteEnum } from '@/utils/constants';
 
 interface DictionaryTypeFormProps {
   visible: boolean;
@@ -110,9 +111,12 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
           },
         ]}
         placeholder="请输入字典名称"
-        disabled={canDelete === 0}
+        disabled={canDelete === CanDeleteEnum.DISABLE}
         fieldProps={{
-          title: canDelete === 0 ? '系统支撑数据，禁止修改' : undefined,
+          title:
+            canDelete === CanDeleteEnum.DISABLE
+              ? '系统支撑数据，禁止修改'
+              : undefined,
         }}
       />
       <ProFormText
