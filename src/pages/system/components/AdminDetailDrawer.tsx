@@ -1,4 +1,5 @@
-import { Drawer } from 'antd';
+import { useModel } from '@umijs/max';
+import { Drawer, Watermark } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { getAdminDetail } from '@/services/api/system';
 import AdminDetailContent from './AdminDetailContent';
@@ -14,6 +15,8 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
   record,
   onClose,
 }) => {
+  const { initialState } = useModel('@@initialState');
+  const currentUser = initialState?.currentUser;
   const [loading, setLoading] = useState(false);
   const [detailData, setDetailData] = useState<{
     account: any;
@@ -54,13 +57,15 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
       onClose={onClose}
       destroyOnClose
     >
-      {detailData ? (
-        <AdminDetailContent detailData={detailData} loading={loading} />
-      ) : (
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          {loading ? '加载中...' : '暂无数据'}
-        </div>
-      )}
+      <Watermark content={currentUser?.name || '管理员详情'}>
+        {detailData ? (
+          <AdminDetailContent detailData={detailData} loading={loading} />
+        ) : (
+          <div style={{ textAlign: 'center', padding: '50px' }}>
+            {loading ? '加载中...' : '暂无数据'}
+          </div>
+        )}
+      </Watermark>
     </Drawer>
   );
 };
