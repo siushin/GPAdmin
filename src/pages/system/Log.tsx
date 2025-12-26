@@ -203,6 +203,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'left',
+      render: (_, record) => record.username || '',
     },
     {
       title: '访问来源',
@@ -241,7 +242,7 @@ const Log: React.FC = () => {
       fieldProps: {
         placeholder: '日志内容、IP归属地',
       },
-      render: (_, record) => record.content,
+      render: (_, record) => record.content || '',
     },
     {
       title: 'IP地址',
@@ -258,6 +259,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'right',
+      render: (_, record) => record.ip_location || '',
     },
     {
       title: '创建时间',
@@ -269,7 +271,7 @@ const Log: React.FC = () => {
       fixed: 'right',
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.created_at) return '-';
+        if (!record.created_at) return '';
         // 尝试格式化日期时间
         try {
           return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
@@ -295,6 +297,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'left',
+      render: (_, record) => record.username || '',
     },
     {
       title: '模块名称',
@@ -353,7 +356,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.params) return '-';
+        if (!record.params) return '';
         let displayText = '';
         let tooltipText = '';
         try {
@@ -475,7 +478,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.user_agent) return '-';
+        if (!record.user_agent) return '';
         return (
           <Tooltip
             title={
@@ -514,7 +517,7 @@ const Log: React.FC = () => {
       fixed: 'right',
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.operated_at) return '-';
+        if (!record.operated_at) return '';
         // 尝试格式化日期时间
         try {
           return dayjs(record.operated_at).format('YYYY-MM-DD HH:mm:ss');
@@ -540,6 +543,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'left',
+      render: (_, record) => record.username || '',
     },
     {
       title: '资源ID',
@@ -549,7 +553,7 @@ const Log: React.FC = () => {
       fixed: 'left',
       render: (_, record) => {
         if (record.resource_id === null || record.resource_id === undefined) {
-          return '-';
+          return '';
         }
         return String(record.resource_id);
       },
@@ -607,6 +611,7 @@ const Log: React.FC = () => {
       ellipsis: true,
       hideInSearch: true,
       width: 200,
+      render: (_, record) => record.description || '',
     },
     {
       title: '变更前数据',
@@ -617,7 +622,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.before_data) return '-';
+        if (!record.before_data) return '';
         let displayText = '';
         let tooltipText = '';
         try {
@@ -675,7 +680,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.after_data) return '-';
+        if (!record.after_data) return '';
         let displayText = '';
         let tooltipText = '';
         try {
@@ -739,6 +744,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'right',
+      render: (_, record) => record.ip_location || '',
     },
     {
       title: 'User-Agent',
@@ -749,7 +755,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.user_agent) return '-';
+        if (!record.user_agent) return '';
         return (
           <Tooltip
             title={
@@ -788,7 +794,7 @@ const Log: React.FC = () => {
       fixed: 'right',
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.audited_at) return '-';
+        if (!record.audited_at) return '';
         // 尝试格式化日期时间
         try {
           return dayjs(record.audited_at).format('YYYY-MM-DD HH:mm:ss');
@@ -822,6 +828,7 @@ const Log: React.FC = () => {
       width: 150,
       fixed: 'left',
       hideInSearch: true,
+      render: (_, record) => record.username || '',
     },
     {
       title: '账号',
@@ -829,6 +836,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'left',
+      render: (_, record) => record.account_username || '',
     },
     {
       title: '登录状态',
@@ -856,6 +864,7 @@ const Log: React.FC = () => {
       hideInSearch: true,
       width: 150,
       fixed: 'right',
+      render: (_, record) => record.ip_location || '',
     },
     {
       title: '登录时间',
@@ -867,7 +876,7 @@ const Log: React.FC = () => {
       fixed: 'right',
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.login_at) return '-';
+        if (!record.login_at) return '';
         // 尝试格式化日期时间
         try {
           return dayjs(record.login_at).format('YYYY-MM-DD HH:mm:ss');
@@ -894,6 +903,7 @@ const Log: React.FC = () => {
       dataIndex: 'browser_version',
       hideInSearch: true,
       width: 120,
+      render: (_, record) => record.browser_version || '',
     },
     {
       title: '操作系统',
@@ -930,7 +940,7 @@ const Log: React.FC = () => {
         showTitle: false,
       },
       render: (_, record) => {
-        if (!record.user_agent) return '-';
+        if (!record.user_agent) return '';
         return (
           <Tooltip
             title={
@@ -965,6 +975,7 @@ const Log: React.FC = () => {
       ellipsis: true,
       hideInSearch: true,
       width: 200,
+      render: (_, record) => record.message || '',
     },
   ];
 

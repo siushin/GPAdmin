@@ -5,7 +5,7 @@ import {
 } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import React, { useEffect } from 'react';
-import { CanDeleteEnum } from '@/utils/constants';
+import { SysParamFlag } from '@/utils/constants';
 
 interface DictionaryTypeFormProps {
   visible: boolean;
@@ -14,9 +14,9 @@ interface DictionaryTypeFormProps {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
-    can_delete?: number;
+    sys_param_flag?: number;
   } | null;
-  canDelete?: number;
+  sysParamFlag?: number;
   onCancel: () => void;
   onSubmit: (values: {
     dictionary_name: string;
@@ -29,7 +29,7 @@ interface DictionaryTypeFormProps {
 const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
   visible,
   editingRecord,
-  canDelete,
+  sysParamFlag,
   onCancel,
   onSubmit,
 }) => {
@@ -111,10 +111,10 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
           },
         ]}
         placeholder="请输入字典名称"
-        disabled={canDelete === CanDeleteEnum.DISABLE}
+        disabled={sysParamFlag === SysParamFlag.Yes}
         fieldProps={{
           title:
-            canDelete === CanDeleteEnum.DISABLE
+            sysParamFlag === SysParamFlag.Yes
               ? '系统支撑数据，禁止修改'
               : undefined,
         }}

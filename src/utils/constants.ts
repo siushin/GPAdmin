@@ -26,11 +26,11 @@ export const DEFAULT_PAGINATION = {
 };
 
 /**
- * 禁止删除标识枚举
+ * 系统参数标识枚举
  */
-export const CanDeleteEnum = {
-  DISABLE: 0, // 禁止删除
-  ALLOWED: 1, // 允许删除
+export const SysParamFlag = {
+  No: 0, // 否
+  Yes: 1, // 是
 } as const;
 
 /**

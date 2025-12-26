@@ -27,8 +27,19 @@ scope:
 
 ## 常量使用规范
 
-- 禁止删除标识（`can_delete`）的判断必须使用 `CanDeleteEnum` 常量：
-  - `CanDeleteEnum.DISABLE = 0` // 禁止删除
-  - `CanDeleteEnum.ALLOWED = 1` // 允许删除
-- 禁止在代码中直接使用数字 `0` 或 `1` 进行 `can_delete` 的判断比较
+- 系统参数标识（`sys_param_flag`）的判断必须使用 `SysParamFlag` 常量：
+  - `SysParamFlag.No = 0` // 否
+  - `SysParamFlag.Yes = 1` // 是
+- 禁止在代码中直接使用数字 `0` 或 `1` 进行 `sys_param_flag` 的判断比较
 - 常量定义在 `@/utils/constants.ts` 中
+
+## 表格字段显示规范
+
+- **表格字段值为空时，必须显示空字符串 `''`，禁止显示 `-` 或其他占位符**
+- 如果字段可能为空，需要在 `columns` 配置中添加 `render` 函数处理：
+
+  ```typescript
+  render: (_, record) => record.field_name || ''
+  ```
+
+- 确保所有可能为空的字段都遵循此规范，保持表格显示的一致性

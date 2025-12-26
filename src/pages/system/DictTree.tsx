@@ -13,14 +13,13 @@ import {
   addOrganizationType,
   deleteOrganization,
   deleteOrganizationType,
-  getFullTreeDataForHtml,
   getOrganizationList,
   getOrganizationTypeList,
   moveOrganization,
   updateOrganization,
   updateOrganizationType,
 } from '@/services/api/system';
-import { CanDeleteEnum, TABLE_SIZE } from '@/utils/constants';
+import { SysParamFlag, TABLE_SIZE } from '@/utils/constants';
 import OrganizationForm from '../organization/components/OrganizationForm';
 import useStyles from '../organization/style.style';
 import DictionaryTypeForm from './components/DictionaryTypeForm';
@@ -35,7 +34,7 @@ const DictTree: React.FC = () => {
       dictionary_name: string;
       dictionary_value: string;
       dictionary_desc?: string;
-      can_delete?: number;
+      sys_param_flag?: number;
     }>
   >([]);
   const actionRef = useRef<ActionType | null>(null);
@@ -50,7 +49,7 @@ const DictTree: React.FC = () => {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
-    can_delete?: number;
+    sys_param_flag?: number;
   } | null>(null);
   const dom = useRef<HTMLDivElement>(null);
   const [initConfig, setInitConfig] = useState<{
@@ -235,7 +234,7 @@ const DictTree: React.FC = () => {
     dictionary_name: string;
     dictionary_value: string;
     dictionary_desc?: string;
-    can_delete?: number;
+    sys_param_flag?: number;
   }) => {
     setEditingTypeRecord(record);
     setTypeFormVisible(true);
@@ -323,7 +322,7 @@ const DictTree: React.FC = () => {
                   dictionary_name: values.dictionary_name,
                   dictionary_value: values.dictionary_value,
                   dictionary_desc: values.dictionary_desc,
-                  can_delete: editingTypeRecord.can_delete,
+                  sys_param_flag: editingTypeRecord.sys_param_flag,
                 }
               : item,
           ),
@@ -353,7 +352,7 @@ const DictTree: React.FC = () => {
               dictionary_name: res.data.dictionary_name,
               dictionary_value: res.data.dictionary_value,
               dictionary_desc: res.data.dictionary_desc,
-              can_delete: res.data.can_delete ?? CanDeleteEnum.ALLOWED,
+              sys_param_flag: res.data.sys_param_flag ?? SysParamFlag.No,
             },
           ]);
           // 如果当前没有选中类型，自动选中新增的类型
@@ -404,7 +403,7 @@ const DictTree: React.FC = () => {
             }}
             style={{ padding: '0 4px' }}
           />
-          {type.can_delete === CanDeleteEnum.DISABLE ? (
+          {type.sys_param_flag === SysParamFlag.Yes ? (
             <Tooltip title="系统支撑数据，禁止删除">
               <Button
                 type="text"
@@ -451,6 +450,7 @@ const DictTree: React.FC = () => {
       fieldProps: {
         placeholder: '请输入字典名称',
       },
+      render: (_, record) => record.organization_name || '',
     },
     {
       title: '操作',
@@ -643,7 +643,7 @@ const DictTree: React.FC = () => {
       <DictionaryTypeForm
         visible={typeFormVisible}
         editingRecord={editingTypeRecord}
-        canDelete={editingTypeRecord?.can_delete}
+        sysParamFlag={editingTypeRecord?.sys_param_flag}
         onCancel={() => {
           setTypeFormVisible(false);
           setEditingTypeRecord(null);

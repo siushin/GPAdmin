@@ -5,7 +5,7 @@ import type {
   ProFormInstance,
 } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { App, Button, Popconfirm, Space, theme } from 'antd';
+import { App, Button, Modal, Popconfirm, Space, Tooltip, theme } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
   addDictionary,
@@ -13,13 +13,12 @@ import {
   deleteDictionary,
   getDictionaryCategoryList,
   getDictionaryList,
-  getDictionaryPidData,
   updateDictionary,
 } from '@/services/api/system';
 import {
-  CanDeleteEnum,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  SysParamFlag,
   TABLE_SIZE,
 } from '@/utils/constants';
 import DictionaryForm from './components/DictionaryForm';
@@ -115,32 +114,59 @@ const Dict: React.FC = () => {
       message.warning('请选择要删除的数据');
       return;
     }
-    try {
-      const res = await batchDeleteDictionary({
-        dictionary_ids: selectedRowKeys,
-      });
-      if (res.code === 200) {
-        message.success('批量删除成功');
-        setSelectedRowKeys([]);
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '批量删除失败');
-      }
-    } catch (_error) {
-      message.error('批量删除失败');
-    }
+    Modal.confirm({
+      title: '确认批量删除',
+      content: `确定要删除选中的 ${selectedRowKeys.length} 条数据吗？删除后无法恢复。`,
+      okText: '确定',
+      cancelText: '取消',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const res = await batchDeleteDictionary({
+            dictionary_ids: selectedRowKeys.join(','),
+          });
+          if (res.code === 200) {
+            message.success('批量删除成功');
+            setSelectedRowKeys([]);
+            actionRef.current?.reload();
+          } else {
+            message.error(res.message || '批量删除失败');
+          }
+        } catch (_error) {
+          message.error('批量删除失败');
+        }
+      },
+    });
   };
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 从搜索框获取当前选中的分类ID
+      const categoryId = formRef.current?.getFieldValue('category_id');
+      // 根据 category_id 获取对应的 category_code
+      const categoryCode = categoryId ? categoryCodeMap[categoryId] : undefined;
+
+      // 构建提交参数，使用 category_code 而不是 category_id
+      const submitValues: any = {
+        ...values,
+      };
+
+      // 如果有 category_code，添加到提交参数中
+      if (categoryCode) {
+        submitValues.category_code = categoryCode;
+      }
+
+      // 移除 category_id（如果存在）
+      delete submitValues.category_id;
+
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
         res = await updateDictionary({
-          ...values,
+          ...submitValues,
           dictionary_id: editingRecord.dictionary_id,
         });
       } else {
-        res = await addDictionary(values);
+        res = await addDictionary(submitValues);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');
@@ -174,8 +200,8 @@ const Dict: React.FC = () => {
         allowClear: true,
         onChange: (value: number | undefined) => {
           setSelectedCategoryId(value);
-          // 如果取消选择，清空表格数据；如果选中，触发查询
-          actionRef.current?.reload();
+          // 如果取消选择，清空表格数据；如果选中，触发查询并重置页码为1
+          actionRef.current?.reloadAndRest?.();
         },
       },
       valueEnum: categoryOptions.reduce(
@@ -206,33 +232,6 @@ const Dict: React.FC = () => {
       },
     },
     {
-      title: '父级',
-      dataIndex: 'parent_id',
-      valueType: 'select',
-      hideInTable: true,
-      hideInSearch: true,
-      request: async (params) => {
-        try {
-          const res = await getDictionaryPidData({
-            category_id: params.category_id,
-          });
-          if (res.code === 200 && res.data) {
-            return res.data.map((item: any) => ({
-              label: item.dictionary_name,
-              value: item.dictionary_id,
-            }));
-          }
-        } catch (error) {
-          console.error('加载父级数据失败:', error);
-        }
-        return [];
-      },
-      dependencies: ['category_id'],
-      fieldProps: {
-        placeholder: '请选择父级',
-      },
-    },
-    {
       title: '字典描述',
       dataIndex: 'dictionary_desc',
       width: 200,
@@ -240,6 +239,7 @@ const Dict: React.FC = () => {
       fieldProps: {
         placeholder: '请输入字典描述',
       },
+      render: (_, record) => record.dictionary_desc || '',
     },
     {
       title: '排序',
@@ -248,54 +248,36 @@ const Dict: React.FC = () => {
       width: 100,
     },
     {
-      title: '可删除',
-      dataIndex: 'can_delete',
-      valueType: 'select',
-      width: 100,
-      valueEnum: {
-        [CanDeleteEnum.ALLOWED]: { text: '是' },
-        [CanDeleteEnum.DISABLE]: { text: '否' },
-      },
-      fieldProps: {
-        placeholder: '请选择可删除',
-        options: [
-          { label: '是', value: CanDeleteEnum.ALLOWED },
-          { label: '否', value: CanDeleteEnum.DISABLE },
-        ],
-      },
-      render: (_, record) => {
-        const canDelete = record.can_delete === CanDeleteEnum.ALLOWED;
-        return (
-          <span
-            style={{
-              color: canDelete ? token.colorSuccess : token.colorError,
-            }}
-          >
-            {canDelete ? '是' : '否'}
-          </span>
-        );
-      },
-    },
-    {
       title: '操作',
       valueType: 'option',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) => {
+        const canDelete = record.sys_param_flag === SysParamFlag.No;
+        return (
+          <Space>
+            <Button type="link" size="small" onClick={() => handleEdit(record)}>
+              编辑
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            {canDelete ? (
+              <Popconfirm
+                title="确定要删除这条数据吗？"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button type="link" size="small" danger>
+                  删除
+                </Button>
+              </Popconfirm>
+            ) : (
+              <Tooltip title="系统支撑数据，禁止删除">
+                <Button type="link" size="small" danger disabled>
+                  删除
+                </Button>
+              </Tooltip>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -347,7 +329,6 @@ const Dict: React.FC = () => {
               dictionary_name: allParams.dictionary_name,
               dictionary_value: allParams.dictionary_value,
               dictionary_desc: allParams.dictionary_desc,
-              can_delete: allParams.can_delete,
               category_code: categoryCode,
             };
 
@@ -433,6 +414,13 @@ const Dict: React.FC = () => {
           editingRecord
             ? editingRecord.category_id
             : formRef.current?.getFieldValue('category_id')
+        }
+        categoryCode={
+          editingRecord
+            ? categoryCodeMap[editingRecord.category_id]
+            : formRef.current?.getFieldValue('category_id')
+              ? categoryCodeMap[formRef.current.getFieldValue('category_id')]
+              : undefined
         }
         onCancel={() => {
           setFormVisible(false);

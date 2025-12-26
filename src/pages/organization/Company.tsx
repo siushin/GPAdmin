@@ -75,6 +75,7 @@ const Company: React.FC = () => {
       fieldProps: {
         placeholder: '请输入组织名称',
       },
+      render: (_, record) => record.organization_name || '',
     },
     {
       title: '操作',

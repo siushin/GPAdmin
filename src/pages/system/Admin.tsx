@@ -145,6 +145,7 @@ const Admin: React.FC = () => {
       dataIndex: 'last_login_ip',
       hideInSearch: true,
       width: 130,
+      render: (_, record) => record.last_login_ip || '',
     },
     {
       title: '最后登录时间',
@@ -154,7 +155,7 @@ const Admin: React.FC = () => {
       width: 180,
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.last_login_time) return '-';
+        if (!record.last_login_time) return '';
         try {
           return dayjs(record.last_login_time).format('YYYY-MM-DD HH:mm:ss');
         } catch (_e) {
@@ -178,7 +179,7 @@ const Admin: React.FC = () => {
       width: 180,
       fieldProps: dateRangeFieldProps,
       render: (_, record) => {
-        if (!record.created_at) return '-';
+        if (!record.created_at) return '';
         try {
           return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
         } catch (_e) {

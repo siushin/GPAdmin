@@ -137,6 +137,10 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
         destroyOnHidden: true,
       }}
       onFinish={async (values) => {
+        // 如果是添加下级，确保 organization_pid 被正确设置
+        if (isAddChild && editingRecord) {
+          values.organization_pid = editingRecord.organization_id;
+        }
         await onSubmit(values);
         return true;
       }}
@@ -175,32 +179,39 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
               autoFocus: true,
             }}
           />
-          <ProFormSelect
-            name="organization_pid"
-            label={isAddChild ? '上级组织架构' : '上级组织架构'}
-            options={parentOptions}
-            fieldProps={{
-              placeholder: isAddChild
-                ? '上级组织架构（默认使用当前组织）'
-                : '请选择上级组织架构（不选则为顶级）',
-              showSearch: true,
-              disabled: isAddChild,
-              filterOption: (input, option) => {
-                // 支持搜索，移除占位符后进行匹配
-                const label = option?.label as string;
-                if (!label) return false;
-                // 移除占位符符号（├─、└─、│等）和空格，只保留实际的组织名称
-                const cleanLabel = label.replace(/[├└│─\s]/g, '').toLowerCase();
-                const cleanInput = input.trim().toLowerCase();
-                return cleanLabel.includes(cleanInput);
-              },
-            }}
-            extra={
-              isAddChild
-                ? '将在当前组织架构下创建子级组织架构'
-                : '不选择则作为顶级组织架构创建'
-            }
-          />
+          {isAddChild ? (
+            <ProFormText
+              name="organization_pid_display"
+              label="上级组织架构"
+              fieldProps={{
+                value: editingRecord?.organization_name || '',
+                disabled: true,
+              }}
+              extra="将在当前组织架构下创建子级组织架构"
+            />
+          ) : (
+            <ProFormSelect
+              name="organization_pid"
+              label="上级组织架构"
+              options={parentOptions}
+              fieldProps={{
+                placeholder: '请选择上级组织架构（不选则为顶级）',
+                showSearch: true,
+                filterOption: (input, option) => {
+                  // 支持搜索，移除占位符后进行匹配
+                  const label = option?.label as string;
+                  if (!label) return false;
+                  // 移除占位符符号（├─、└─、│等）和空格，只保留实际的组织名称
+                  const cleanLabel = label
+                    .replace(/[├└│─\s]/g, '')
+                    .toLowerCase();
+                  const cleanInput = input.trim().toLowerCase();
+                  return cleanLabel.includes(cleanInput);
+                },
+              }}
+              extra="不选择则作为顶级组织架构创建"
+            />
+          )}
         </div>
       )}
     </ModalForm>

@@ -110,6 +110,7 @@ const Role: React.FC = () => {
       hideInSearch: true,
       width: 200,
       ellipsis: true,
+      render: (_, record) => record.description || '',
     },
     {
       title: '状态',

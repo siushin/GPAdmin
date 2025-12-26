@@ -212,6 +212,7 @@ const Menu: React.FC = () => {
       dataIndex: 'menu_icon',
       hideInSearch: true,
       width: 150,
+      render: (_, record) => record.menu_icon || '',
     },
     {
       title: '状态',
