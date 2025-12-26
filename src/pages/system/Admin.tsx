@@ -84,46 +84,38 @@ const Admin: React.FC = () => {
       title: '用户名',
       dataIndex: 'username',
       width: 150,
+      fixed: 'left',
       fieldProps: {
         placeholder: '请输入用户名',
       },
-    },
-    {
-      title: '账号类型',
-      dataIndex: 'account_type',
-      valueType: 'select',
-      valueEnum: {
-        admin: { text: '管理员', status: 'Success' },
-        user: { text: '用户', status: 'Default' },
-      },
-      width: 120,
-    },
-    {
-      title: '是否超级管理员',
-      dataIndex: 'is_super',
-      valueType: 'select',
-      valueEnum: {
-        1: { text: '是', status: 'Success' },
-        0: { text: '否', status: 'Default' },
-      },
-      width: 130,
       render: (_, record) => (
-        <Tag color={record.is_super === 1 ? 'red' : 'default'}>
-          {record.is_super === 1 ? '是' : '否'}
-        </Tag>
+        <Space>
+          {record.username}
+          {record.is_super === 1 && <Tag color="#108ee9">超管</Tag>}
+        </Space>
       ),
     },
     {
-      title: '所属公司ID',
-      dataIndex: 'company_id',
-      hideInSearch: true,
+      title: '姓名',
+      dataIndex: 'nickname',
       width: 120,
+      fixed: 'left',
+      hideInSearch: true,
+      render: (_, record) => record.nickname || '',
     },
     {
-      title: '所属部门ID',
-      dataIndex: 'department_id',
+      title: '所属公司',
+      dataIndex: 'company_name',
       hideInSearch: true,
-      width: 120,
+      width: 150,
+      render: (_, record) => record.company_name || '',
+    },
+    {
+      title: '所属部门',
+      dataIndex: 'department_name',
+      hideInSearch: true,
+      width: 150,
+      render: (_, record) => record.department_name || '',
     },
     {
       title: '账号状态',
@@ -168,7 +160,7 @@ const Admin: React.FC = () => {
       dataIndex: 'keyword',
       hideInTable: true,
       fieldProps: {
-        placeholder: '用户名、IP地址',
+        placeholder: '姓名、手机号、邮箱',
       },
     },
     {

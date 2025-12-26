@@ -73,6 +73,45 @@ export async function deleteAdmin(
   });
 }
 
+/** 公司列表 POST /api/admin/company/list */
+export async function getCompanyList(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      company_id: number;
+      company_code: string;
+      company_name: string;
+    }>;
+  }>('/api/admin/company/list', {
+    method: 'POST',
+    data: {},
+    ...(options || {}),
+  });
+}
+
+/** 部门列表 POST /api/admin/department/list */
+export async function getDepartmentList(
+  params?: {
+    company_id?: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      department_id: number;
+      department_code: string;
+      department_name: string;
+    }>;
+  }>('/api/admin/department/list', {
+    method: 'POST',
+    data: params || {},
+    ...(options || {}),
+  });
+}
+
 // ========== 角色管理 API ==========
 
 /** 角色列表 POST /api/admin/role/index */
