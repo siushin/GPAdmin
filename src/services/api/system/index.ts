@@ -73,6 +73,57 @@ export async function deleteAdmin(
   });
 }
 
+/** 获取管理员详情 POST /api/admin/admin/getDetail */
+export async function getAdminDetail(
+  body: {
+    id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      account: any;
+      profile: any;
+      admin: any;
+      social: Array<{
+        id: number;
+        social_type: string;
+        social_account: string;
+        social_name?: string;
+        avatar?: string;
+        is_verified: number;
+        verified_at?: string;
+        created_at?: string;
+        updated_at?: string;
+      }>;
+    };
+  }>('/api/admin/admin/getDetail', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取管理员日志 POST /api/admin/admin/getLogs */
+export async function getAdminLogs(
+  params: {
+    account_id: number;
+    log_type: 'general' | 'operation' | 'audit' | 'login';
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/admin/getLogs', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
 /** 公司列表 POST /api/admin/company/list */
 export async function getCompanyList(options?: { [key: string]: any }) {
   return request<{

@@ -16,6 +16,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import AdminDetailDrawer from './components/AdminDetailDrawer';
 import AdminForm from './components/AdminForm';
 
 const Admin: React.FC = () => {
@@ -23,6 +24,8 @@ const Admin: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -32,6 +35,11 @@ const Admin: React.FC = () => {
   const handleEdit = (record: any) => {
     setEditingRecord(record);
     setFormVisible(true);
+  };
+
+  const handleView = (record: any) => {
+    setViewingRecord(record);
+    setDetailVisible(true);
   };
 
   const handleDelete = async (record: any) => {
@@ -186,6 +194,9 @@ const Admin: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
+          <Button type="link" size="small" onClick={() => handleView(record)}>
+            查看
+          </Button>
           <Button type="link" size="small" onClick={() => handleEdit(record)}>
             编辑
           </Button>
@@ -262,6 +273,14 @@ const Admin: React.FC = () => {
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
+      />
+      <AdminDetailDrawer
+        visible={detailVisible}
+        record={viewingRecord}
+        onClose={() => {
+          setDetailVisible(false);
+          setViewingRecord(null);
+        }}
       />
     </PageContainer>
   );
