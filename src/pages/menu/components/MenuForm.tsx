@@ -54,7 +54,11 @@ const MenuForm: React.FC<MenuFormProps> = ({
         }
       }}
       onFinish={async (values) => {
-        await onSubmit(values);
+        // 如果是新增菜单，追加 account_type
+        const submitValues = editingRecord
+          ? values
+          : { ...values, account_type: accountType };
+        await onSubmit(submitValues);
         return true;
       }}
       initialValues={
@@ -66,7 +70,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
               status: editingRecord.status ?? 1,
               sort: editingRecord.sort ?? 0,
               is_required: editingRecord.is_required ?? 0,
-              account_type: editingRecord.account_type || accountType,
             }
           : {
               parent_id: 0,
@@ -74,7 +77,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
               status: 1,
               sort: 0,
               is_required: 0,
-              account_type: accountType,
             }
       }
       width={800}
@@ -111,19 +113,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
           />
         </Col>
         <Col span={12}>
-          <ProFormRadio.Group
-            name="account_type"
-            label="账号类型"
-            options={[
-              { label: '管理员', value: 'admin' },
-              { label: '用户', value: 'user' },
-            ]}
-            rules={[{ required: true, message: '请选择账号类型' }]}
-          />
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}>
           <ProFormSelect
             name="menu_type"
             label="菜单类型"
@@ -137,6 +126,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             }}
           />
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={12}>
           <ProFormSelect
             name="parent_id"
@@ -147,8 +138,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
             }}
           />
         </Col>
-      </Row>
-      <Row gutter={16}>
         <Col span={12}>
           <ProFormItem name="menu_icon" label="图标">
             <Space align="center" style={{ width: '100%' }}>
@@ -162,6 +151,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             </Space>
           </ProFormItem>
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={12}>
           <ProFormText
             name="component"
@@ -172,24 +163,12 @@ const MenuForm: React.FC<MenuFormProps> = ({
             }}
           />
         </Col>
-      </Row>
-      <Row gutter={16}>
         <Col span={12}>
           <ProFormText
             name="redirect"
             label="重定向路径"
             fieldProps={{
               placeholder: '请输入重定向路径（可选）',
-            }}
-          />
-        </Col>
-        <Col span={12}>
-          <ProFormSwitch
-            name="is_required"
-            label="是否必须选中"
-            fieldProps={{
-              checkedChildren: '是',
-              unCheckedChildren: '否',
             }}
           />
         </Col>
@@ -213,6 +192,18 @@ const MenuForm: React.FC<MenuFormProps> = ({
             fieldProps={{
               placeholder: '请输入排序值',
               style: { width: 200 },
+            }}
+          />
+        </Col>
+      </Row>
+      <Row gutter={16}>
+        <Col span={12}>
+          <ProFormSwitch
+            name="is_required"
+            label="是否必须选中"
+            fieldProps={{
+              checkedChildren: '是',
+              unCheckedChildren: '否',
             }}
           />
         </Col>
