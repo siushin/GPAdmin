@@ -3,6 +3,7 @@ import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Space, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import { IconDisplay } from '@/components';
 import {
   addMenu,
   deleteMenu,
@@ -130,8 +131,8 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       title: '图标',
       dataIndex: 'menu_icon',
       hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.menu_icon || '',
+      width: 60,
+      render: (_, record) => <IconDisplay iconName={record.menu_icon} />,
     },
     {
       title: '状态',
@@ -141,7 +142,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
         1: { text: '启用', status: 'Success' },
         0: { text: '禁用', status: 'Error' },
       },
-      width: 100,
+      width: 60,
       render: (_, record) => (
         <Tag color={record.status === 1 ? 'success' : 'error'}>
           {record.status === 1 ? '启用' : '禁用'}
@@ -196,8 +197,10 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
           };
           const response = await getMenuList(requestParams);
           if (response.code === 200) {
+            const data = response.data?.data || [];
+            // 图标组件会在 render 函数中动态获取并显示
             return {
-              data: response.data?.data || [],
+              data,
               success: true,
               total: response.data?.page?.total || 0,
             };

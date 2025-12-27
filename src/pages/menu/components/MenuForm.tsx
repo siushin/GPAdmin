@@ -1,13 +1,15 @@
 import {
   DrawerForm,
   ProFormDigit,
+  ProFormItem,
   ProFormRadio,
   ProFormSelect,
   ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Col, Row } from 'antd';
+import { Col, Form, Input, Row, Space } from 'antd';
 import React from 'react';
+import { getIconComponent, IconDisplay } from '@/components';
 
 interface MenuFormProps {
   visible: boolean;
@@ -26,8 +28,24 @@ const MenuForm: React.FC<MenuFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const IconPreview: React.FC = () => {
+    const iconValue = Form.useWatch('menu_icon');
+    const IconComponent = getIconComponent(iconValue);
+
+    if (!iconValue) {
+      return null;
+    }
+
+    return IconComponent ? (
+      <IconDisplay iconName={iconValue} fontSize={20} />
+    ) : (
+      <span style={{ color: '#ff4d4f' }}>图标不存在</span>
+    );
+  };
+
   return (
     <DrawerForm
+      key={editingRecord?.menu_id || 'new'}
       title={editingRecord ? '编辑菜单' : '新增菜单'}
       open={visible}
       onOpenChange={(open) => {
@@ -39,15 +57,26 @@ const MenuForm: React.FC<MenuFormProps> = ({
         await onSubmit(values);
         return true;
       }}
-      initialValues={{
-        ...editingRecord,
-        parent_id: editingRecord?.parent_id || 0,
-        menu_type: editingRecord?.menu_type || 'menu',
-        status: editingRecord?.status ?? 1,
-        sort: editingRecord?.sort ?? 0,
-        is_required: editingRecord?.is_required ?? 0,
-        account_type: editingRecord?.account_type || accountType,
-      }}
+      initialValues={
+        editingRecord
+          ? {
+              ...editingRecord,
+              parent_id: editingRecord.parent_id ?? 0,
+              menu_type: editingRecord.menu_type || 'menu',
+              status: editingRecord.status ?? 1,
+              sort: editingRecord.sort ?? 0,
+              is_required: editingRecord.is_required ?? 0,
+              account_type: editingRecord.account_type || accountType,
+            }
+          : {
+              parent_id: 0,
+              menu_type: 'menu',
+              status: 1,
+              sort: 0,
+              is_required: 0,
+              account_type: accountType,
+            }
+      }
       width={800}
     >
       <Row gutter={16}>
@@ -121,13 +150,17 @@ const MenuForm: React.FC<MenuFormProps> = ({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <ProFormText
-            name="menu_icon"
-            label="图标"
-            fieldProps={{
-              placeholder: '请输入图标名称（如：AppstoreOutlined）',
-            }}
-          />
+          <ProFormItem name="menu_icon" label="图标">
+            <Space align="center" style={{ width: '100%' }}>
+              <Form.Item name="menu_icon" noStyle>
+                <Input
+                  placeholder="请输入图标名称（如：AppstoreOutlined）"
+                  style={{ width: 200 }}
+                />
+              </Form.Item>
+              <IconPreview />
+            </Space>
+          </ProFormItem>
         </Col>
         <Col span={12}>
           <ProFormText
@@ -181,7 +214,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
               placeholder: '请输入排序值',
               style: { width: 200 },
             }}
-            initialValue={0}
           />
         </Col>
       </Row>

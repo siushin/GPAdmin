@@ -36,12 +36,12 @@ const RoleForm: React.FC<RoleFormProps> = ({
       onFinish={async (values) => {
         await onSubmit(values);
       }}
-      initialValues={
-        editingRecord || {
-          status: 1,
-          account_type: accountType,
-        }
-      }
+      initialValues={{
+        ...(editingRecord || {}),
+        status: editingRecord?.status ?? 1,
+        account_type: editingRecord?.account_type || accountType,
+        sort: editingRecord?.sort ?? 0,
+      }}
       width={MODAL_WIDTH.MEDIUM}
       layout="horizontal"
       labelCol={{ span: 6 }}
@@ -71,7 +71,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
           { label: '用户', value: 'user' },
         ]}
         rules={[{ required: true, message: '请选择账号类型' }]}
-        initialValue={accountType}
       />
       <ProFormTextArea
         name="description"
@@ -89,7 +88,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
           { label: '禁用', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择状态' }]}
-        initialValue={1}
       />
       <ProFormDigit
         name="sort"
@@ -97,7 +95,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
         fieldProps={{
           placeholder: '请输入排序值',
         }}
-        initialValue={0}
       />
     </ModalForm>
   );

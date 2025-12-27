@@ -661,7 +661,7 @@ export async function getDictionaryList(
   });
 }
 
-/** 数据字典全部列表 POST /api/admin/dictionary/all */
+/** 数据字典全部列表 POST /api/admin/dictionary/list */
 export async function getDictionaryAll(
   params?: {
     [key: string]: any;
@@ -672,7 +672,7 @@ export async function getDictionaryAll(
     code: number;
     message: string;
     data?: any[];
-  }>('/api/admin/dictionary/all', {
+  }>('/api/admin/dictionary/list', {
     method: 'POST',
     data: params || {},
     ...(options || {}),

@@ -6,7 +6,17 @@
  * 布局组件
  */
 import Footer from './Footer';
+import IconDisplay from './IconDisplay';
+import { getIconComponent } from './IconDisplay/getIconComponent';
 import { SelectLang, SettingButton } from './RightContent';
 import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
 
-export { AvatarDropdown, AvatarName, Footer, SelectLang, SettingButton };
+export {
+  AvatarDropdown,
+  AvatarName,
+  Footer,
+  SelectLang,
+  SettingButton,
+  IconDisplay,
+  getIconComponent,
+};
