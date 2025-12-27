@@ -8,7 +8,6 @@ interface RoleMenuFormProps {
   onCancel: () => void;
   onSubmit: () => Promise<void>;
   getRoleList: (params?: any) => Promise<any>;
-  getMenuTree: (params?: any) => Promise<any>;
 }
 
 const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
@@ -16,7 +15,6 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
   onCancel,
   onSubmit,
   getRoleList,
-  getMenuTree,
 }) => {
   const [roleOptions, setRoleOptions] = useState<
     Array<{ label: string; value: number }>
@@ -43,24 +41,13 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
         setRoleOptions(options);
       }
 
-      // 加载菜单树形列表
-      const menuRes = await getMenuTree();
-      if (menuRes.code === 200 && menuRes.data) {
-        const formatOptions = (data: any[], level = 0): any[] => {
-          return data.flatMap((item) => {
-            const prefix = '  '.repeat(level);
-            const option = {
-              label: `${prefix}${item.menu_name}`,
-              value: item.menu_id,
-            };
-            if (item.children && item.children.length > 0) {
-              return [option, ...formatOptions(item.children, level + 1)];
-            }
-            return [option];
-          });
-        };
-        setMenuOptions(formatOptions(menuRes.data));
-      }
+      // 暂时使用伪数据作为菜单选项
+      setMenuOptions([
+        { label: '菜单1', value: 1 },
+        { label: '菜单2', value: 2 },
+        { label: '  子菜单1', value: 3 },
+        { label: '  子菜单2', value: 4 },
+      ]);
     } catch (error) {
       console.error('加载选项失败:', error);
     }

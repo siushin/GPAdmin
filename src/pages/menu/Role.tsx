@@ -1,221 +1,29 @@
-import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
-import {
-  addRole,
-  deleteRole,
-  getRoleList,
-  updateRole,
-} from '@/services/api/system';
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_PAGINATION,
-  TABLE_SIZE,
-} from '@/utils/constants';
-import RoleForm from '../system/components/RoleForm';
+import { PageContainer } from '@ant-design/pro-components';
+import { Tabs } from 'antd';
+import React, { useState } from 'react';
+import RoleTable from './components/RoleTable';
 
 const Role: React.FC = () => {
-  const actionRef = useRef<ActionType>(null);
-  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
-  const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<any>(null);
-
-  const handleAdd = () => {
-    setEditingRecord(null);
-    setFormVisible(true);
-  };
-
-  const handleEdit = (record: any) => {
-    setEditingRecord(record);
-    setFormVisible(true);
-  };
-
-  const handleDelete = async (record: any) => {
-    try {
-      const res = await deleteRole({ id: record.id || record.role_id });
-      if (res.code === 200) {
-        message.success('删除成功');
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '删除失败');
-      }
-    } catch (_error) {
-      message.error('删除失败');
-    }
-  };
-
-  const handleFormSubmit = async (values: any) => {
-    try {
-      let res: { code: number; message: string; data?: any };
-      if (editingRecord) {
-        res = await updateRole({
-          ...values,
-          id: editingRecord.id || editingRecord.role_id,
-        });
-      } else {
-        res = await addRole(values);
-      }
-      if (res.code === 200) {
-        message.success(editingRecord ? '更新成功' : '新增成功');
-        setFormVisible(false);
-        setEditingRecord(null);
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || (editingRecord ? '更新失败' : '新增失败'));
-      }
-    } catch (_error) {
-      message.error(editingRecord ? '更新失败' : '新增失败');
-    }
-  };
-
-  const columns: ProColumns<any>[] = [
-    {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
-    },
-    {
-      title: '角色名称',
-      dataIndex: 'role_name',
-      width: 150,
-      fieldProps: {
-        placeholder: '请输入角色名称',
-      },
-    },
-    {
-      title: '角色编码',
-      dataIndex: 'role_code',
-      width: 150,
-      fieldProps: {
-        placeholder: '请输入角色编码',
-      },
-    },
-    {
-      title: '账号类型',
-      dataIndex: 'account_type',
-      valueType: 'select',
-      valueEnum: {
-        admin: { text: '管理员', status: 'Success' },
-        user: { text: '用户', status: 'Default' },
-      },
-      width: 120,
-    },
-    {
-      title: '角色描述',
-      dataIndex: 'description',
-      hideInSearch: true,
-      width: 200,
-      ellipsis: true,
-      render: (_, record) => record.description || '',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      valueType: 'select',
-      valueEnum: {
-        1: { text: '启用', status: 'Success' },
-        0: { text: '禁用', status: 'Error' },
-      },
-      width: 100,
-      render: (_, record) => (
-        <Tag color={record.status === 1 ? 'success' : 'error'}>
-          {record.status === 1 ? '启用' : '禁用'}
-        </Tag>
-      ),
-    },
-    {
-      title: '排序',
-      dataIndex: 'sort',
-      hideInSearch: true,
-      width: 80,
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      width: 150,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const [activeTab, setActiveTab] = useState<'admin' | 'user'>('admin');
 
   return (
     <PageContainer>
-      <ProTable<any>
-        actionRef={actionRef}
-        rowKey="id"
-        size={TABLE_SIZE}
-        search={{
-          labelWidth: 120,
-          defaultCollapsed: false,
-        }}
-        request={async (params) => {
-          const requestParams: any = {
-            ...params,
-            page: params.current || 1,
-            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-          };
-          const response = await getRoleList(requestParams);
-          if (response.code === 200) {
-            return {
-              data: response.data?.data || [],
-              success: true,
-              total: response.data?.page?.total || 0,
-            };
-          }
-          return {
-            data: [],
-            success: false,
-            total: 0,
-          };
-        }}
-        columns={columns}
-        pagination={{
-          ...DEFAULT_PAGINATION,
-          pageSize,
-          onShowSizeChange: (_current, size) => {
-            setPageSize(size);
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'admin' | 'user')}
+        destroyOnHidden
+        items={[
+          {
+            key: 'admin',
+            label: '管理员角色',
+            children: <RoleTable key="admin" accountType="admin" />,
           },
-        }}
-        dateFormatter="string"
-        headerTitle="角色列表"
-        scroll={{ x: 'max-content' }}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-          >
-            新增
-          </Button>,
+          {
+            key: 'user',
+            label: '用户角色',
+            children: <RoleTable key="user" accountType="user" />,
+          },
         ]}
-      />
-      <RoleForm
-        visible={formVisible}
-        editingRecord={editingRecord}
-        onCancel={() => {
-          setFormVisible(false);
-          setEditingRecord(null);
-        }}
-        onSubmit={handleFormSubmit}
       />
     </PageContainer>
   );
