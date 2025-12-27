@@ -7,50 +7,67 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import React, { useEffect, useState } from 'react';
-import { getDepartmentList } from '@/services/api/organization';
+import {
+  getDepartmentList,
+  getPositionList,
+} from '@/services/api/organization';
 import { MODAL_WIDTH } from '@/utils/constants';
 
-interface PositionFormProps {
+interface PostFormProps {
   visible: boolean;
   editingRecord: any;
   onCancel: () => void;
   onSubmit: (values: any) => Promise<void>;
 }
 
-const PositionForm: React.FC<PositionFormProps> = ({
+const PostForm: React.FC<PostFormProps> = ({
   visible,
   editingRecord,
   onCancel,
   onSubmit,
 }) => {
+  const [positionOptions, setPositionOptions] = useState<
+    Array<{ label: string; value: number }>
+  >([]);
   const [departmentOptions, setDepartmentOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
 
   useEffect(() => {
     if (visible) {
-      loadDepartmentOptions();
+      loadOptions();
     }
   }, [visible]);
 
-  const loadDepartmentOptions = async () => {
+  const loadOptions = async () => {
     try {
-      const res = await getDepartmentList({ page: 1, pageSize: 1000 });
-      if (res.code === 200 && res.data?.data) {
-        const options = res.data.data.map((item: any) => ({
+      // 加载职位列表
+      const positionRes = await getPositionList({ page: 1, pageSize: 1000 });
+      if (positionRes.code === 200 && positionRes.data?.data) {
+        const options = positionRes.data.data.map((item: any) => ({
+          label: item.position_name,
+          value: item.position_id,
+        }));
+        setPositionOptions(options);
+      }
+
+      // 加载部门列表
+      const deptRes = await getDepartmentList({ page: 1, pageSize: 1000 });
+      if (deptRes.code === 200 && deptRes.data?.data) {
+        const options = deptRes.data.data.map((item: any) => ({
           label: item.department_name,
           value: item.department_id,
         }));
         setDepartmentOptions(options);
       }
     } catch (error) {
-      console.error('加载部门选项失败:', error);
+      console.error('加载选项失败:', error);
     }
   };
 
   return (
     <ModalForm
-      title={editingRecord ? '编辑职位' : '新增职位'}
+      title={editingRecord ? '编辑岗位' : '新增岗位'}
       open={visible}
       onOpenChange={(open) => {
         if (!open) {
@@ -71,6 +88,16 @@ const PositionForm: React.FC<PositionFormProps> = ({
       wrapperCol={{ span: 18 }}
     >
       <ProFormSelect
+        name="position_id"
+        label="所属职位"
+        options={positionOptions}
+        rules={[{ required: true, message: '请选择所属职位' }]}
+        fieldProps={{
+          placeholder: '请选择所属职位',
+          showSearch: true,
+        }}
+      />
+      <ProFormSelect
         name="department_id"
         label="所属部门"
         options={departmentOptions}
@@ -81,33 +108,33 @@ const PositionForm: React.FC<PositionFormProps> = ({
         }}
       />
       <ProFormText
-        name="position_code"
-        label="职位编码"
+        name="post_code"
+        label="岗位编码"
         fieldProps={{
-          placeholder: '请输入职位编码（可选）',
+          placeholder: '请输入岗位编码（可选）',
         }}
       />
       <ProFormText
-        name="position_name"
-        label="职位名称"
-        rules={[{ required: true, message: '请输入职位名称' }]}
+        name="post_name"
+        label="岗位名称"
+        rules={[{ required: true, message: '请输入岗位名称' }]}
         fieldProps={{
-          placeholder: '请输入职位名称',
+          placeholder: '请输入岗位名称',
         }}
       />
       <ProFormTextArea
-        name="job_description"
-        label="职位描述"
+        name="post_description"
+        label="岗位描述"
         fieldProps={{
-          placeholder: '请输入职位描述（可选）',
+          placeholder: '请输入岗位描述（可选）',
           rows: 3,
         }}
       />
       <ProFormTextArea
-        name="job_requirements"
-        label="任职要求"
+        name="post_requirements"
+        label="岗位要求"
         fieldProps={{
-          placeholder: '请输入任职要求（可选）',
+          placeholder: '请输入岗位要求（可选）',
           rows: 3,
         }}
       />
@@ -133,4 +160,4 @@ const PositionForm: React.FC<PositionFormProps> = ({
   );
 };
 
-export default PositionForm;
+export default PostForm;

@@ -3,25 +3,23 @@ import { request } from '@umijs/max';
 
 // ========== 公司管理 API ==========
 
-/** 公司列表 POST /api/admin/organization/index */
+/** 公司列表 POST /api/admin/company/index */
 export async function getCompanyList(
   params?: {
+    current?: number;
+    pageSize?: number;
     [key: string]: any;
   },
   options?: { [key: string]: any },
 ) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any[];
-  }>('/api/admin/organization/index', {
+  return request<API.PageResponse>('/api/admin/company/index', {
     method: 'POST',
-    data: { ...params, type: 'company' },
+    data: params,
     ...(options || {}),
   });
 }
 
-/** 新增公司 POST /api/admin/organization/add */
+/** 新增公司 POST /api/admin/company/add */
 export async function addCompany(
   body: {
     [key: string]: any;
@@ -32,14 +30,14 @@ export async function addCompany(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/add', {
+  }>('/api/admin/company/add', {
     method: 'POST',
-    data: { ...body, type: 'company' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 更新公司 POST /api/admin/organization/update */
+/** 更新公司 POST /api/admin/company/update */
 export async function updateCompany(
   body: {
     [key: string]: any;
@@ -50,14 +48,14 @@ export async function updateCompany(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/update', {
+  }>('/api/admin/company/update', {
     method: 'POST',
-    data: { ...body, type: 'company' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 删除公司 POST /api/admin/organization/delete */
+/** 删除公司 POST /api/admin/company/delete */
 export async function deleteCompany(
   body: {
     [key: string]: any;
@@ -68,52 +66,32 @@ export async function deleteCompany(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/delete', {
+  }>('/api/admin/company/delete', {
     method: 'POST',
-    data: { ...body, type: 'company' },
-    ...(options || {}),
-  });
-}
-
-/** 移动公司 POST /api/admin/organization/move */
-export async function moveCompany(
-  body: {
-    [key: string]: any;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any;
-  }>('/api/admin/organization/move', {
-    method: 'POST',
-    data: { ...body, type: 'company' },
+    data: body,
     ...(options || {}),
   });
 }
 
 // ========== 部门管理 API ==========
 
-/** 部门列表 POST /api/admin/organization/index */
+/** 部门列表 POST /api/admin/department/index */
 export async function getDepartmentList(
   params?: {
+    current?: number;
+    pageSize?: number;
     [key: string]: any;
   },
   options?: { [key: string]: any },
 ) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any[];
-  }>('/api/admin/organization/index', {
+  return request<API.PageResponse>('/api/admin/department/index', {
     method: 'POST',
-    data: { ...params, type: 'department' },
+    data: params,
     ...(options || {}),
   });
 }
 
-/** 新增部门 POST /api/admin/organization/add */
+/** 新增部门 POST /api/admin/department/add */
 export async function addDepartment(
   body: {
     [key: string]: any;
@@ -124,14 +102,14 @@ export async function addDepartment(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/add', {
+  }>('/api/admin/department/add', {
     method: 'POST',
-    data: { ...body, type: 'department' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 更新部门 POST /api/admin/organization/update */
+/** 更新部门 POST /api/admin/department/update */
 export async function updateDepartment(
   body: {
     [key: string]: any;
@@ -142,14 +120,14 @@ export async function updateDepartment(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/update', {
+  }>('/api/admin/department/update', {
     method: 'POST',
-    data: { ...body, type: 'department' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 删除部门 POST /api/admin/organization/delete */
+/** 删除部门 POST /api/admin/department/delete */
 export async function deleteDepartment(
   body: {
     [key: string]: any;
@@ -160,52 +138,32 @@ export async function deleteDepartment(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/delete', {
+  }>('/api/admin/department/delete', {
     method: 'POST',
-    data: { ...body, type: 'department' },
-    ...(options || {}),
-  });
-}
-
-/** 移动部门 POST /api/admin/organization/move */
-export async function moveDepartment(
-  body: {
-    [key: string]: any;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any;
-  }>('/api/admin/organization/move', {
-    method: 'POST',
-    data: { ...body, type: 'department' },
+    data: body,
     ...(options || {}),
   });
 }
 
 // ========== 职位管理 API ==========
 
-/** 职位列表 POST /api/admin/organization/index */
+/** 职位列表 POST /api/admin/position/index */
 export async function getPositionList(
   params?: {
+    current?: number;
+    pageSize?: number;
     [key: string]: any;
   },
   options?: { [key: string]: any },
 ) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any[];
-  }>('/api/admin/organization/index', {
+  return request<API.PageResponse>('/api/admin/position/index', {
     method: 'POST',
-    data: { ...params, type: 'position' },
+    data: params,
     ...(options || {}),
   });
 }
 
-/** 新增职位 POST /api/admin/organization/add */
+/** 新增职位 POST /api/admin/position/add */
 export async function addPosition(
   body: {
     [key: string]: any;
@@ -216,14 +174,14 @@ export async function addPosition(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/add', {
+  }>('/api/admin/position/add', {
     method: 'POST',
-    data: { ...body, type: 'position' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 更新职位 POST /api/admin/organization/update */
+/** 更新职位 POST /api/admin/position/update */
 export async function updatePosition(
   body: {
     [key: string]: any;
@@ -234,14 +192,14 @@ export async function updatePosition(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/update', {
+  }>('/api/admin/position/update', {
     method: 'POST',
-    data: { ...body, type: 'position' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 删除职位 POST /api/admin/organization/delete */
+/** 删除职位 POST /api/admin/position/delete */
 export async function deletePosition(
   body: {
     [key: string]: any;
@@ -252,52 +210,32 @@ export async function deletePosition(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/delete', {
+  }>('/api/admin/position/delete', {
     method: 'POST',
-    data: { ...body, type: 'position' },
-    ...(options || {}),
-  });
-}
-
-/** 移动职位 POST /api/admin/organization/move */
-export async function movePosition(
-  body: {
-    [key: string]: any;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any;
-  }>('/api/admin/organization/move', {
-    method: 'POST',
-    data: { ...body, type: 'position' },
+    data: body,
     ...(options || {}),
   });
 }
 
 // ========== 岗位管理 API ==========
 
-/** 岗位列表 POST /api/admin/organization/index */
+/** 岗位列表 POST /api/admin/post/index */
 export async function getJobList(
   params?: {
+    current?: number;
+    pageSize?: number;
     [key: string]: any;
   },
   options?: { [key: string]: any },
 ) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any[];
-  }>('/api/admin/organization/index', {
+  return request<API.PageResponse>('/api/admin/post/index', {
     method: 'POST',
-    data: { ...params, type: 'job' },
+    data: params,
     ...(options || {}),
   });
 }
 
-/** 新增岗位 POST /api/admin/organization/add */
+/** 新增岗位 POST /api/admin/post/add */
 export async function addJob(
   body: {
     [key: string]: any;
@@ -308,14 +246,14 @@ export async function addJob(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/add', {
+  }>('/api/admin/post/add', {
     method: 'POST',
-    data: { ...body, type: 'job' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 更新岗位 POST /api/admin/organization/update */
+/** 更新岗位 POST /api/admin/post/update */
 export async function updateJob(
   body: {
     [key: string]: any;
@@ -326,14 +264,14 @@ export async function updateJob(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/update', {
+  }>('/api/admin/post/update', {
     method: 'POST',
-    data: { ...body, type: 'job' },
+    data: body,
     ...(options || {}),
   });
 }
 
-/** 删除岗位 POST /api/admin/organization/delete */
+/** 删除岗位 POST /api/admin/post/delete */
 export async function deleteJob(
   body: {
     [key: string]: any;
@@ -344,27 +282,9 @@ export async function deleteJob(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/organization/delete', {
+  }>('/api/admin/post/delete', {
     method: 'POST',
-    data: { ...body, type: 'job' },
-    ...(options || {}),
-  });
-}
-
-/** 移动岗位 POST /api/admin/organization/move */
-export async function moveJob(
-  body: {
-    [key: string]: any;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    code: number;
-    message: string;
-    data?: any;
-  }>('/api/admin/organization/move', {
-    method: 'POST',
-    data: { ...body, type: 'job' },
+    data: body,
     ...(options || {}),
   });
 }

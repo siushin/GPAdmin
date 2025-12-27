@@ -21,8 +21,8 @@ import {
 } from '@/services/api/system';
 import { SysParamFlag, TABLE_SIZE } from '@/utils/constants';
 import OrganizationForm from '../organization/components/OrganizationForm';
-import useStyles from '../organization/style.style';
 import DictionaryTypeForm from './components/DictionaryTypeForm';
+import useStyles from './DictTree.style';
 
 const DictTree: React.FC = () => {
   const { message } = App.useApp();

@@ -138,9 +138,9 @@ export default [
     access: 'canAdmin',
   },
   {
-    path: '/organization/job',
-    name: 'org.job',
-    component: './organization/Job',
+    path: '/organization/post',
+    name: 'org.post',
+    component: './organization/Post',
     access: 'canAdmin',
   },
 

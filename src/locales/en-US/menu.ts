@@ -50,5 +50,5 @@ export default {
   'menu.org.company': 'Company Management',
   'menu.org.dept': 'Department Management',
   'menu.org.position': 'Position Management',
-  'menu.org.job': 'Job Management',
+  'menu.org.post': 'Post Management',
 };

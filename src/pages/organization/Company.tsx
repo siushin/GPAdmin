@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space } from 'antd';
+import { Button, message, Popconfirm, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
   addCompany,
@@ -9,11 +9,16 @@ import {
   getCompanyList,
   updateCompany,
 } from '@/services/api/organization';
-import { TABLE_SIZE } from '@/utils/constants';
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGINATION,
+  TABLE_SIZE,
+} from '@/utils/constants';
 import CompanyForm from './components/CompanyForm';
 
 const Company: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
@@ -30,7 +35,7 @@ const Company: React.FC = () => {
   const handleDelete = async (record: any) => {
     try {
       const res = await deleteCompany({
-        organization_id: record.organization_id,
+        company_id: record.company_id,
       });
       if (res.code === 200) {
         message.success('删除成功');
@@ -49,7 +54,7 @@ const Company: React.FC = () => {
       if (editingRecord) {
         res = await updateCompany({
           ...values,
-          organization_id: editingRecord.organization_id,
+          company_id: editingRecord.company_id,
         });
       } else {
         res = await addCompany(values);
@@ -69,13 +74,67 @@ const Company: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '组织名称',
-      dataIndex: 'organization_name',
-      width: 300,
+      title: '序号',
+      valueType: 'index',
+      width: 80,
+      hideInSearch: true,
+      fixed: 'left',
+    },
+    {
+      title: '公司编码',
+      dataIndex: 'company_code',
+      width: 150,
       fieldProps: {
-        placeholder: '请输入组织名称',
+        placeholder: '请输入公司编码',
       },
-      render: (_, record) => record.organization_name || '',
+    },
+    {
+      title: '公司名称',
+      dataIndex: 'company_name',
+      width: 200,
+      fieldProps: {
+        placeholder: '请输入公司名称',
+      },
+    },
+    {
+      title: '法人代表',
+      dataIndex: 'legal_person',
+      hideInSearch: true,
+      width: 120,
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'contact_phone',
+      hideInSearch: true,
+      width: 150,
+    },
+    {
+      title: '联系邮箱',
+      dataIndex: 'contact_email',
+      hideInSearch: true,
+      width: 200,
+    },
+    {
+      title: '公司地址',
+      dataIndex: 'address',
+      hideInSearch: true,
+      width: 250,
+      ellipsis: true,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '正常', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
+      },
+      width: 100,
+      render: (_, record) => (
+        <Tag color={record.status === 1 ? 'success' : 'error'}>
+          {record.status === 1 ? '正常' : '禁用'}
+        </Tag>
+      ),
     },
     {
       title: '操作',
@@ -88,7 +147,7 @@ const Company: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
+            title="确定要删除这条数据吗？"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -104,34 +163,43 @@ const Company: React.FC = () => {
     <PageContainer>
       <ProTable<any>
         actionRef={actionRef}
-        rowKey="organization_id"
+        rowKey="company_id"
         size={TABLE_SIZE}
         search={{
           labelWidth: 120,
           defaultCollapsed: false,
         }}
         request={async (params) => {
-          const response = await getCompanyList({
+          const requestParams: any = {
             ...params,
-            organization_name: params.organization_name,
-          });
+            page: params.current || 1,
+            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+          };
+          const response = await getCompanyList(requestParams);
           if (response.code === 200) {
             return {
-              data: response.data || [],
+              data: response.data?.data || [],
               success: true,
+              total: response.data?.page?.total || 0,
             };
           }
           return {
             data: [],
             success: false,
+            total: 0,
           };
         }}
         columns={columns}
+        pagination={{
+          ...DEFAULT_PAGINATION,
+          pageSize,
+          onShowSizeChange: (_current, size) => {
+            setPageSize(size);
+          },
+        }}
         dateFormatter="string"
         headerTitle="公司列表"
         scroll={{ x: 'max-content' }}
-        pagination={false}
-        defaultExpandAllRows
         toolBarRender={() => [
           <Button
             key="add"
@@ -151,7 +219,6 @@ const Company: React.FC = () => {
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
-        getCompanyList={getCompanyList}
       />
     </PageContainer>
   );

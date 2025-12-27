@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space } from 'antd';
+import { Button, message, Popconfirm, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
   addJob,
@@ -9,11 +9,16 @@ import {
   getJobList,
   updateJob,
 } from '@/services/api/organization';
-import { TABLE_SIZE } from '@/utils/constants';
-import JobForm from './components/JobForm';
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGINATION,
+  TABLE_SIZE,
+} from '@/utils/constants';
+import PostForm from './components/PostForm';
 
-const Job: React.FC = () => {
+const Post: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
@@ -30,7 +35,7 @@ const Job: React.FC = () => {
   const handleDelete = async (record: any) => {
     try {
       const res = await deleteJob({
-        organization_id: record.organization_id,
+        post_id: record.post_id,
       });
       if (res.code === 200) {
         message.success('删除成功');
@@ -49,7 +54,7 @@ const Job: React.FC = () => {
       if (editingRecord) {
         res = await updateJob({
           ...values,
-          organization_id: editingRecord.organization_id,
+          post_id: editingRecord.post_id,
         });
       } else {
         res = await addJob(values);
@@ -69,13 +74,62 @@ const Job: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '组织名称',
-      dataIndex: 'organization_name',
-      width: 300,
+      title: '序号',
+      valueType: 'index',
+      width: 80,
+      hideInSearch: true,
+      fixed: 'left',
+    },
+    {
+      title: '岗位编码',
+      dataIndex: 'post_code',
+      width: 150,
       fieldProps: {
-        placeholder: '请输入组织名称',
+        placeholder: '请输入岗位编码',
       },
-      render: (_, record) => record.organization_name || '',
+    },
+    {
+      title: '岗位名称',
+      dataIndex: 'post_name',
+      width: 200,
+      fieldProps: {
+        placeholder: '请输入岗位名称',
+      },
+    },
+    {
+      title: '所属职位',
+      dataIndex: 'position_id',
+      hideInSearch: true,
+      width: 150,
+      render: (_, record) => record.position_name || '-',
+    },
+    {
+      title: '所属部门',
+      dataIndex: 'department_id',
+      hideInSearch: true,
+      width: 150,
+      render: (_, record) => record.department_name || '-',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '正常', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
+      },
+      width: 100,
+      render: (_, record) => (
+        <Tag color={record.status === 1 ? 'success' : 'error'}>
+          {record.status === 1 ? '正常' : '禁用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '排序',
+      dataIndex: 'sort_order',
+      hideInSearch: true,
+      width: 80,
     },
     {
       title: '操作',
@@ -88,7 +142,7 @@ const Job: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
+            title="确定要删除这条数据吗？"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -104,34 +158,43 @@ const Job: React.FC = () => {
     <PageContainer>
       <ProTable<any>
         actionRef={actionRef}
-        rowKey="organization_id"
+        rowKey="post_id"
         size={TABLE_SIZE}
         search={{
           labelWidth: 120,
           defaultCollapsed: false,
         }}
         request={async (params) => {
-          const response = await getJobList({
+          const requestParams: any = {
             ...params,
-            organization_name: params.organization_name,
-          });
+            page: params.current || 1,
+            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+          };
+          const response = await getJobList(requestParams);
           if (response.code === 200) {
             return {
-              data: response.data || [],
+              data: response.data?.data || [],
               success: true,
+              total: response.data?.page?.total || 0,
             };
           }
           return {
             data: [],
             success: false,
+            total: 0,
           };
         }}
         columns={columns}
+        pagination={{
+          ...DEFAULT_PAGINATION,
+          pageSize,
+          onShowSizeChange: (_current, size) => {
+            setPageSize(size);
+          },
+        }}
         dateFormatter="string"
         headerTitle="岗位列表"
         scroll={{ x: 'max-content' }}
-        pagination={false}
-        defaultExpandAllRows
         toolBarRender={() => [
           <Button
             key="add"
@@ -143,7 +206,7 @@ const Job: React.FC = () => {
           </Button>,
         ]}
       />
-      <JobForm
+      <PostForm
         visible={formVisible}
         editingRecord={editingRecord}
         onCancel={() => {
@@ -151,10 +214,9 @@ const Job: React.FC = () => {
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
-        getJobList={getJobList}
       />
     </PageContainer>
   );
 };
 
-export default Job;
+export default Post;

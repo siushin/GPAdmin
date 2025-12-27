@@ -50,5 +50,5 @@ export default {
   'menu.org.company': '公司管理',
   'menu.org.dept': '部門管理',
   'menu.org.position': '職位管理',
-  'menu.org.job': '崗位管理',
+  'menu.org.post': '崗位管理',
 };
