@@ -74,21 +74,6 @@ const Post: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
-    },
-    {
-      title: '岗位编码',
-      dataIndex: 'post_code',
-      width: 150,
-      fieldProps: {
-        placeholder: '请输入岗位编码',
-      },
-    },
-    {
       title: '岗位名称',
       dataIndex: 'post_name',
       width: 200,
@@ -97,18 +82,13 @@ const Post: React.FC = () => {
       },
     },
     {
-      title: '所属职位',
-      dataIndex: 'position_id',
-      hideInSearch: true,
+      title: '岗位编码',
+      dataIndex: 'post_code',
       width: 150,
-      render: (_, record) => record.position_name || '-',
-    },
-    {
-      title: '所属部门',
-      dataIndex: 'department_id',
+      fieldProps: {
+        placeholder: '请输入岗位编码',
+      },
       hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.department_name || '-',
     },
     {
       title: '状态',
@@ -126,12 +106,6 @@ const Post: React.FC = () => {
       ),
     },
     {
-      title: '排序',
-      dataIndex: 'sort_order',
-      hideInSearch: true,
-      width: 80,
-    },
-    {
       title: '操作',
       valueType: 'option',
       width: 150,
@@ -142,7 +116,7 @@ const Post: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？"
+            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -185,6 +159,9 @@ const Post: React.FC = () => {
           };
         }}
         columns={columns}
+        dateFormatter="string"
+        headerTitle="岗位列表"
+        scroll={{ x: 'max-content' }}
         pagination={{
           ...DEFAULT_PAGINATION,
           pageSize,
@@ -192,9 +169,6 @@ const Post: React.FC = () => {
             setPageSize(size);
           },
         }}
-        dateFormatter="string"
-        headerTitle="岗位列表"
-        scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button
             key="add"

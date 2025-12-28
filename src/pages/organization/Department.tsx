@@ -9,16 +9,11 @@ import {
   getDepartmentList,
   updateDepartment,
 } from '@/services/api/organization';
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_PAGINATION,
-  TABLE_SIZE,
-} from '@/utils/constants';
+import { TABLE_SIZE } from '@/utils/constants';
 import DepartmentForm from './components/DepartmentForm';
 
 const Department: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
-  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
@@ -74,11 +69,13 @@ const Department: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
+      title: '部门名称',
+      dataIndex: 'department_name',
+      width: 300,
+      fieldProps: {
+        placeholder: '请输入部门名称',
+      },
+      render: (_, record) => record.department_name || '',
     },
     {
       title: '部门编码',
@@ -87,28 +84,7 @@ const Department: React.FC = () => {
       fieldProps: {
         placeholder: '请输入部门编码',
       },
-    },
-    {
-      title: '部门名称',
-      dataIndex: 'department_name',
-      width: 200,
-      fieldProps: {
-        placeholder: '请输入部门名称',
-      },
-    },
-    {
-      title: '所属公司',
-      dataIndex: 'company_id',
       hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.company_name || '-',
-    },
-    {
-      title: '上级部门',
-      dataIndex: 'parent_id',
-      hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.parent_name || '顶级部门',
     },
     {
       title: '状态',
@@ -119,17 +95,12 @@ const Department: React.FC = () => {
         0: { text: '禁用', status: 'Error' },
       },
       width: 100,
+      hideInSearch: true,
       render: (_, record) => (
         <Tag color={record.status === 1 ? 'success' : 'error'}>
           {record.status === 1 ? '正常' : '禁用'}
         </Tag>
       ),
-    },
-    {
-      title: '排序',
-      dataIndex: 'sort_order',
-      hideInSearch: true,
-      width: 80,
     },
     {
       title: '操作',
@@ -142,7 +113,7 @@ const Department: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？"
+            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -165,36 +136,30 @@ const Department: React.FC = () => {
           defaultCollapsed: false,
         }}
         request={async (params) => {
-          const requestParams: any = {
+          const response = await getDepartmentList({
             ...params,
-            page: params.current || 1,
-            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-          };
-          const response = await getDepartmentList(requestParams);
+            department_name: params.department_name,
+            department_code: params.department_code,
+            status: params.status,
+          });
           if (response.code === 200) {
+            // 后端返回的是树形结构
             return {
-              data: response.data?.data || [],
+              data: response.data || [],
               success: true,
-              total: response.data?.page?.total || 0,
             };
           }
           return {
             data: [],
             success: false,
-            total: 0,
           };
         }}
         columns={columns}
-        pagination={{
-          ...DEFAULT_PAGINATION,
-          pageSize,
-          onShowSizeChange: (_current, size) => {
-            setPageSize(size);
-          },
-        }}
         dateFormatter="string"
         headerTitle="部门列表"
         scroll={{ x: 'max-content' }}
+        pagination={false}
+        defaultExpandAllRows
         toolBarRender={() => [
           <Button
             key="add"

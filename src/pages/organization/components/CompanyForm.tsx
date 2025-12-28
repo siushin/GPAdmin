@@ -1,5 +1,5 @@
 import {
-  ModalForm,
+  DrawerForm,
   ProFormRadio,
   ProFormText,
   ProFormTextArea,
@@ -21,7 +21,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
   onSubmit,
 }) => {
   return (
-    <ModalForm
+    <DrawerForm
       title={editingRecord ? '编辑公司' : '新增公司'}
       open={visible}
       onOpenChange={(open) => {
@@ -31,6 +31,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       }}
       onFinish={async (values) => {
         await onSubmit(values);
+        return true;
       }}
       initialValues={{
         ...(editingRecord || {}),
@@ -42,18 +43,18 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       wrapperCol={{ span: 18 }}
     >
       <ProFormText
-        name="company_code"
-        label="公司编码"
-        fieldProps={{
-          placeholder: '请输入公司编码（可选）',
-        }}
-      />
-      <ProFormText
         name="company_name"
         label="公司名称"
         rules={[{ required: true, message: '请输入公司名称' }]}
         fieldProps={{
           placeholder: '请输入公司名称',
+        }}
+      />
+      <ProFormText
+        name="company_code"
+        label="公司编码"
+        fieldProps={{
+          placeholder: '请输入公司编码（可选）',
         }}
       />
       <ProFormText
@@ -100,9 +101,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
           { label: '禁用', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择状态' }]}
-        initialValue={1}
       />
-    </ModalForm>
+    </DrawerForm>
   );
 };
 

@@ -74,21 +74,6 @@ const Position: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
-    },
-    {
-      title: '职位编码',
-      dataIndex: 'position_code',
-      width: 150,
-      fieldProps: {
-        placeholder: '请输入职位编码',
-      },
-    },
-    {
       title: '职位名称',
       dataIndex: 'position_name',
       width: 200,
@@ -97,11 +82,13 @@ const Position: React.FC = () => {
       },
     },
     {
-      title: '所属部门',
-      dataIndex: 'department_id',
-      hideInSearch: true,
+      title: '职位编码',
+      dataIndex: 'position_code',
       width: 150,
-      render: (_, record) => record.department_name || '-',
+      fieldProps: {
+        placeholder: '请输入职位编码',
+      },
+      hideInSearch: true,
     },
     {
       title: '状态',
@@ -119,12 +106,6 @@ const Position: React.FC = () => {
       ),
     },
     {
-      title: '排序',
-      dataIndex: 'sort_order',
-      hideInSearch: true,
-      width: 80,
-    },
-    {
       title: '操作',
       valueType: 'option',
       width: 150,
@@ -135,7 +116,7 @@ const Position: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？"
+            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -178,6 +159,9 @@ const Position: React.FC = () => {
           };
         }}
         columns={columns}
+        dateFormatter="string"
+        headerTitle="职位列表"
+        scroll={{ x: 'max-content' }}
         pagination={{
           ...DEFAULT_PAGINATION,
           pageSize,
@@ -185,9 +169,6 @@ const Position: React.FC = () => {
             setPageSize(size);
           },
         }}
-        dateFormatter="string"
-        headerTitle="职位列表"
-        scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button
             key="add"

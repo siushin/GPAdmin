@@ -1,5 +1,5 @@
 import {
-  ModalForm,
+  DrawerForm,
   ProFormDigit,
   ProFormRadio,
   ProFormSelect,
@@ -7,7 +7,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import React, { useEffect, useState } from 'react';
-import { getCompanyList, getDepartmentList } from '@/services/api/organization';
+import { getDepartmentList } from '@/services/api/organization';
 import { MODAL_WIDTH } from '@/utils/constants';
 
 interface DepartmentFormProps {
@@ -23,54 +23,67 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
-  const [companyOptions, setCompanyOptions] = useState<
-    Array<{ label: string; value: number }>
-  >([]);
   const [parentOptions, setParentOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
 
   useEffect(() => {
     if (visible) {
-      loadOptions();
+      loadParentOptions();
     }
-  }, [visible, editingRecord]);
+  }, [visible]);
 
-  const loadOptions = async () => {
+  const loadParentOptions = async () => {
     try {
-      // 加载公司列表
-      const companyRes = await getCompanyList({ page: 1, pageSize: 1000 });
-      if (companyRes.code === 200 && companyRes.data?.data) {
-        const options = companyRes.data.data.map((item: any) => ({
-          label: item.company_name,
-          value: item.company_id,
-        }));
-        setCompanyOptions(options);
-      }
-
-      // 加载部门列表（用于选择父部门）
-      const deptRes = await getDepartmentList({ page: 1, pageSize: 1000 });
-      if (deptRes.code === 200 && deptRes.data?.data) {
-        const options = deptRes.data.data.map((item: any) => ({
-          label: item.department_name,
-          value: item.department_id,
-        }));
-        // 编辑时，排除自己
+      const res = await getDepartmentList();
+      if (res.code === 200 && res.data) {
+        // 将树形数据转换为扁平列表
+        const flattenData = (data: any[]): any[] => {
+          const result: any[] = [];
+          data.forEach((item) => {
+            result.push({
+              label: item.department_name,
+              value: item.department_id,
+            });
+            if (item.children && item.children.length > 0) {
+              result.push(...flattenData(item.children));
+            }
+          });
+          return result;
+        };
+        const options = flattenData(res.data);
+        // 编辑时，排除自己和子级
         if (editingRecord) {
+          const excludeIds = [editingRecord.department_id];
+          // 递归获取所有子部门ID
+          const getAllChildIds = (data: any[], parentId: number): number[] => {
+            const childIds: number[] = [];
+            data.forEach((item) => {
+              if (item.parent_id === parentId) {
+                childIds.push(item.department_id);
+                childIds.push(...getAllChildIds(data, item.department_id));
+              }
+            });
+            return childIds;
+          };
+          const allData = flattenData(res.data);
+          const childIds = getAllChildIds(allData, editingRecord.department_id);
+          excludeIds.push(...childIds);
           setParentOptions(
-            options.filter((opt) => opt.value !== editingRecord.department_id),
+            options.filter((opt) => !excludeIds.includes(opt.value)),
           );
         } else {
           setParentOptions(options);
         }
       }
     } catch (error) {
-      console.error('加载选项失败:', error);
+      console.error('加载父级选项失败:', error);
+      setParentOptions([]);
     }
   };
 
   return (
-    <ModalForm
+    <DrawerForm
       title={editingRecord ? '编辑部门' : '新增部门'}
       open={visible}
       onOpenChange={(open) => {
@@ -80,6 +93,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
       }}
       onFinish={async (values) => {
         await onSubmit(values);
+        return true;
       }}
       initialValues={{
         ...(editingRecord || {}),
@@ -92,14 +106,12 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
       labelCol={{ span: 6 }}
       wrapperCol={{ span: 18 }}
     >
-      <ProFormSelect
-        name="company_id"
-        label="所属公司"
-        options={companyOptions}
-        rules={[{ required: true, message: '请选择所属公司' }]}
+      <ProFormText
+        name="department_name"
+        label="部门名称"
+        rules={[{ required: true, message: '请输入部门名称' }]}
         fieldProps={{
-          placeholder: '请选择所属公司',
-          showSearch: true,
+          placeholder: '请输入部门名称',
         }}
       />
       <ProFormText
@@ -109,14 +121,6 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           placeholder: '请输入部门编码（可选）',
         }}
       />
-      <ProFormText
-        name="department_name"
-        label="部门名称"
-        rules={[{ required: true, message: '请输入部门名称' }]}
-        fieldProps={{
-          placeholder: '请输入部门名称',
-        }}
-      />
       <ProFormSelect
         name="parent_id"
         label="上级部门"
@@ -124,14 +128,6 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         fieldProps={{
           placeholder: '请选择上级部门（不选则为顶级）',
           showSearch: true,
-        }}
-        extra="不选择则作为顶级部门创建"
-      />
-      <ProFormText
-        name="manager_id"
-        label="部门负责人"
-        fieldProps={{
-          placeholder: '请输入部门负责人ID（可选）',
         }}
       />
       <ProFormTextArea
@@ -150,7 +146,6 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           { label: '禁用', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择状态' }]}
-        initialValue={1}
       />
       <ProFormDigit
         name="sort_order"
@@ -158,9 +153,8 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         fieldProps={{
           placeholder: '请输入排序值',
         }}
-        initialValue={0}
       />
-    </ModalForm>
+    </DrawerForm>
   );
 };
 

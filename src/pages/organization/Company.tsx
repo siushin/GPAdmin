@@ -74,11 +74,13 @@ const Company: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '序号',
-      valueType: 'index',
-      width: 80,
-      hideInSearch: true,
-      fixed: 'left',
+      title: '公司名称',
+      dataIndex: 'company_name',
+      width: 300,
+      fieldProps: {
+        placeholder: '请输入公司名称',
+      },
+      render: (_, record) => record.company_name || '',
     },
     {
       title: '公司编码',
@@ -87,39 +89,6 @@ const Company: React.FC = () => {
       fieldProps: {
         placeholder: '请输入公司编码',
       },
-    },
-    {
-      title: '公司名称',
-      dataIndex: 'company_name',
-      width: 200,
-      fieldProps: {
-        placeholder: '请输入公司名称',
-      },
-    },
-    {
-      title: '法人代表',
-      dataIndex: 'legal_person',
-      hideInSearch: true,
-      width: 120,
-    },
-    {
-      title: '联系电话',
-      dataIndex: 'contact_phone',
-      hideInSearch: true,
-      width: 150,
-    },
-    {
-      title: '联系邮箱',
-      dataIndex: 'contact_email',
-      hideInSearch: true,
-      width: 200,
-    },
-    {
-      title: '公司地址',
-      dataIndex: 'address',
-      hideInSearch: true,
-      width: 250,
-      ellipsis: true,
     },
     {
       title: '状态',
@@ -147,7 +116,7 @@ const Company: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？"
+            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>
@@ -173,7 +142,7 @@ const Company: React.FC = () => {
           const requestParams: any = {
             ...params,
             page: params.current || 1,
-            pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+            pageSize: params.pageSize ?? 10,
           };
           const response = await getCompanyList(requestParams);
           if (response.code === 200) {
@@ -190,6 +159,9 @@ const Company: React.FC = () => {
           };
         }}
         columns={columns}
+        dateFormatter="string"
+        headerTitle="公司列表"
+        scroll={{ x: 'max-content' }}
         pagination={{
           ...DEFAULT_PAGINATION,
           pageSize,
@@ -197,9 +169,6 @@ const Company: React.FC = () => {
             setPageSize(size);
           },
         }}
-        dateFormatter="string"
-        headerTitle="公司列表"
-        scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button
             key="add"

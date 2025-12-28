@@ -1,5 +1,5 @@
 import {
-  ModalForm,
+  DrawerForm,
   ProFormDigit,
   ProFormRadio,
   ProFormSelect,
@@ -26,10 +26,10 @@ const PostForm: React.FC<PostFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
-  const [positionOptions, setPositionOptions] = useState<
+  const [departmentOptions, setDepartmentOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
-  const [departmentOptions, setDepartmentOptions] = useState<
+  const [positionOptions, setPositionOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
 
@@ -41,24 +41,34 @@ const PostForm: React.FC<PostFormProps> = ({
 
   const loadOptions = async () => {
     try {
-      // 加载职位列表
-      const positionRes = await getPositionList({ page: 1, pageSize: 1000 });
-      if (positionRes.code === 200 && positionRes.data?.data) {
-        const options = positionRes.data.data.map((item: any) => ({
+      // 加载部门选项
+      const deptRes = await getDepartmentList();
+      if (deptRes.code === 200 && deptRes.data) {
+        const flattenData = (data: any[]): any[] => {
+          const result: any[] = [];
+          data.forEach((item) => {
+            result.push({
+              label: item.department_name,
+              value: item.department_id,
+            });
+            if (item.children && item.children.length > 0) {
+              result.push(...flattenData(item.children));
+            }
+          });
+          return result;
+        };
+        const deptOptions = flattenData(deptRes.data);
+        setDepartmentOptions(deptOptions);
+      }
+
+      // 加载职位选项
+      const posRes = await getPositionList({ pageSize: 1000 });
+      if (posRes.code === 200 && posRes.data?.data) {
+        const posOptions = posRes.data.data.map((item: any) => ({
           label: item.position_name,
           value: item.position_id,
         }));
-        setPositionOptions(options);
-      }
-
-      // 加载部门列表
-      const deptRes = await getDepartmentList({ page: 1, pageSize: 1000 });
-      if (deptRes.code === 200 && deptRes.data?.data) {
-        const options = deptRes.data.data.map((item: any) => ({
-          label: item.department_name,
-          value: item.department_id,
-        }));
-        setDepartmentOptions(options);
+        setPositionOptions(posOptions);
       }
     } catch (error) {
       console.error('加载选项失败:', error);
@@ -66,7 +76,7 @@ const PostForm: React.FC<PostFormProps> = ({
   };
 
   return (
-    <ModalForm
+    <DrawerForm
       title={editingRecord ? '编辑岗位' : '新增岗位'}
       open={visible}
       onOpenChange={(open) => {
@@ -76,6 +86,7 @@ const PostForm: React.FC<PostFormProps> = ({
       }}
       onFinish={async (values) => {
         await onSubmit(values);
+        return true;
       }}
       initialValues={{
         ...(editingRecord || {}),
@@ -87,24 +98,12 @@ const PostForm: React.FC<PostFormProps> = ({
       labelCol={{ span: 6 }}
       wrapperCol={{ span: 18 }}
     >
-      <ProFormSelect
-        name="position_id"
-        label="所属职位"
-        options={positionOptions}
-        rules={[{ required: true, message: '请选择所属职位' }]}
+      <ProFormText
+        name="post_name"
+        label="岗位名称"
+        rules={[{ required: true, message: '请输入岗位名称' }]}
         fieldProps={{
-          placeholder: '请选择所属职位',
-          showSearch: true,
-        }}
-      />
-      <ProFormSelect
-        name="department_id"
-        label="所属部门"
-        options={departmentOptions}
-        rules={[{ required: true, message: '请选择所属部门' }]}
-        fieldProps={{
-          placeholder: '请选择所属部门',
-          showSearch: true,
+          placeholder: '请输入岗位名称',
         }}
       />
       <ProFormText
@@ -114,12 +113,22 @@ const PostForm: React.FC<PostFormProps> = ({
           placeholder: '请输入岗位编码（可选）',
         }}
       />
-      <ProFormText
-        name="post_name"
-        label="岗位名称"
-        rules={[{ required: true, message: '请输入岗位名称' }]}
+      <ProFormSelect
+        name="position_id"
+        label="所属职位"
+        options={positionOptions}
         fieldProps={{
-          placeholder: '请输入岗位名称',
+          placeholder: '请选择所属职位（可选）',
+          showSearch: true,
+        }}
+      />
+      <ProFormSelect
+        name="department_id"
+        label="所属部门"
+        options={departmentOptions}
+        fieldProps={{
+          placeholder: '请选择所属部门（可选）',
+          showSearch: true,
         }}
       />
       <ProFormTextArea
@@ -146,7 +155,6 @@ const PostForm: React.FC<PostFormProps> = ({
           { label: '禁用', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择状态' }]}
-        initialValue={1}
       />
       <ProFormDigit
         name="sort_order"
@@ -154,9 +162,8 @@ const PostForm: React.FC<PostFormProps> = ({
         fieldProps={{
           placeholder: '请输入排序值',
         }}
-        initialValue={0}
       />
-    </ModalForm>
+    </DrawerForm>
   );
 };
 
