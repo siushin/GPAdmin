@@ -116,7 +116,7 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
         name="target_platform"
         label="目标平台"
         options={[
-          { label: '全部平台', value: 'all' },
+          { label: '全平台', value: 'all' },
           { label: '用户端', value: 'user' },
           { label: '管理端', value: 'admin' },
           { label: '小程序', value: 'miniapp' },

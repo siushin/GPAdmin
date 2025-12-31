@@ -80,7 +80,7 @@ const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> = ({
 
   // 平台名称映射
   const platformMap: Record<string, string> = {
-    all: '全部平台',
+    all: '全平台',
     user: '用户端',
     admin: '管理端',
     miniapp: '小程序',

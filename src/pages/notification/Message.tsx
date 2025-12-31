@@ -115,7 +115,7 @@ const Message: React.FC = () => {
     {
       title: '标题',
       dataIndex: 'title',
-      width: 200,
+      width: 150,
       fixed: 'left',
       fieldProps: {
         placeholder: '请输入标题',
@@ -125,15 +125,23 @@ const Message: React.FC = () => {
       title: '内容',
       dataIndex: 'content',
       hideInSearch: true,
-      width: 200,
-      ellipsis: true,
+      width: 150,
+      ellipsis: {
+        showTitle: false,
+      },
       render: (text: any, record: any) => (
         <span
           style={{
             cursor: 'pointer',
             color: '#1890ff',
+            display: 'block',
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
           onClick={() => handleViewDetail(record)}
+          title={text}
         >
           {text}
         </span>
@@ -159,7 +167,7 @@ const Message: React.FC = () => {
       width: 150,
       valueType: 'select',
       valueEnum: {
-        all: { text: '全部平台' },
+        all: { text: '全平台' },
         user: { text: '用户端' },
         admin: { text: '管理端' },
         miniapp: { text: '小程序' },
@@ -178,7 +186,7 @@ const Message: React.FC = () => {
 
         // 平台名称映射
         const platformMap: Record<string, string> = {
-          all: '全部平台',
+          all: '全平台',
           user: '用户端',
           admin: '管理端',
           miniapp: '小程序',
@@ -212,7 +220,7 @@ const Message: React.FC = () => {
         1: { text: '已读', status: 'Success' },
         0: { text: '未读', status: 'Default' },
       },
-      width: 100,
+      width: 80,
       render: (_, record) => (
         <Tag color={record.status === 1 ? 'success' : 'default'}>
           {record.status === 1 ? '已读' : '未读'}
