@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, message, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
@@ -16,6 +16,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import NotificationDetailDrawer from './components/NotificationDetailDrawer';
 import NotificationReadDrawer from './components/NotificationReadDrawer';
 
 const SystemNotification: React.FC = () => {
@@ -25,6 +26,8 @@ const SystemNotification: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [readDrawerVisible, setReadDrawerVisible] = useState(false);
   const [viewingRecord, setViewingRecord] = useState<any>(null);
+  const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -79,6 +82,11 @@ const SystemNotification: React.FC = () => {
     setReadDrawerVisible(true);
   };
 
+  const handleViewDetail = (record: any) => {
+    setDetailRecord(record);
+    setDetailDrawerVisible(true);
+  };
+
   const columns: ProColumns<any>[] = [
     {
       title: '序号',
@@ -100,8 +108,19 @@ const SystemNotification: React.FC = () => {
       title: '内容',
       dataIndex: 'content',
       hideInSearch: true,
-      width: 300,
+      width: 250,
       ellipsis: true,
+      render: (text: any, record: any) => (
+        <span
+          style={{
+            cursor: 'pointer',
+            color: '#1890ff',
+          }}
+          onClick={() => handleViewDetail(record)}
+        >
+          {text}
+        </span>
+      ),
     },
     {
       title: '目标平台',
@@ -114,23 +133,44 @@ const SystemNotification: React.FC = () => {
         admin: { text: '管理端' },
         miniapp: { text: '小程序' },
       },
+      fieldProps: {
+        mode: 'multiple',
+        placeholder: '请选择目标平台',
+      },
       render: (_, record) => {
-        const platforms = record.target_platform?.split(',') || [];
-        return (
-          <Space>
-            {platforms.map((p: string) => (
-              <Tag key={p}>
-                {p === 'all'
-                  ? '全部平台'
-                  : p === 'user'
-                    ? '用户端'
-                    : p === 'admin'
-                      ? '管理端'
-                      : '小程序'}
-              </Tag>
-            ))}
-          </Space>
-        );
+        if (!record.target_platform) return '';
+        const platforms = record.target_platform
+          .split(',')
+          .map((p: string) => p.trim())
+          .filter(Boolean);
+        if (platforms.length === 0) return '';
+
+        // 平台名称映射
+        const platformMap: Record<string, string> = {
+          all: '全部平台',
+          user: '用户端',
+          admin: '管理端',
+          miniapp: '小程序',
+        };
+
+        // 排序规则：all 排在最前面，然后是 user, admin, miniapp
+        const sortOrder: Record<string, number> = {
+          all: 0,
+          user: 1,
+          admin: 2,
+          miniapp: 3,
+        };
+
+        // 排序并转换为中文名称
+        const sortedPlatforms = platforms
+          .sort((a: string, b: string) => {
+            const orderA = sortOrder[a] ?? 999;
+            const orderB = sortOrder[b] ?? 999;
+            return orderA - orderB;
+          })
+          .map((p: string) => platformMap[p] || p);
+
+        return sortedPlatforms.join('、');
       },
     },
     {
@@ -143,6 +183,24 @@ const SystemNotification: React.FC = () => {
         business: { text: '业务通知' },
         activity: { text: '活动通知' },
         other: { text: '其他' },
+      },
+      fieldProps: {
+        mode: 'multiple',
+        placeholder: '请选择通知类型',
+      },
+      render: (_, record) => {
+        if (!record.type) return '-';
+        const typeMap: Record<string, { text: string; color: string }> = {
+          system: { text: '系统通知', color: 'blue' },
+          business: { text: '业务通知', color: 'green' },
+          activity: { text: '活动通知', color: 'orange' },
+          other: { text: '其他', color: 'default' },
+        };
+        const typeInfo = typeMap[record.type] || {
+          text: record.type,
+          color: 'default',
+        };
+        return <Tag color={typeInfo.color}>{typeInfo.text}</Tag>;
       },
     },
     {
@@ -159,6 +217,99 @@ const SystemNotification: React.FC = () => {
           {record.status === 1 ? '启用' : '禁用'}
         </Tag>
       ),
+    },
+    {
+      title: '生效时间',
+      dataIndex: 'effective_time',
+      hideInSearch: false,
+      width: 200,
+      valueType: 'select',
+      valueEnum: {
+        not_started: { text: '未开始' },
+        in_progress: { text: '进行中' },
+        ended: { text: '已结束' },
+        effective: { text: '已生效' },
+      },
+      fieldProps: {
+        mode: 'multiple',
+        placeholder: '请选择生效状态',
+      },
+      render: (_, record) => {
+        const now = dayjs();
+        let startTime = null;
+        let endTime = null;
+        let status = '';
+        let statusColor = '';
+        let timeText = '';
+        let displayText = '';
+
+        if (record.start_time) {
+          startTime = dayjs(record.start_time);
+        }
+        if (record.end_time) {
+          endTime = dayjs(record.end_time);
+        }
+
+        // 如果都没有开始和结束时间，使用创建时间
+        if (!startTime && !endTime) {
+          if (!record.created_at) return '-';
+          const createdTime = dayjs(record.created_at);
+          timeText = createdTime.format('YYYY-MM-DD HH:mm:ss');
+          displayText = createdTime.format('YYYY-MM-DD');
+          status = '已生效';
+          statusColor = 'blue';
+        } else if (startTime && endTime) {
+          // 有开始和结束时间
+          const startStr = startTime.format('YYYY-MM-DD HH:mm:ss');
+          const endStr = endTime.format('YYYY-MM-DD HH:mm:ss');
+          timeText = `${startStr} ~ ${endStr}`;
+          displayText = `${startTime.format('YYYY-MM-DD')} ~ ${endTime.format('YYYY-MM-DD')}`;
+
+          if (now.isBefore(startTime)) {
+            status = '未开始';
+            statusColor = 'orange';
+          } else if (now.isAfter(endTime)) {
+            status = '已结束';
+            statusColor = 'red';
+          } else {
+            status = '进行中';
+            statusColor = 'green';
+          }
+        } else if (startTime) {
+          // 只有开始时间
+          const startStr = startTime.format('YYYY-MM-DD HH:mm:ss');
+          timeText = `${startStr} ~ 长期有效`;
+          displayText = `${startTime.format('YYYY-MM-DD')} ~ 长期有效`;
+          if (now.isBefore(startTime)) {
+            status = '未开始';
+            statusColor = 'orange';
+          } else {
+            status = '进行中';
+            statusColor = 'green';
+          }
+        } else if (endTime) {
+          // 只有结束时间
+          const endStr = endTime.format('YYYY-MM-DD HH:mm:ss');
+          timeText = `立即生效 ~ ${endStr}`;
+          displayText = `立即生效 ~ ${endTime.format('YYYY-MM-DD')}`;
+          if (now.isAfter(endTime)) {
+            status = '已结束';
+            statusColor = 'red';
+          } else {
+            status = '进行中';
+            statusColor = 'green';
+          }
+        }
+
+        return (
+          <Space size={8} style={{ whiteSpace: 'nowrap' }}>
+            <Tooltip title={timeText}>
+              <span style={{ cursor: 'pointer' }}>{displayText}</span>
+            </Tooltip>
+            <Tag color={statusColor}>{status}</Tag>
+          </Space>
+        );
+      },
     },
     {
       title: '创建时间',
@@ -222,6 +373,20 @@ const SystemNotification: React.FC = () => {
             current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
+          // 将目标平台数组转换为逗号分隔的字符串
+          if (Array.isArray(requestParams.target_platform)) {
+            requestParams.target_platform =
+              requestParams.target_platform.join(',');
+          }
+          // 将通知类型数组转换为逗号分隔的字符串
+          if (Array.isArray(requestParams.type)) {
+            requestParams.type = requestParams.type.join(',');
+          }
+          // 将生效状态数组转换为逗号分隔的字符串
+          if (Array.isArray(requestParams.effective_time)) {
+            requestParams.effective_time =
+              requestParams.effective_time.join(',');
+          }
           const response = await getSystemNotificationList(requestParams);
           if (response.code === 200) {
             return {
@@ -267,6 +432,15 @@ const SystemNotification: React.FC = () => {
         onClose={() => {
           setReadDrawerVisible(false);
           setViewingRecord(null);
+        }}
+      />
+      <NotificationDetailDrawer
+        visible={detailDrawerVisible}
+        record={detailRecord}
+        type="system_notification"
+        onClose={() => {
+          setDetailDrawerVisible(false);
+          setDetailRecord(null);
         }}
       />
     </PageContainer>

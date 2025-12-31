@@ -16,6 +16,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import NotificationDetailDrawer from './components/NotificationDetailDrawer';
 import NotificationReadDrawer from './components/NotificationReadDrawer';
 
 const Message: React.FC = () => {
@@ -25,6 +26,8 @@ const Message: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [readDrawerVisible, setReadDrawerVisible] = useState(false);
   const [viewingRecord, setViewingRecord] = useState<any>(null);
+  const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -79,6 +82,11 @@ const Message: React.FC = () => {
     setReadDrawerVisible(true);
   };
 
+  const handleViewDetail = (record: any) => {
+    setDetailRecord(record);
+    setDetailDrawerVisible(true);
+  };
+
   const columns: ProColumns<any>[] = [
     {
       title: '序号',
@@ -100,8 +108,19 @@ const Message: React.FC = () => {
       title: '内容',
       dataIndex: 'content',
       hideInSearch: true,
-      width: 300,
+      width: 250,
       ellipsis: true,
+      render: (text: any, record: any) => (
+        <span
+          style={{
+            cursor: 'pointer',
+            color: '#1890ff',
+          }}
+          onClick={() => handleViewDetail(record)}
+        >
+          {text}
+        </span>
+      ),
     },
     {
       title: '发送者ID',
@@ -128,23 +147,44 @@ const Message: React.FC = () => {
         admin: { text: '管理端' },
         miniapp: { text: '小程序' },
       },
+      fieldProps: {
+        mode: 'multiple',
+        placeholder: '请选择目标平台',
+      },
       render: (_, record) => {
-        const platforms = record.target_platform?.split(',') || [];
-        return (
-          <Space>
-            {platforms.map((p: string) => (
-              <Tag key={p}>
-                {p === 'all'
-                  ? '全部平台'
-                  : p === 'user'
-                    ? '用户端'
-                    : p === 'admin'
-                      ? '管理端'
-                      : '小程序'}
-              </Tag>
-            ))}
-          </Space>
-        );
+        if (!record.target_platform) return '';
+        const platforms = record.target_platform
+          .split(',')
+          .map((p: string) => p.trim())
+          .filter(Boolean);
+        if (platforms.length === 0) return '';
+
+        // 平台名称映射
+        const platformMap: Record<string, string> = {
+          all: '全部平台',
+          user: '用户端',
+          admin: '管理端',
+          miniapp: '小程序',
+        };
+
+        // 排序规则：all 排在最前面，然后是 user, admin, miniapp
+        const sortOrder: Record<string, number> = {
+          all: 0,
+          user: 1,
+          admin: 2,
+          miniapp: 3,
+        };
+
+        // 排序并转换为中文名称
+        const sortedPlatforms = platforms
+          .sort((a: string, b: string) => {
+            const orderA = sortOrder[a] ?? 999;
+            const orderB = sortOrder[b] ?? 999;
+            return orderA - orderB;
+          })
+          .map((p: string) => platformMap[p] || p);
+
+        return sortedPlatforms.join('、');
       },
     },
     {
@@ -161,6 +201,28 @@ const Message: React.FC = () => {
           {record.status === 1 ? '已读' : '未读'}
         </Tag>
       ),
+    },
+    {
+      title: '生效时间',
+      dataIndex: 'effective_time',
+      hideInSearch: true,
+      width: 200,
+      render: (_, record) => {
+        // 站内信创建即生效，使用创建时间作为生效时间
+        if (!record.created_at) return '-';
+        try {
+          const createdTime = dayjs(record.created_at);
+          const timeText = createdTime.format('YYYY-MM-DD HH:mm:ss');
+          return (
+            <Space direction="vertical" size={4}>
+              <div>{timeText}</div>
+              <Tag color="blue">已生效</Tag>
+            </Space>
+          );
+        } catch (_e) {
+          return record.created_at;
+        }
+      },
     },
     {
       title: '创建时间',
@@ -224,6 +286,11 @@ const Message: React.FC = () => {
             current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
+          // 将目标平台数组转换为逗号分隔的字符串
+          if (Array.isArray(requestParams.target_platform)) {
+            requestParams.target_platform =
+              requestParams.target_platform.join(',');
+          }
           const response = await getMessageList(requestParams);
           if (response.code === 200) {
             return {
@@ -269,6 +336,15 @@ const Message: React.FC = () => {
         onClose={() => {
           setReadDrawerVisible(false);
           setViewingRecord(null);
+        }}
+      />
+      <NotificationDetailDrawer
+        visible={detailDrawerVisible}
+        record={detailRecord}
+        type="message"
+        onClose={() => {
+          setDetailDrawerVisible(false);
+          setDetailRecord(null);
         }}
       />
     </PageContainer>

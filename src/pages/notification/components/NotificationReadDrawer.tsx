@@ -69,6 +69,22 @@ const NotificationReadDrawer: React.FC<NotificationReadDrawerProps> = ({
       render: (_, record) => record.account?.profile?.nickname || '-',
     },
     {
+      title: 'IP地址',
+      dataIndex: 'ip_address',
+      width: 150,
+      fieldProps: {
+        placeholder: '请输入IP地址',
+      },
+    },
+    {
+      title: 'IP归属地',
+      dataIndex: 'ip_location',
+      width: 150,
+      fieldProps: {
+        placeholder: '请输入IP归属地',
+      },
+    },
+    {
       title: '查看时间',
       dataIndex: 'read_at',
       valueType: 'dateRange',
