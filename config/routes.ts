@@ -70,13 +70,13 @@ export default [
   {
     path: '/notification',
     name: 'notif',
-    redirect: '/notification/system',
+    redirect: '/notification/systemNotification',
     access: 'canAdmin',
   },
   {
-    path: '/notification/system',
-    name: 'notif.system',
-    component: './notification/System',
+    path: '/notification/systemNotification',
+    name: 'notif.systemNotification',
+    component: './notification/SystemNotification',
     access: 'canAdmin',
   },
   {

@@ -24,7 +24,7 @@ export default {
 
   // 通知管理
   'menu.notif': '通知管理',
-  'menu.notif.system': '系统通知',
+  'menu.notif.systemNotification': '系统通知',
   'menu.notif.message': '站内信',
   'menu.notif.announcement': '公告管理',
 

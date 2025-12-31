@@ -5,10 +5,10 @@ import { Button, message, Popconfirm, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
-  addAnnouncement,
-  deleteAnnouncement,
-  getAnnouncementList,
-  updateAnnouncement,
+  addSystemNotification,
+  deleteSystemNotification,
+  getSystemNotificationList,
+  updateSystemNotification,
 } from '@/services/api/notification';
 import {
   DEFAULT_PAGE_SIZE,
@@ -18,7 +18,7 @@ import {
 import { dateRangeFieldProps } from '@/utils/datePresets';
 import NotificationReadDrawer from './components/NotificationReadDrawer';
 
-const Announcement: React.FC = () => {
+const SystemNotification: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
@@ -38,7 +38,7 @@ const Announcement: React.FC = () => {
 
   const handleDelete = async (record: any) => {
     try {
-      const res = await deleteAnnouncement({ id: record.id });
+      const res = await deleteSystemNotification({ id: record.id });
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
@@ -54,12 +54,12 @@ const Announcement: React.FC = () => {
     try {
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
-        res = await updateAnnouncement({
+        res = await updateSystemNotification({
           ...values,
           id: editingRecord.id,
         });
       } else {
-        res = await addAnnouncement(values);
+        res = await addSystemNotification(values);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');
@@ -134,41 +134,15 @@ const Announcement: React.FC = () => {
       },
     },
     {
-      title: '显示位置',
-      dataIndex: 'position',
+      title: '通知类型',
+      dataIndex: 'type',
       width: 120,
-      fieldProps: {
-        placeholder: '请输入显示位置',
-      },
-    },
-    {
-      title: '开始时间',
-      dataIndex: 'start_time',
-      valueType: 'dateTime',
-      hideInSearch: true,
-      width: 180,
-      render: (_, record) => {
-        if (!record.start_time) return '';
-        try {
-          return dayjs(record.start_time).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.start_time;
-        }
-      },
-    },
-    {
-      title: '结束时间',
-      dataIndex: 'end_time',
-      valueType: 'dateTime',
-      hideInSearch: true,
-      width: 180,
-      render: (_, record) => {
-        if (!record.end_time) return '';
-        try {
-          return dayjs(record.end_time).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.end_time;
-        }
+      valueType: 'select',
+      valueEnum: {
+        system: { text: '系统通知' },
+        business: { text: '业务通知' },
+        activity: { text: '活动通知' },
+        other: { text: '其他' },
       },
     },
     {
@@ -248,7 +222,7 @@ const Announcement: React.FC = () => {
             current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
-          const response = await getAnnouncementList(requestParams);
+          const response = await getSystemNotificationList(requestParams);
           if (response.code === 200) {
             return {
               data: response.data?.data || [],
@@ -271,7 +245,7 @@ const Announcement: React.FC = () => {
           },
         }}
         dateFormatter="string"
-        headerTitle="公告列表"
+        headerTitle="系统通知列表"
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button
@@ -287,9 +261,9 @@ const Announcement: React.FC = () => {
       {/* TODO: 添加表单弹窗组件 */}
       <NotificationReadDrawer
         visible={readDrawerVisible}
-        readType="announcement"
+        readType="system_notification"
         targetId={viewingRecord?.id}
-        title={`公告查看记录 - ${viewingRecord?.title || ''}`}
+        title={`系统通知查看记录 - ${viewingRecord?.title || ''}`}
         onClose={() => {
           setReadDrawerVisible(false);
           setViewingRecord(null);
@@ -299,4 +273,4 @@ const Announcement: React.FC = () => {
   );
 };
 
-export default Announcement;
+export default SystemNotification;
