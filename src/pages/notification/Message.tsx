@@ -16,6 +16,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import MessageForm from './components/MessageForm';
 import NotificationDetailDrawer from './components/NotificationDetailDrawer';
 import NotificationReadDrawer from './components/NotificationReadDrawer';
 
@@ -35,11 +36,21 @@ const Message: React.FC = () => {
   };
 
   const handleEdit = (record: any) => {
+    // 如果状态是已读，不允许编辑
+    if (record.status === 1) {
+      message.warning('已读的站内信不能编辑');
+      return;
+    }
     setEditingRecord(record);
     setFormVisible(true);
   };
 
   const handleDelete = async (record: any) => {
+    // 如果状态是已读，不允许删除
+    if (record.status === 1) {
+      message.warning('已读的站内信不能删除');
+      return;
+    }
     try {
       const res = await deleteMessage({ id: record.id });
       if (res.code === 200) {
@@ -55,14 +66,20 @@ const Message: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 处理目标平台：单选框直接使用值
+      const submitValues = {
+        ...values,
+        target_platform: values.target_platform || 'all',
+      };
+
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
         res = await updateMessage({
-          ...values,
+          ...submitValues,
           id: editingRecord.id,
         });
       } else {
-        res = await addMessage(values);
+        res = await addMessage(submitValues);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');
@@ -108,7 +125,7 @@ const Message: React.FC = () => {
       title: '内容',
       dataIndex: 'content',
       hideInSearch: true,
-      width: 250,
+      width: 200,
       ellipsis: true,
       render: (text: any, record: any) => (
         <span
@@ -123,13 +140,13 @@ const Message: React.FC = () => {
       ),
     },
     {
-      title: '发送者ID',
+      title: '发送者',
       dataIndex: 'sender_id',
       hideInSearch: true,
       width: 120,
     },
     {
-      title: '接收者ID',
+      title: '接收者',
       dataIndex: 'receiver_id',
       width: 120,
       fieldProps: {
@@ -203,28 +220,6 @@ const Message: React.FC = () => {
       ),
     },
     {
-      title: '生效时间',
-      dataIndex: 'effective_time',
-      hideInSearch: true,
-      width: 200,
-      render: (_, record) => {
-        // 站内信创建即生效，使用创建时间作为生效时间
-        if (!record.created_at) return '-';
-        try {
-          const createdTime = dayjs(record.created_at);
-          const timeText = createdTime.format('YYYY-MM-DD HH:mm:ss');
-          return (
-            <Space direction="vertical" size={4}>
-              <div>{timeText}</div>
-              <Tag color="blue">已生效</Tag>
-            </Space>
-          );
-        } catch (_e) {
-          return record.created_at;
-        }
-      },
-    },
-    {
       title: '创建时间',
       dataIndex: 'created_at',
       valueType: 'dateRange',
@@ -245,28 +240,44 @@ const Message: React.FC = () => {
       valueType: 'option',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleViewReads(record)}
-          >
-            查看记录
-          </Button>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) => {
+        const isDisabled = record.status === 1; // 已读状态不能编辑和删除
+        return (
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleViewReads(record)}
+            >
+              查看记录
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleEdit(record)}
+              disabled={isDisabled}
+              title={isDisabled ? '已读的站内信不能编辑' : ''}
+            >
+              编辑
+            </Button>
+            <Popconfirm
+              title="确定要删除这条数据吗？"
+              onConfirm={() => handleDelete(record)}
+              disabled={isDisabled}
+            >
+              <Button
+                type="link"
+                size="small"
+                danger
+                disabled={isDisabled}
+                title={isDisabled ? '已读的站内信不能删除' : ''}
+              >
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -327,7 +338,15 @@ const Message: React.FC = () => {
           </Button>,
         ]}
       />
-      {/* TODO: 添加表单弹窗组件 */}
+      <MessageForm
+        visible={formVisible}
+        editingRecord={editingRecord}
+        onCancel={() => {
+          setFormVisible(false);
+          setEditingRecord(null);
+        }}
+        onSubmit={handleFormSubmit}
+      />
       <NotificationReadDrawer
         visible={readDrawerVisible}
         readType="message"

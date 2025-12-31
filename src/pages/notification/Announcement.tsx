@@ -16,6 +16,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import AnnouncementForm from './components/AnnouncementForm';
 import NotificationDetailDrawer from './components/NotificationDetailDrawer';
 import NotificationReadDrawer from './components/NotificationReadDrawer';
 
@@ -35,11 +36,21 @@ const Announcement: React.FC = () => {
   };
 
   const handleEdit = (record: any) => {
+    // 如果状态是禁用，不允许编辑
+    if (record.status === 0) {
+      message.warning('禁用的公告不能编辑，请先启用');
+      return;
+    }
     setEditingRecord(record);
     setFormVisible(true);
   };
 
   const handleDelete = async (record: any) => {
+    // 如果状态是禁用，不允许删除
+    if (record.status === 0) {
+      message.warning('禁用的公告不能删除，请先启用');
+      return;
+    }
     try {
       const res = await deleteAnnouncement({ id: record.id });
       if (res.code === 200) {
@@ -55,14 +66,20 @@ const Announcement: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 处理目标平台：单选框直接使用值
+      const submitValues = {
+        ...values,
+        target_platform: values.target_platform || 'all',
+      };
+
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
         res = await updateAnnouncement({
-          ...values,
+          ...submitValues,
           id: editingRecord.id,
         });
       } else {
-        res = await addAnnouncement(values);
+        res = await addAnnouncement(submitValues);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');
@@ -98,7 +115,7 @@ const Announcement: React.FC = () => {
     {
       title: '标题',
       dataIndex: 'title',
-      width: 200,
+      width: 150,
       fixed: 'left',
       fieldProps: {
         placeholder: '请输入标题',
@@ -108,7 +125,7 @@ const Announcement: React.FC = () => {
       title: '内容',
       dataIndex: 'content',
       hideInSearch: true,
-      width: 250,
+      width: 100,
       ellipsis: true,
       render: (text: any, record: any) => (
         <span
@@ -179,36 +196,6 @@ const Announcement: React.FC = () => {
       width: 120,
       fieldProps: {
         placeholder: '请输入显示位置',
-      },
-    },
-    {
-      title: '开始时间',
-      dataIndex: 'start_time',
-      valueType: 'dateTime',
-      hideInSearch: true,
-      width: 180,
-      render: (_, record) => {
-        if (!record.start_time) return '';
-        try {
-          return dayjs(record.start_time).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.start_time;
-        }
-      },
-    },
-    {
-      title: '结束时间',
-      dataIndex: 'end_time',
-      valueType: 'dateTime',
-      hideInSearch: true,
-      width: 180,
-      render: (_, record) => {
-        if (!record.end_time) return '';
-        try {
-          return dayjs(record.end_time).format('YYYY-MM-DD HH:mm:ss');
-        } catch (_e) {
-          return record.end_time;
-        }
       },
     },
     {
@@ -340,28 +327,44 @@ const Announcement: React.FC = () => {
       valueType: 'option',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleViewReads(record)}
-          >
-            查看记录
-          </Button>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) => {
+        const isDisabled = record.status === 0; // 禁用状态不能编辑和删除
+        return (
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleViewReads(record)}
+            >
+              查看记录
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleEdit(record)}
+              disabled={isDisabled}
+              title={isDisabled ? '禁用的公告不能编辑' : ''}
+            >
+              编辑
+            </Button>
+            <Popconfirm
+              title="确定要删除这条数据吗？"
+              onConfirm={() => handleDelete(record)}
+              disabled={isDisabled}
+            >
+              <Button
+                type="link"
+                size="small"
+                danger
+                disabled={isDisabled}
+                title={isDisabled ? '禁用的公告不能删除' : ''}
+              >
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -422,7 +425,15 @@ const Announcement: React.FC = () => {
           </Button>,
         ]}
       />
-      {/* TODO: 添加表单弹窗组件 */}
+      <AnnouncementForm
+        visible={formVisible}
+        editingRecord={editingRecord}
+        onCancel={() => {
+          setFormVisible(false);
+          setEditingRecord(null);
+        }}
+        onSubmit={handleFormSubmit}
+      />
       <NotificationReadDrawer
         visible={readDrawerVisible}
         readType="announcement"
