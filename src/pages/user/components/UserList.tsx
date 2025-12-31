@@ -5,21 +5,26 @@ import { Button, message, Popconfirm, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
-  addAdmin,
-  deleteAdmin,
-  getAdminList,
-  updateAdmin,
-} from '@/services/api/system';
+  addUser,
+  auditUser,
+  deleteUser,
+  getUserList,
+  updateUser,
+} from '@/services/api/user';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
-import AdminDetailDrawer from './components/AdminDetailDrawer';
-import AdminForm from './components/AdminForm';
+import UserDetailDrawer from './UserDetailDrawer';
+import UserForm from './UserForm';
 
-const Admin: React.FC = () => {
+interface UserListProps {
+  isPending?: boolean; // true: 待审核列表, false: 用户列表
+}
+
+const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
   const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
@@ -44,7 +49,7 @@ const Admin: React.FC = () => {
 
   const handleDelete = async (record: any) => {
     try {
-      const res = await deleteAdmin({ account_id: record.account_id });
+      const res = await deleteUser({ account_id: record.account_id });
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
@@ -56,16 +61,33 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleAudit = async (record: any, status: number) => {
+    try {
+      const res = await auditUser({
+        account_id: record.account_id,
+        status,
+      });
+      if (res.code === 200) {
+        message.success(status === 1 ? '审核通过' : '审核拒绝');
+        actionRef.current?.reload();
+      } else {
+        message.error(res.message || '审核失败');
+      }
+    } catch (_error) {
+      message.error('审核失败');
+    }
+  };
+
   const handleFormSubmit = async (values: any) => {
     try {
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
-        res = await updateAdmin({
+        res = await updateUser({
           ...values,
           account_id: editingRecord.account_id,
         });
       } else {
-        res = await addAdmin(values);
+        res = await addUser(values);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');
@@ -96,12 +118,6 @@ const Admin: React.FC = () => {
       fieldProps: {
         placeholder: '请输入用户名',
       },
-      render: (_, record) => (
-        <Space>
-          {record.username}
-          {record.is_super === 1 && <Tag color="#108ee9">超管</Tag>}
-        </Space>
-      ),
     },
     {
       title: '姓名',
@@ -112,33 +128,42 @@ const Admin: React.FC = () => {
       render: (_, record) => record.nickname || '',
     },
     {
-      title: '所属公司',
-      dataIndex: 'company_name',
+      title: '手机号',
+      dataIndex: 'phone',
       hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.company_name || '',
+      width: 120,
+      render: (_, record) => record.phone || '',
     },
     {
-      title: '所属部门',
-      dataIndex: 'department_name',
+      title: '邮箱',
+      dataIndex: 'email',
       hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.department_name || '',
+      width: 180,
+      render: (_, record) => record.email || '',
     },
     {
       title: '账号状态',
       dataIndex: 'status',
       valueType: 'select',
       valueEnum: {
-        1: { text: '正常', status: 'Success' },
+        '-1': { text: '待审核', status: 'Warning' },
         0: { text: '禁用', status: 'Error' },
+        1: { text: '正常', status: 'Success' },
       },
       width: 100,
-      render: (_, record) => (
-        <Tag color={record.status === 1 ? 'success' : 'error'}>
-          {record.status === 1 ? '正常' : '禁用'}
-        </Tag>
-      ),
+      hideInSearch: isPending, // 待审核列表隐藏状态筛选
+      render: (_, record) => {
+        const statusMap: Record<
+          number | string,
+          { color: string; text: string }
+        > = {
+          '-1': { color: 'warning', text: '待审核' },
+          0: { color: 'error', text: '禁用' },
+          1: { color: 'success', text: '正常' },
+        };
+        const statusInfo = statusMap[record.status] || statusMap[0];
+        return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
+      },
     },
     {
       title: '最后登录IP',
@@ -190,24 +215,52 @@ const Admin: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 150,
+      width: isPending ? 200 : 150,
       fixed: 'right',
       render: (_, record) => (
         <Space>
           <Button type="link" size="small" onClick={() => handleView(record)}>
             查看
           </Button>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
-            </Button>
-          </Popconfirm>
+          {!isPending && (
+            <>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => handleEdit(record)}
+              >
+                编辑
+              </Button>
+              <Popconfirm
+                title="确定要删除这条数据吗？"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button type="link" size="small" danger>
+                  删除
+                </Button>
+              </Popconfirm>
+            </>
+          )}
+          {isPending && (
+            <>
+              <Popconfirm
+                title="确定要通过审核吗？"
+                onConfirm={() => handleAudit(record, 1)}
+              >
+                <Button type="link" size="small" style={{ color: '#52c41a' }}>
+                  通过
+                </Button>
+              </Popconfirm>
+              <Popconfirm
+                title="确定要拒绝审核吗？"
+                onConfirm={() => handleAudit(record, 0)}
+              >
+                <Button type="link" size="small" danger>
+                  拒绝
+                </Button>
+              </Popconfirm>
+            </>
+          )}
         </Space>
       ),
     },
@@ -229,7 +282,25 @@ const Admin: React.FC = () => {
             current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
-          const response = await getAdminList(requestParams);
+
+          // 根据isPending设置status筛选条件
+          if (isPending) {
+            // 待审核列表：status = -1（固定条件，覆盖用户选择）
+            requestParams.status = -1;
+          } else {
+            // 用户列表：status != -1
+            // 如果用户选择了状态筛选（0或1），使用用户选择的值
+            if (
+              params.status !== undefined &&
+              params.status !== null &&
+              params.status !== ''
+            ) {
+              requestParams.status = params.status;
+            }
+            // 如果用户没有选择状态筛选，不传status参数，后续会在前端过滤掉status=-1的数据
+          }
+
+          const response = await getUserList(requestParams);
           if (response.code === 200) {
             return {
               data: response.data?.data || [],
@@ -252,29 +323,35 @@ const Admin: React.FC = () => {
           },
         }}
         dateFormatter="string"
-        headerTitle="管理员列表"
+        headerTitle={isPending ? '待审核用户列表' : '用户列表'}
         scroll={{ x: 'max-content' }}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-          >
-            新增
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          [
+            !isPending ? (
+              <Button
+                key="add"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAdd}
+              >
+                新增
+              </Button>
+            ) : null,
+          ].filter(Boolean)
+        }
       />
-      <AdminForm
-        visible={formVisible}
-        editingRecord={editingRecord}
-        onCancel={() => {
-          setFormVisible(false);
-          setEditingRecord(null);
-        }}
-        onSubmit={handleFormSubmit}
-      />
-      <AdminDetailDrawer
+      {!isPending && (
+        <UserForm
+          visible={formVisible}
+          editingRecord={editingRecord}
+          onCancel={() => {
+            setFormVisible(false);
+            setEditingRecord(null);
+          }}
+          onSubmit={handleFormSubmit}
+        />
+      )}
+      <UserDetailDrawer
         visible={detailVisible}
         record={viewingRecord}
         onClose={() => {
@@ -286,4 +363,4 @@ const Admin: React.FC = () => {
   );
 };
 
-export default Admin;
+export default UserList;

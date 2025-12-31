@@ -1,12 +1,12 @@
 import { Card, Descriptions, Divider, Spin, Tabs, Tag } from 'antd';
 import React from 'react';
-import AdminLogsSection from './AdminLogsSection';
+import UserLogsSection from './UserLogsSection';
 
-interface AdminDetailContentProps {
+interface UserDetailContentProps {
   detailData: {
     account: any;
     profile: any;
-    admin: any;
+    user: any;
     social: Array<{
       id: number;
       social_type: string;
@@ -22,11 +22,11 @@ interface AdminDetailContentProps {
   loading?: boolean;
 }
 
-const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
+const UserDetailContent: React.FC<UserDetailContentProps> = ({
   detailData,
   loading,
 }) => {
-  const { account, profile, admin, social } = detailData;
+  const { account, profile, user, social } = detailData;
 
   // 性别映射
   const genderMap: Record<string, string> = {
@@ -37,8 +37,9 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
 
   // 账号状态映射
   const statusMap: Record<number, { text: string; color: string }> = {
-    1: { text: '正常', color: 'success' },
+    '-1': { text: '待审核', color: 'warning' },
     0: { text: '禁用', color: 'error' },
+    1: { text: '正常', color: 'success' },
   };
 
   if (loading) {
@@ -65,39 +66,26 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
                   <Descriptions.Item label="用户名">
                     {account.username}
                   </Descriptions.Item>
+                  <Descriptions.Item label="账号类型">
+                    {account.account_type}
+                  </Descriptions.Item>
                   <Descriptions.Item label="账号状态">
                     <Tag color={statusMap[account.status]?.color}>
                       {statusMap[account.status]?.text}
                     </Tag>
                   </Descriptions.Item>
                   <Descriptions.Item label="最后登录IP">
-                    {account.last_login_ip || ''}
+                    {account.last_login_ip || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="最后登录时间">
-                    {account.last_login_time || ''}
+                    {account.last_login_time || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {account.created_at || ''}
+                    {account.created_at || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {account.updated_at || ''}
+                    {account.updated_at || '-'}
                   </Descriptions.Item>
-                  {/* 管理员信息合并到账号信息 */}
-                  {admin && (
-                    <>
-                      <Descriptions.Item label="是否超级管理员">
-                        <Tag color={admin.is_super === 1 ? 'blue' : 'default'}>
-                          {admin.is_super === 1 ? '是' : '否'}
-                        </Tag>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="所属公司">
-                        {admin.company_name || ''}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="所属部门">
-                        {admin.department_name || ''}
-                      </Descriptions.Item>
-                    </>
-                  )}
                 </Descriptions>
               </Card>
             ),
@@ -109,10 +97,10 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
               <Card>
                 <Descriptions column={2} bordered>
                   <Descriptions.Item label="昵称">
-                    {profile.nickname || ''}
+                    {profile.nickname || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="性别">
-                    {genderMap[profile.gender] || profile.gender || ''}
+                    {genderMap[profile.gender] || profile.gender || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="头像">
                     {profile.avatar ? (
@@ -122,26 +110,26 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
                         style={{ width: 60, height: 60, objectFit: 'cover' }}
                       />
                     ) : (
-                      ''
+                      '-'
                     )}
                   </Descriptions.Item>
                   <Descriptions.Item label="真实姓名">
-                    {profile.real_name || ''}
+                    {profile.real_name || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="身份证号">
-                    {profile.id_card || ''}
+                    {profile.id_card || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="认证方式">
-                    {profile.verification_method || ''}
+                    {profile.verification_method || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="认证时间">
-                    {profile.verified_at || ''}
+                    {profile.verified_at || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {profile.created_at || ''}
+                    {profile.created_at || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {profile.updated_at || ''}
+                    {profile.updated_at || '-'}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -234,10 +222,10 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
 
       {/* 日志模块 */}
       <div style={{ marginTop: 24 }}>
-        <AdminLogsSection accountId={account.id} />
+        <UserLogsSection accountId={account.id} />
       </div>
     </div>
   );
 };
 
-export default AdminDetailContent;
+export default UserDetailContent;

@@ -86,3 +86,145 @@ export async function resetPassword(
     ...(options || {}),
   });
 }
+
+// ========== 用户管理 API ==========
+
+/** 用户列表 POST /api/admin/user/index */
+export async function getUserList(
+  params: {
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/user/index', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 新增用户 POST /api/admin/user/add */
+export async function addUser(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/user/add', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新用户 POST /api/admin/user/update */
+export async function updateUser(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/user/update', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除用户 POST /api/admin/user/delete */
+export async function deleteUser(
+  body: {
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/user/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取用户详情 POST /api/admin/user/getDetail */
+export async function getUserDetail(
+  body: {
+    account_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      account: any;
+      profile: any;
+      user: any;
+      social: Array<{
+        id: number;
+        social_type: string;
+        social_account: string;
+        social_name?: string;
+        avatar?: string;
+        is_verified: number;
+        verified_at?: string;
+        created_at?: string;
+        updated_at?: string;
+      }>;
+    };
+  }>('/api/admin/user/getDetail', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 审核用户 POST /api/admin/user/audit */
+export async function auditUser(
+  body: {
+    account_id: number;
+    status: number; // 1: 通过, 0: 拒绝
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/user/audit', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取用户日志 POST /api/admin/user/getLogs */
+export async function getUserLogs(
+  params: {
+    account_id: number;
+    log_type: 'general' | 'operation' | 'audit' | 'login';
+    current?: number;
+    pageSize?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.PageResponse>('/api/admin/user/getLogs', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}

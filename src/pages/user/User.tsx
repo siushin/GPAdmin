@@ -1,13 +1,8 @@
-import { PageContainer } from '@ant-design/pro-components';
-import { Empty } from 'antd';
 import React from 'react';
+import UserList from './components/UserList';
 
 const User: React.FC = () => {
-  return (
-    <PageContainer>
-      <Empty description="用户管理功能开发中..." />
-    </PageContainer>
-  );
+  return <UserList isPending={false} />;
 };
 
 export default User;

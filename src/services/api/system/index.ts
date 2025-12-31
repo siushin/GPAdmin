@@ -76,7 +76,7 @@ export async function deleteAdmin(
 /** 获取管理员详情 POST /api/admin/admin/getDetail */
 export async function getAdminDetail(
   body: {
-    id: number;
+    account_id: number;
   },
   options?: { [key: string]: any },
 ) {

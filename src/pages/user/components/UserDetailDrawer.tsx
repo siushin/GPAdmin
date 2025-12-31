@@ -1,16 +1,16 @@
 import { useModel } from '@umijs/max';
 import { Drawer, Watermark } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { getAdminDetail } from '@/services/api/system';
-import AdminDetailContent from './AdminDetailContent';
+import { getUserDetail } from '@/services/api/user';
+import UserDetailContent from './UserDetailContent';
 
-interface AdminDetailDrawerProps {
+interface UserDetailDrawerProps {
   visible: boolean;
   record: any;
   onClose: () => void;
 }
 
-const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
+const UserDetailDrawer: React.FC<UserDetailDrawerProps> = ({
   visible,
   record,
   onClose,
@@ -21,7 +21,7 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
   const [detailData, setDetailData] = useState<{
     account: any;
     profile: any;
-    admin: any;
+    user: any;
     social: Array<any>;
   } | null>(null);
 
@@ -38,12 +38,12 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
 
     setLoading(true);
     try {
-      const res = await getAdminDetail({ account_id: record.account_id });
+      const res = await getUserDetail({ account_id: record.account_id });
       if (res.code === 200 && res.data) {
         setDetailData(res.data);
       }
     } catch (error) {
-      console.error('加载管理员详情失败:', error);
+      console.error('加载用户详情失败:', error);
     } finally {
       setLoading(false);
     }
@@ -51,15 +51,15 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
 
   return (
     <Drawer
-      title="管理员详情"
+      title="用户详情"
       width={1200}
       open={visible}
       onClose={onClose}
       destroyOnClose
     >
-      <Watermark content={currentUser?.name || '管理员详情'}>
+      <Watermark content={currentUser?.name || '用户详情'}>
         {detailData ? (
-          <AdminDetailContent detailData={detailData} loading={loading} />
+          <UserDetailContent detailData={detailData} loading={loading} />
         ) : (
           <div style={{ textAlign: 'center', padding: '50px' }}>
             {loading ? '加载中...' : '暂无数据'}
@@ -70,4 +70,4 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
   );
 };
 
-export default AdminDetailDrawer;
+export default UserDetailDrawer;
