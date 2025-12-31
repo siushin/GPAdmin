@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, message, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
   addCompany,
@@ -14,6 +14,7 @@ import {
   DEFAULT_PAGINATION,
   TABLE_SIZE,
 } from '@/utils/constants';
+import CompanyDetail from './components/CompanyDetail';
 import CompanyForm from './components/CompanyForm';
 
 const Company: React.FC = () => {
@@ -21,6 +22,8 @@ const Company: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -30,6 +33,11 @@ const Company: React.FC = () => {
   const handleEdit = (record: any) => {
     setEditingRecord(record);
     setFormVisible(true);
+  };
+
+  const handleDetail = (record: any) => {
+    setDetailRecord(record);
+    setDetailVisible(true);
   };
 
   const handleDelete = async (record: any) => {
@@ -76,7 +84,9 @@ const Company: React.FC = () => {
     {
       title: '公司名称',
       dataIndex: 'company_name',
-      width: 300,
+      width: 200,
+      ellipsis: true,
+      fixed: 'left',
       fieldProps: {
         placeholder: '请输入公司名称',
       },
@@ -89,6 +99,36 @@ const Company: React.FC = () => {
       fieldProps: {
         placeholder: '请输入公司编码',
       },
+    },
+    {
+      title: '统一社会信用代码',
+      dataIndex: 'company_credit_code',
+      width: 180,
+      hideInSearch: true,
+      copyable: true,
+      render: (_, record) => record.company_credit_code || '-',
+    },
+    {
+      title: '法人代表',
+      dataIndex: 'legal_person',
+      width: 120,
+      hideInSearch: true,
+      render: (_, record) => record.legal_person || '-',
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'contact_phone',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) => record.contact_phone || '-',
+    },
+    {
+      title: '联系邮箱',
+      dataIndex: 'contact_email',
+      width: 180,
+      ellipsis: true,
+      hideInSearch: true,
+      render: (_, record) => record.contact_email || '-',
     },
     {
       title: '状态',
@@ -106,12 +146,37 @@ const Company: React.FC = () => {
       ),
     },
     {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      valueType: 'dateRange',
+      hideInTable: true,
+      search: {
+        transform: (value) => {
+          return {
+            created_at_start: value[0],
+            created_at_end: value[1],
+          };
+        },
+      },
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      valueType: 'dateTime',
+      width: 180,
+      hideInSearch: true,
+      render: (_, record) => record.created_at || '',
+    },
+    {
       title: '操作',
       valueType: 'option',
-      width: 150,
+      width: 200,
       fixed: 'right',
       render: (_, record) => (
         <Space>
+          <Button type="link" size="small" onClick={() => handleDetail(record)}>
+            详情
+          </Button>
           <Button type="link" size="small" onClick={() => handleEdit(record)}>
             编辑
           </Button>
@@ -141,7 +206,7 @@ const Company: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.current || 1,
+            current: params.current || 1,
             pageSize: params.pageSize ?? 10,
           };
           const response = await getCompanyList(requestParams);
@@ -188,6 +253,14 @@ const Company: React.FC = () => {
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
+      />
+      <CompanyDetail
+        visible={detailVisible}
+        record={detailRecord}
+        onClose={() => {
+          setDetailVisible(false);
+          setDetailRecord(null);
+        }}
       />
     </PageContainer>
   );

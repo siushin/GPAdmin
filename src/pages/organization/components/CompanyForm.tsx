@@ -58,6 +58,18 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         }}
       />
       <ProFormText
+        name="company_credit_code"
+        label="统一社会信用代码"
+        rules={[
+          { required: true, message: '请输入统一社会信用代码' },
+          { len: 18, message: '统一社会信用代码必须为18位' },
+        ]}
+        fieldProps={{
+          placeholder: '请输入18位统一社会信用代码',
+          maxLength: 18,
+        }}
+      />
+      <ProFormText
         name="legal_person"
         label="法人代表"
         fieldProps={{
@@ -86,7 +98,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         }}
       />
       <ProFormTextArea
-        name="description"
+        name="company_desc"
         label="公司描述"
         fieldProps={{
           placeholder: '请输入公司描述（可选）',

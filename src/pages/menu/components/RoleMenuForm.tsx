@@ -32,7 +32,7 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
   const loadOptions = async () => {
     try {
       // 加载角色列表
-      const roleRes = await getRoleList({ page: 1, pageSize: 1000 });
+      const roleRes = await getRoleList({ current: 1, pageSize: 1000 });
       if (roleRes.code === 200 && roleRes.data?.data) {
         const options = roleRes.data.data.map((item: any) => ({
           label: `${item.role_name} (${item.role_code})`,

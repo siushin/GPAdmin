@@ -34,7 +34,7 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
   const loadOptions = async () => {
     try {
       // 加载用户列表
-      const userRes = await getAdminList({ page: 1, pageSize: 1000 });
+      const userRes = await getAdminList({ current: 1, pageSize: 1000 });
       if (userRes.code === 200 && userRes.data?.data) {
         const options = userRes.data.data.map((item: any) => ({
           label: `${item.username} (ID: ${item.user_id || item.id})`,
@@ -44,7 +44,7 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
       }
 
       // 加载角色列表
-      const roleRes = await getRoleList({ page: 1, pageSize: 1000 });
+      const roleRes = await getRoleList({ current: 1, pageSize: 1000 });
       if (roleRes.code === 200 && roleRes.data?.data) {
         const options = roleRes.data.data.map((item: any) => ({
           label: `${item.role_name} (${item.role_code})`,

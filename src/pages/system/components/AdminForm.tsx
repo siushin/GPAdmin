@@ -30,7 +30,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
   const [selectedCompanyId, setSelectedCompanyId] = useState<
     number | undefined
   >();
-  const formRef = useRef<ProFormInstance>();
+  const formRef = useRef<ProFormInstance>(undefined);
 
   // 加载公司列表
   useEffect(() => {
@@ -89,22 +89,9 @@ const AdminForm: React.FC<AdminFormProps> = ({
     }
   }, [editingRecord]);
 
-  // 打开新增表单时清空表单数据
-  useEffect(() => {
-    if (visible && !editingRecord) {
-      // 延迟一下确保表单已经渲染
-      setTimeout(() => {
-        formRef.current?.resetFields();
-        formRef.current?.setFieldsValue({
-          status: 1,
-          is_super: 0,
-        });
-      }, 100);
-    }
-  }, [visible, editingRecord]);
-
   return (
     <DrawerForm
+      key={editingRecord?.id || editingRecord?.user_id || 'new'}
       formRef={formRef}
       title={editingRecord ? '编辑管理员' : '新增管理员'}
       open={visible}
@@ -170,7 +157,6 @@ const AdminForm: React.FC<AdminFormProps> = ({
           { label: '否', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择是否超级管理员' }]}
-        initialValue={0}
       />
       <ProFormSelect
         name="company_id"
@@ -183,7 +169,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
           style: { minWidth: 200 },
           onChange: (value) => {
-            setSelectedCompanyId(value);
+            setSelectedCompanyId(value as number | undefined);
             // 清空部门选择
             formRef.current?.setFieldValue('department_id', undefined);
           },

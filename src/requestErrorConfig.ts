@@ -3,6 +3,7 @@ import type { RequestConfig } from '@umijs/max';
 import { history } from '@umijs/max';
 import { message } from 'antd';
 import { getNotification } from '@/utils/notification';
+import { transformPaginationParams } from '@/utils/pagination';
 import {
   clearToken,
   getToken,
@@ -122,6 +123,16 @@ export const errorConfig: RequestConfig = {
         // 添加Authorization头
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // 统一处理分页参数：将 current 转换为 page
+      if (
+        config.data &&
+        typeof config.data === 'object' &&
+        !Array.isArray(config.data)
+      ) {
+        config.data = transformPaginationParams(config.data);
+      }
+
       return config;
     },
   ],

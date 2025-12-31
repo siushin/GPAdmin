@@ -226,7 +226,7 @@ const Admin: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.current || 1,
+            current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
           const response = await getAdminList(requestParams);

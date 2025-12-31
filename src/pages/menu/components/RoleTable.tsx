@@ -168,7 +168,7 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.current || 1,
+            current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             account_type: accountType,
           };

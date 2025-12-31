@@ -580,7 +580,7 @@ const AdminDetail: React.FC<AdminDetailProps> = ({ accountId, loading }) => {
         ...params,
         account_id: accountId,
         log_type: tab,
-        page: params.current || 1,
+        current: params.current || 1,
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
       };
 
