@@ -211,6 +211,55 @@ export async function auditUser(
   });
 }
 
+/** 批量审核用户 POST /api/admin/user/batchAudit */
+export async function batchAuditUser(
+  body: {
+    account_ids: number[];
+    status: number; // 1: 通过, 0: 拒绝
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      success_count: number;
+      fail_count: number;
+      success_usernames: string[];
+      fail_usernames: string[];
+      message: string;
+    };
+  }>('/api/admin/user/batchAudit', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 批量删除用户 POST /api/admin/user/batchDelete */
+export async function batchDeleteUser(
+  body: {
+    account_ids: number[];
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      success_count: number;
+      fail_count: number;
+      success_usernames: string[];
+      fail_usernames: string[];
+      message: string;
+    };
+  }>('/api/admin/user/batchDelete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 获取用户日志 POST /api/admin/user/getLogs */
 export async function getUserLogs(
   params: {

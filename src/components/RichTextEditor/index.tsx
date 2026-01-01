@@ -6,7 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 // @ts-expect-error
 import StarterKit from '@tiptap/starter-kit';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import './index.less';
 
 interface RichTextEditorProps {
@@ -24,6 +24,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   maxLength,
   disabled = false,
 }) => {
+  // 使用 ref 来跟踪是否正在更新，避免循环引用
+  const isUpdatingRef = useRef(false);
+  const lastValueRef = useRef<string | undefined>(value);
+  const onChangeRef = useRef(onChange);
+
+  // 保持 onChange 引用最新
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -39,14 +49,34 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     content: value || '',
     editable: !disabled,
     onUpdate: ({ editor }) => {
+      // 如果正在更新，不触发 onChange，避免循环引用
+      if (isUpdatingRef.current) {
+        return;
+      }
       const html = editor.getHTML();
-      onChange?.(html);
+      // 只有当内容真正改变时才触发 onChange
+      if (html !== lastValueRef.current && html !== value) {
+        lastValueRef.current = html;
+        onChangeRef.current?.(html);
+      }
     },
   });
 
   useEffect(() => {
-    if (editor && value !== undefined && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
+    if (editor && value !== undefined) {
+      const currentContent = editor.getHTML();
+      // 只有当值真正改变时才更新，避免循环引用
+      if (value !== currentContent && value !== lastValueRef.current) {
+        isUpdatingRef.current = true;
+        lastValueRef.current = value;
+        // 使用 requestAnimationFrame 确保在下一个渲染周期重置标志
+        requestAnimationFrame(() => {
+          editor.commands.setContent(value, false);
+          requestAnimationFrame(() => {
+            isUpdatingRef.current = false;
+          });
+        });
+      }
     }
   }, [value, editor]);
 

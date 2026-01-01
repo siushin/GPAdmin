@@ -7,7 +7,7 @@ import {
   ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import RichTextEditor from '@/components/RichTextEditor';
 
 interface MessageFormProps {
@@ -25,9 +25,26 @@ const MessageForm: React.FC<MessageFormProps> = ({
 }) => {
   const formRef = useRef<ProFormInstance>(undefined);
   const [contentValue, setContentValue] = useState<string>('');
+  const lastContentValueRef = useRef<string>('');
 
   // 如果编辑的记录是已读状态，不允许编辑
   const isReadOnly = editingRecord && editingRecord.status === 1;
+
+  // 使用 useCallback 稳定 onChange 回调，避免循环引用
+  const handleContentChange = useCallback(
+    (value: string) => {
+      // 只有当值真正改变时才更新，避免循环引用
+      if (value !== lastContentValueRef.current && value !== contentValue) {
+        lastContentValueRef.current = value;
+        setContentValue(value);
+        // 使用 setTimeout 延迟更新表单字段，避免循环引用
+        setTimeout(() => {
+          formRef.current?.setFieldValue('content', value);
+        }, 0);
+      }
+    },
+    [contentValue],
+  );
 
   useEffect(() => {
     if (visible && editingRecord) {
@@ -35,13 +52,23 @@ const MessageForm: React.FC<MessageFormProps> = ({
         ...editingRecord,
         status: editingRecord.status === 1 ? true : false,
       });
-      setContentValue(editingRecord.content || '');
+      const content = editingRecord.content || '';
+      // 只有当内容真正改变时才更新，避免循环引用
+      if (content !== lastContentValueRef.current) {
+        setContentValue(content);
+        lastContentValueRef.current = content;
+      }
     } else if (visible && !editingRecord) {
       formRef.current?.resetFields();
-      formRef.current?.setFieldsValue({ status: false });
+      formRef.current?.setFieldsValue({
+        status: false,
+        target_platform: 'all', // 默认选中第一个：全平台
+      });
       setContentValue('');
+      lastContentValueRef.current = '';
     }
-  }, [visible, editingRecord]);
+    // 使用 editingRecord?.id 作为依赖项，避免对象引用导致的循环
+  }, [visible, editingRecord?.id]);
 
   return (
     <DrawerForm
@@ -95,6 +122,7 @@ const MessageForm: React.FC<MessageFormProps> = ({
       <ProFormRadio.Group
         name="target_platform"
         label="目标平台"
+        initialValue="all"
         options={[
           { label: '全平台', value: 'all' },
           { label: '用户端', value: 'user' },
@@ -118,10 +146,7 @@ const MessageForm: React.FC<MessageFormProps> = ({
       >
         <RichTextEditor
           value={contentValue}
-          onChange={(value) => {
-            setContentValue(value);
-            formRef.current?.setFieldValue('content', value);
-          }}
+          onChange={handleContentChange}
           placeholder="请输入站内信内容..."
           maxLength={5000}
           disabled={isReadOnly}

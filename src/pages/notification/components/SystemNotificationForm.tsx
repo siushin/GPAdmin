@@ -9,7 +9,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import RichTextEditor from '@/components/RichTextEditor';
 
 interface SystemNotificationFormProps {
@@ -28,9 +28,26 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
   const formRef = useRef<ProFormInstance>(undefined);
   const [contentValue, setContentValue] = useState<string>('');
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
+  const lastContentValueRef = useRef<string>('');
 
   // 如果编辑的记录是禁用状态，不允许编辑
   const isReadOnly = editingRecord && editingRecord.status === 0;
+
+  // 使用 useCallback 稳定 onChange 回调，避免循环引用
+  const handleContentChange = useCallback(
+    (value: string) => {
+      // 只有当值真正改变时才更新，避免循环引用
+      if (value !== lastContentValueRef.current && value !== contentValue) {
+        lastContentValueRef.current = value;
+        setContentValue(value);
+        // 使用 setTimeout 延迟更新表单字段，避免循环引用
+        setTimeout(() => {
+          formRef.current?.setFieldValue('content', value);
+        }, 0);
+      }
+    },
+    [contentValue],
+  );
 
   useEffect(() => {
     if (visible && editingRecord) {
@@ -43,17 +60,28 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
         status: editingRecord.status === 1 ? true : false,
       };
       formRef.current?.setFieldsValue(values);
-      setContentValue(editingRecord.content || '');
+      const content = editingRecord.content || '';
+      // 只有当内容真正改变时才更新，避免循环引用
+      if (content !== lastContentValueRef.current) {
+        setContentValue(content);
+        lastContentValueRef.current = content;
+      }
       setStartTime(
         editingRecord.start_time ? dayjs(editingRecord.start_time) : null,
       );
     } else if (visible && !editingRecord) {
       formRef.current?.resetFields();
-      formRef.current?.setFieldsValue({ status: true });
+      formRef.current?.setFieldsValue({
+        status: true,
+        type: 'system', // 默认选中第一个：系统通知
+        target_platform: 'all', // 默认选中第一个：全平台
+      });
       setContentValue('');
+      lastContentValueRef.current = '';
       setStartTime(null);
     }
-  }, [visible, editingRecord]);
+    // 使用 editingRecord?.id 作为依赖项，避免对象引用导致的循环
+  }, [visible, editingRecord?.id]);
 
   return (
     <DrawerForm
@@ -104,6 +132,7 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
       <ProFormRadio.Group
         name="type"
         label="通知类型"
+        initialValue="system"
         options={[
           { label: '系统通知', value: 'system' },
           { label: '业务通知', value: 'business' },
@@ -115,6 +144,7 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
       <ProFormRadio.Group
         name="target_platform"
         label="目标平台"
+        initialValue="all"
         options={[
           { label: '全平台', value: 'all' },
           { label: '用户端', value: 'user' },
@@ -308,10 +338,7 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
       >
         <RichTextEditor
           value={contentValue}
-          onChange={(value) => {
-            setContentValue(value);
-            formRef.current?.setFieldValue('content', value);
-          }}
+          onChange={handleContentChange}
           placeholder="请输入通知内容..."
           maxLength={5000}
           disabled={isReadOnly}

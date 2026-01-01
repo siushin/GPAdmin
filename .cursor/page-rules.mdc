@@ -43,3 +43,130 @@ scope:
   ```
 
 - 确保所有可能为空的字段都遵循此规范，保持表格显示的一致性
+
+## 按钮禁用规范
+
+- 禁用的按钮必须使用 `danger disabled` 属性，并使用 `Tooltip` 组件包裹以显示禁用原因
+- 禁止在禁用按钮上单独设置 `color` 样式，保持禁用状态样式的一致性
+
+## 批量操作规范
+
+- **所有批量操作（批量审核、批量删除、批量启用/禁用等）必须放在 `toolBarRender` 中**
+- **禁止使用 `FooterToolbar` 组件进行批量操作**
+- 批量操作按钮应该：
+  - 使用 `disabled` 属性控制是否可用（当 `selectedRowKeys.length === 0` 时禁用）
+  - 通过 `Modal` 或 `Popconfirm` 进行二次确认
+  - 显示操作状态（loading 状态）
+- 批量操作按钮应与其他操作按钮（如"新增"按钮）一起放在 `toolBarRender` 数组中
+- 使用 `.filter(Boolean)` 过滤掉条件渲染时的 `null` 值，保持代码整洁
+- **当页面存在批量选择功能（`rowSelection`）时，单个删除/编辑操作成功后，必须同步更新 `selectedRowKeys` 状态**
+  - 单个删除成功后，需要从 `selectedRowKeys` 中移除已删除项的 ID
+  - 确保"已选择 X 项"的显示数据与实际选中状态保持一致
+
+## 分页重置规范
+
+- 当切换 tab、筛选条件或查询条件改变时，必须重置分页到第一页
+- 使用 `actionRef.current?.reloadAndRest?.()` 方法进行重置分页并重新加载数据
+- 禁止使用 `actionRef.current?.reload()` 在条件改变时重新加载，避免出现无数据的情况
+
+### 批量操作范例
+
+```typescript
+// 状态管理
+const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+const [batchAuditVisible, setBatchAuditVisible] = useState(false);
+const [batchAuditLoading, setBatchAuditLoading] = useState(false);
+
+// 单个删除处理函数（需要更新选中状态）
+const handleDelete = async (record: any) => {
+  try {
+    const res = await deleteItem({ id: record.id });
+    if (res.code === 200) {
+      message.success('删除成功');
+      // 从选中列表中移除已删除的项
+      setSelectedRowKeys((prev) =>
+        prev.filter((key) => key !== record.id),
+      );
+      actionRef.current?.reload();
+    }
+  } catch (error) {
+    message.error('删除失败');
+  }
+};
+
+// 批量操作处理函数
+const handleBatchAudit = async () => {
+  if (selectedRowKeys.length === 0) {
+    message.warning('请至少选择一条数据');
+    return;
+  }
+
+  setBatchAuditLoading(true);
+  try {
+    const res = await batchAudit({ ids: selectedRowKeys });
+    if (res.code === 200) {
+      message.success('批量审核成功');
+      setBatchAuditVisible(false);
+      setSelectedRowKeys([]);
+      actionRef.current?.reload();
+    }
+  } catch (error) {
+    message.error('批量审核失败');
+  } finally {
+    setBatchAuditLoading(false);
+  }
+};
+
+// ProTable 配置
+<ProTable
+  rowSelection={{
+    selectedRowKeys,
+    onChange: (keys) => setSelectedRowKeys(keys),
+  }}
+  toolBarRender={() => [
+    <Button
+      key="add"
+      type="primary"
+      icon={<PlusOutlined />}
+      onClick={handleAdd}
+    >
+      新增
+    </Button>,
+    <Button
+      key="batchAudit"
+      type="primary"
+      disabled={selectedRowKeys.length === 0}
+      onClick={() => setBatchAuditVisible(true)}
+    >
+      批量审核
+    </Button>,
+    <Button
+      key="batchDelete"
+      danger
+      disabled={selectedRowKeys.length === 0}
+      onClick={() => {
+        Modal.confirm({
+          title: '确定要批量删除选中的数据吗？',
+          onOk: handleBatchDelete,
+        });
+      }}
+    >
+      批量删除
+    </Button>,
+  ]}
+/>
+
+// 批量操作确认 Modal
+<Modal
+  title="批量审核"
+  open={batchAuditVisible}
+  onOk={handleBatchAudit}
+  onCancel={() => setBatchAuditVisible(false)}
+  confirmLoading={batchAuditLoading}
+>
+  <div>已选择 <strong>{selectedRowKeys.length}</strong> 条数据</div>
+  {/* 其他审核选项 */}
+</Modal>
+```
+
+**参考实现：** `src/pages/user/components/UserList.tsx`（批量审核功能）
