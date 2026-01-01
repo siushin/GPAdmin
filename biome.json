@@ -14,7 +14,8 @@
       "!**/public",
       "!**/coverage",
       "!**/node_modules",
-      "!biome.json"
+      "!biome.json",
+      "README.md"
     ]
   },
   "formatter": {
