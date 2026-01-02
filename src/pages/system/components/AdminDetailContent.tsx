@@ -73,6 +73,9 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
                   <Descriptions.Item label="最后登录IP">
                     {account.last_login_ip || ''}
                   </Descriptions.Item>
+                  <Descriptions.Item label="最后登录地">
+                    {account.last_login_location || ''}
+                  </Descriptions.Item>
                   <Descriptions.Item label="最后登录时间">
                     {account.last_login_time || ''}
                   </Descriptions.Item>

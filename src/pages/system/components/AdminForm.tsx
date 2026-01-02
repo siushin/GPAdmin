@@ -149,14 +149,19 @@ const AdminForm: React.FC<AdminFormProps> = ({
           }}
         />
       )}
-      <ProFormRadio.Group
-        name="is_super"
-        label="是否超级管理员"
-        options={[
-          { label: '是', value: 1 },
-          { label: '否', value: 0 },
-        ]}
-        rules={[{ required: true, message: '请选择是否超级管理员' }]}
+      <ProFormText
+        name="mobile"
+        label="手机号"
+        fieldProps={{
+          placeholder: '请输入手机号（可选）',
+        }}
+      />
+      <ProFormText
+        name="email"
+        label="邮箱"
+        fieldProps={{
+          placeholder: '请输入邮箱（可选）',
+        }}
       />
       <ProFormSelect
         name="company_id"
@@ -189,6 +194,15 @@ const AdminForm: React.FC<AdminFormProps> = ({
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
           style: { minWidth: 200 },
         }}
+      />
+      <ProFormRadio.Group
+        name="is_super"
+        label="是否超级管理员"
+        options={[
+          { label: '是', value: 1 },
+          { label: '否', value: 0 },
+        ]}
+        rules={[{ required: true, message: '请选择是否超级管理员' }]}
       />
       <ProFormSelect
         name="status"

@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, message, Popconfirm, Segmented, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
@@ -26,6 +26,8 @@ const Admin: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [viewingRecord, setViewingRecord] = useState<any>(null);
+  // 账号状态筛选：'all' | 0 | 1，默认 'all'
+  const [statusFilter, setStatusFilter] = useState<'all' | 0 | 1>('all');
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -80,6 +82,13 @@ const Admin: React.FC = () => {
     }
   };
 
+  // 状态筛选切换处理
+  const handleStatusFilterChange = (value: string | number) => {
+    setStatusFilter(value as 'all' | 0 | 1);
+    // 重置分页到第一页并重新加载数据
+    actionRef.current?.reloadAndRest?.();
+  };
+
   const columns: ProColumns<any>[] = [
     {
       title: '序号',
@@ -89,19 +98,20 @@ const Admin: React.FC = () => {
       fixed: 'left',
     },
     {
+      title: '关键字',
+      dataIndex: 'keyword',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: '用户名、姓名、手机号、邮箱',
+      },
+    },
+    {
       title: '用户名',
       dataIndex: 'username',
-      width: 150,
+      width: 120,
       fixed: 'left',
-      fieldProps: {
-        placeholder: '请输入用户名',
-      },
-      render: (_, record) => (
-        <Space>
-          {record.username}
-          {record.is_super === 1 && <Tag color="#108ee9">超管</Tag>}
-        </Space>
-      ),
+      hideInSearch: true,
+      render: (_, record) => record.username || '',
     },
     {
       title: '姓名',
@@ -110,6 +120,62 @@ const Admin: React.FC = () => {
       fixed: 'left',
       hideInSearch: true,
       render: (_, record) => record.nickname || '',
+    },
+    {
+      title: '账号状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '正常', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
+      },
+      width: 100,
+      fixed: 'left',
+      hideInSearch: true, // 状态筛选使用 Segmented 组件
+      render: (_, record) => (
+        <Tag color={record.status === 1 ? 'success' : 'error'}>
+          {record.status === 1 ? '正常' : '禁用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '是否超级管理员',
+      dataIndex: 'is_super',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '是', status: 'Success' },
+        0: { text: '否', status: 'Default' },
+      },
+      width: 120,
+      fixed: 'left',
+      hideInTable: false,
+      fieldProps: {
+        placeholder: '请选择',
+        allowClear: true,
+        options: [
+          { label: '是', value: 1 },
+          { label: '否', value: 0 },
+        ],
+      },
+      render: (_, record) => (
+        <Tag color={record.is_super === 1 ? 'success' : 'default'}>
+          {record.is_super === 1 ? '是' : '否'}
+        </Tag>
+      ),
+    },
+    {
+      title: '手机号',
+      dataIndex: 'phone',
+      hideInSearch: true,
+      width: 130,
+      render: (_, record) => record.phone || '',
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+      hideInSearch: true,
+      width: 180,
+      render: (_, record) => record.email || '',
     },
     {
       title: '所属公司',
@@ -126,26 +192,18 @@ const Admin: React.FC = () => {
       render: (_, record) => record.department_name || '',
     },
     {
-      title: '账号状态',
-      dataIndex: 'status',
-      valueType: 'select',
-      valueEnum: {
-        1: { text: '正常', status: 'Success' },
-        0: { text: '禁用', status: 'Error' },
-      },
-      width: 100,
-      render: (_, record) => (
-        <Tag color={record.status === 1 ? 'success' : 'error'}>
-          {record.status === 1 ? '正常' : '禁用'}
-        </Tag>
-      ),
-    },
-    {
       title: '最后登录IP',
       dataIndex: 'last_login_ip',
       hideInSearch: true,
       width: 130,
       render: (_, record) => record.last_login_ip || '',
+    },
+    {
+      title: '最后登录地',
+      dataIndex: 'last_login_location',
+      hideInSearch: true,
+      width: 150,
+      render: (_, record) => record.last_login_location || '',
     },
     {
       title: '最后登录时间',
@@ -161,14 +219,6 @@ const Admin: React.FC = () => {
         } catch (_e) {
           return record.last_login_time;
         }
-      },
-    },
-    {
-      title: '关键字',
-      dataIndex: 'keyword',
-      hideInTable: true,
-      fieldProps: {
-        placeholder: '姓名、手机号、邮箱',
       },
     },
     {
@@ -229,6 +279,25 @@ const Admin: React.FC = () => {
             current: params.current || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
+
+          // 根据 statusFilter 设置状态筛选（覆盖表单中的status值）
+          if (statusFilter === 'all') {
+            // 全部：显示 0（禁用）和 1（正常）
+            requestParams.status = [0, 1];
+          } else {
+            // 根据 Segmented 选择的状态筛选
+            requestParams.status = statusFilter;
+          }
+
+          // 是否超级管理员筛选从搜索表单中获取（如果未选择则不传该参数）
+          if (
+            params.is_super !== undefined &&
+            params.is_super !== null &&
+            params.is_super !== ''
+          ) {
+            requestParams.is_super = params.is_super;
+          }
+
           const response = await getAdminList(requestParams);
           if (response.code === 200) {
             return {
@@ -255,6 +324,16 @@ const Admin: React.FC = () => {
         headerTitle="管理员列表"
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
+          <Segmented
+            key="statusSegmented"
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+            options={[
+              { label: '全部', value: 'all' },
+              { label: '正常', value: 1 },
+              { label: '禁用', value: 0 },
+            ]}
+          />,
           <Button
             key="add"
             type="primary"
