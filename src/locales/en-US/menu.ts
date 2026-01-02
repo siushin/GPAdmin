@@ -40,7 +40,7 @@ export default {
 
   // 系統管理
   'menu.system': 'System Management',
-  'menu.system.admin': 'Admin Management',
+  'menu.system.admin': 'Admin List',
   'menu.system.dict': 'Dictionary',
   'menu.system.dictTree': 'Dictionary (Tree)',
   'menu.system.log': 'System Log',

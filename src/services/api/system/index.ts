@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
-// ========== 管理员管理 API ==========
+// ========== 管理员列表 API ==========
 
 /** 管理员列表 POST /api/admin/admin/index */
 export async function getAdminList(

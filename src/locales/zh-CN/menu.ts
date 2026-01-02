@@ -40,7 +40,7 @@ export default {
 
   // 系统管理
   'menu.system': '系统管理',
-  'menu.system.admin': '管理员管理',
+  'menu.system.admin': '管理员列表',
   'menu.system.dict': '数据字典',
   'menu.system.dictTree': '数据字典（树状）',
   'menu.system.log': '系统日志',
