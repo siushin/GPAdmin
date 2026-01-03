@@ -444,7 +444,7 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
           const requestParams: any = {
             ...params,
             ...formValues, // 合并表单值，表单值优先级更高
-            current: params.current || 1,
+            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
 

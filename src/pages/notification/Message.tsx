@@ -302,7 +302,7 @@ const Message: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            current: params.current || 1,
+            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
           // 将目标平台数组转换为逗号分隔的字符串

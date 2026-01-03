@@ -45,10 +45,8 @@ export default {
   'menu.system.dictTree': 'Dictionary (Tree)',
   'menu.system.log': 'System Log',
 
-  // 組織架構管理
-  'menu.org': 'Organization Management',
+  // 公司管理
+  'menu.org': 'Company Management',
   'menu.org.company': 'Company Management',
   'menu.org.dept': 'Department Management',
-  'menu.org.position': 'Position Management',
-  'menu.org.post': 'Post Management',
 };

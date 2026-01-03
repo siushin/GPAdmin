@@ -122,53 +122,11 @@ const Admin: React.FC = () => {
       render: (_, record) => record.nickname || '',
     },
     {
-      title: '账号状态',
-      dataIndex: 'status',
-      valueType: 'select',
-      valueEnum: {
-        1: { text: '正常', status: 'Success' },
-        0: { text: '禁用', status: 'Error' },
-      },
-      width: 100,
-      fixed: 'left',
-      hideInSearch: true, // 状态筛选使用 Segmented 组件
-      render: (_, record) => (
-        <Tag color={record.status === 1 ? 'success' : 'error'}>
-          {record.status === 1 ? '正常' : '禁用'}
-        </Tag>
-      ),
-    },
-    {
-      title: '是否超级管理员',
-      dataIndex: 'is_super',
-      valueType: 'select',
-      valueEnum: {
-        1: { text: '是', status: 'Success' },
-        0: { text: '否', status: 'Default' },
-      },
-      width: 120,
-      fixed: 'left',
-      hideInTable: false,
-      fieldProps: {
-        placeholder: '请选择',
-        allowClear: true,
-        options: [
-          { label: '是', value: 1 },
-          { label: '否', value: 0 },
-        ],
-      },
-      render: (_, record) => (
-        <Tag color={record.is_super === 1 ? 'success' : 'default'}>
-          {record.is_super === 1 ? '是' : '否'}
-        </Tag>
-      ),
-    },
-    {
       title: '手机号',
-      dataIndex: 'phone',
+      dataIndex: 'mobile',
       hideInSearch: true,
       width: 130,
-      render: (_, record) => record.phone || '',
+      render: (_, record) => record.mobile || '',
     },
     {
       title: '邮箱',
@@ -183,13 +141,6 @@ const Admin: React.FC = () => {
       hideInSearch: true,
       width: 150,
       render: (_, record) => record.company_name || '',
-    },
-    {
-      title: '所属部门',
-      dataIndex: 'department_name',
-      hideInSearch: true,
-      width: 150,
-      render: (_, record) => record.department_name || '',
     },
     {
       title: '最后登录IP',
@@ -238,6 +189,48 @@ const Admin: React.FC = () => {
       },
     },
     {
+      title: '账号状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '正常', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
+      },
+      width: 100,
+      fixed: 'right',
+      hideInSearch: true, // 状态筛选使用 Segmented 组件
+      render: (_, record) => (
+        <Tag color={record.status === 1 ? 'success' : 'error'}>
+          {record.status === 1 ? '正常' : '禁用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '是否超级管理员',
+      dataIndex: 'is_super',
+      valueType: 'select',
+      valueEnum: {
+        1: { text: '是', status: 'Success' },
+        0: { text: '否', status: 'Default' },
+      },
+      width: 120,
+      fixed: 'right',
+      hideInTable: false,
+      fieldProps: {
+        placeholder: '请选择',
+        allowClear: true,
+        options: [
+          { label: '是', value: 1 },
+          { label: '否', value: 0 },
+        ],
+      },
+      render: (_, record) => (
+        <Tag color={record.is_super === 1 ? 'success' : 'default'}>
+          {record.is_super === 1 ? '是' : '否'}
+        </Tag>
+      ),
+    },
+    {
       title: '操作',
       valueType: 'option',
       width: 150,
@@ -276,7 +269,7 @@ const Admin: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            current: params.current || 1,
+            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
 

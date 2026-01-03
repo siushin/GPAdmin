@@ -323,7 +323,7 @@ const Dict: React.FC = () => {
             }
 
             const requestParams: any = {
-              current: params.current || 1,
+              page: params.page || 1,
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
               // 传递搜索表单的参数
               dictionary_name: allParams.dictionary_name,

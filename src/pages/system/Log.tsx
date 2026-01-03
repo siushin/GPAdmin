@@ -990,7 +990,7 @@ const Log: React.FC = () => {
             // 处理时间范围参数
             const requestParams: any = {
               ...params,
-              current: params.current || 1,
+              page: params.page || 1,
               // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
@@ -1028,7 +1028,7 @@ const Log: React.FC = () => {
             // 处理时间范围参数
             const requestParams: any = {
               ...params,
-              current: params.current || 1,
+              page: params.page || 1,
               // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
@@ -1066,7 +1066,7 @@ const Log: React.FC = () => {
             // 处理时间范围参数
             const requestParams: any = {
               ...params,
-              current: params.current || 1,
+              page: params.page || 1,
               // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };
@@ -1104,7 +1104,7 @@ const Log: React.FC = () => {
             // 处理时间范围参数
             const requestParams: any = {
               ...params,
-              current: params.current || 1,
+              page: params.page || 1,
               // 确保 pageSize 有值，优先使用 params.pageSize，否则使用默认值
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             };

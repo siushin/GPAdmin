@@ -45,10 +45,8 @@ export default {
   'menu.system.dictTree': '數據字典（樹狀）',
   'menu.system.log': '系統日誌',
 
-  // 組織架構管理
-  'menu.org': '組織架構管理',
+  // 公司管理
+  'menu.org': '公司管理',
   'menu.org.company': '公司管理',
   'menu.org.dept': '部門管理',
-  'menu.org.position': '職位管理',
-  'menu.org.post': '崗位管理',
 };

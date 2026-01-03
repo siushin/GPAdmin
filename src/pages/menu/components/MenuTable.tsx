@@ -191,7 +191,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            current: params.current || 1,
+            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             account_type: accountType,
           };

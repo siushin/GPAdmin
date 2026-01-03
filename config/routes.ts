@@ -112,7 +112,7 @@ export default [
     access: 'canAdmin',
   },
 
-  // 组织架构管理
+  // 公司管理
   {
     path: '/organization',
     name: 'org',
@@ -129,18 +129,6 @@ export default [
     path: '/organization/department',
     name: 'org.dept',
     component: './organization/Department',
-    access: 'canAdmin',
-  },
-  {
-    path: '/organization/position',
-    name: 'org.position',
-    component: './organization/Position',
-    access: 'canAdmin',
-  },
-  {
-    path: '/organization/post',
-    name: 'org.post',
-    component: './organization/Post',
     access: 'canAdmin',
   },
 

@@ -206,7 +206,7 @@ const Company: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            current: params.current || 1,
+            page: params.page || 1,
             pageSize: params.pageSize ?? 10,
           };
           const response = await getCompanyList(requestParams);

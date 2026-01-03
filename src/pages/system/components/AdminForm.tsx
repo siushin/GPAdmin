@@ -3,10 +3,11 @@ import {
   DrawerForm,
   ProFormRadio,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
-import { getCompanyList, getDepartmentList } from '@/services/api/system';
+import { getCompanyList } from '@/services/api/system';
 
 interface AdminFormProps {
   visible: boolean;
@@ -24,12 +25,9 @@ const AdminForm: React.FC<AdminFormProps> = ({
   const [companyOptions, setCompanyOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
-  const [departmentOptions, setDepartmentOptions] = useState<
-    Array<{ label: string; value: number }>
-  >([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<
-    number | undefined
-  >();
+  const [formKey, setFormKey] = useState<string>(
+    editingRecord?.id || editingRecord?.user_id || `new-${Date.now()}`,
+  );
   const formRef = useRef<ProFormInstance>(undefined);
 
   // 加载公司列表
@@ -48,71 +46,48 @@ const AdminForm: React.FC<AdminFormProps> = ({
     }
   }, [visible]);
 
-  // 加载部门列表
+  // 初始化表单 key
   useEffect(() => {
-    if (visible && selectedCompanyId) {
-      getDepartmentList({ company_id: selectedCompanyId }).then((res) => {
-        if (res.code === 200 && res.data) {
-          setDepartmentOptions(
-            res.data.map((item) => ({
-              label: item.department_name,
-              value: item.department_id,
-            })),
-          );
-        }
-      });
-    } else {
-      setDepartmentOptions([]);
+    if (visible) {
+      // 新增时，每次打开都生成新的 key，确保表单被重置
+      if (!editingRecord) {
+        setFormKey(`new-${Date.now()}`);
+      } else {
+        setFormKey(
+          editingRecord.id || editingRecord.user_id || `edit-${Date.now()}`,
+        );
+      }
     }
-  }, [visible, selectedCompanyId]);
-
-  // 初始化选中的公司ID和加载部门列表
-  useEffect(() => {
-    if (editingRecord?.company_id) {
-      setSelectedCompanyId(editingRecord.company_id);
-      // 编辑时，如果有公司ID，自动加载部门列表
-      getDepartmentList({ company_id: editingRecord.company_id }).then(
-        (res) => {
-          if (res.code === 200 && res.data) {
-            setDepartmentOptions(
-              res.data.map((item) => ({
-                label: item.department_name,
-                value: item.department_id,
-              })),
-            );
-          }
-        },
-      );
-    } else {
-      setSelectedCompanyId(undefined);
-      setDepartmentOptions([]);
-    }
-  }, [editingRecord]);
+  }, [visible, editingRecord]);
 
   return (
     <DrawerForm
-      key={editingRecord?.id || editingRecord?.user_id || 'new'}
+      key={formKey}
       formRef={formRef}
       title={editingRecord ? '编辑管理员' : '新增管理员'}
       open={visible}
       onOpenChange={(open) => {
         if (!open) {
           onCancel();
-          setSelectedCompanyId(undefined);
-          setDepartmentOptions([]);
         }
       }}
       onFinish={async (values) => {
-        await onSubmit(values);
+        // 将 status 的 boolean 值转换为 1/0
+        const submitValues = {
+          ...values,
+          status: values.status ? 1 : 0,
+        };
+        await onSubmit(submitValues);
         return true;
       }}
       initialValues={
         editingRecord
           ? {
               ...editingRecord,
+              status: editingRecord.status === 1,
             }
           : {
-              status: 1,
+              status: true,
               is_super: 0,
             }
       }
@@ -150,17 +125,24 @@ const AdminForm: React.FC<AdminFormProps> = ({
         />
       )}
       <ProFormText
+        name="nickname"
+        label="姓名"
+        fieldProps={{
+          placeholder: '请输入姓名',
+        }}
+      />
+      <ProFormText
         name="mobile"
         label="手机号"
         fieldProps={{
-          placeholder: '请输入手机号（可选）',
+          placeholder: '请输入手机号',
         }}
       />
       <ProFormText
         name="email"
         label="邮箱"
         fieldProps={{
-          placeholder: '请输入邮箱（可选）',
+          placeholder: '请输入邮箱',
         }}
       />
       <ProFormSelect
@@ -168,27 +150,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
         label="所属公司"
         options={companyOptions}
         fieldProps={{
-          placeholder: '请选择所属公司（可选）',
-          showSearch: true,
-          filterOption: (input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
-          style: { minWidth: 200 },
-          onChange: (value) => {
-            setSelectedCompanyId(value as number | undefined);
-            // 清空部门选择
-            formRef.current?.setFieldValue('department_id', undefined);
-          },
-        }}
-      />
-      <ProFormSelect
-        name="department_id"
-        label="所属部门"
-        options={departmentOptions}
-        fieldProps={{
-          placeholder: selectedCompanyId
-            ? '请选择所属部门（可选）'
-            : '请先选择所属公司',
-          disabled: !selectedCompanyId,
+          placeholder: '请选择所属公司',
           showSearch: true,
           filterOption: (input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
@@ -204,17 +166,12 @@ const AdminForm: React.FC<AdminFormProps> = ({
         ]}
         rules={[{ required: true, message: '请选择是否超级管理员' }]}
       />
-      <ProFormSelect
+      <ProFormSwitch
         name="status"
         label="账号状态"
-        options={[
-          { label: '正常', value: 1 },
-          { label: '禁用', value: 0 },
-        ]}
-        rules={[{ required: true, message: '请选择账号状态' }]}
         fieldProps={{
-          placeholder: '请选择账号状态',
-          style: { width: 200 },
+          checkedChildren: '正常',
+          unCheckedChildren: '禁用',
         }}
       />
     </DrawerForm>
