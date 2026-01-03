@@ -123,10 +123,10 @@ const Admin: React.FC = () => {
     },
     {
       title: '手机号',
-      dataIndex: 'mobile',
+      dataIndex: 'phone',
       hideInSearch: true,
       width: 130,
-      render: (_, record) => record.mobile || '',
+      render: (_, record) => record.phone || '',
     },
     {
       title: '邮箱',

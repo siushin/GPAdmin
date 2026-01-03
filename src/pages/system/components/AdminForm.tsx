@@ -132,7 +132,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
         }}
       />
       <ProFormText
-        name="mobile"
+        name="phone"
         label="手机号"
         fieldProps={{
           placeholder: '请输入手机号',
