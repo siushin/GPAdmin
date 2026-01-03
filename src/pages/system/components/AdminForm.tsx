@@ -6,6 +6,7 @@ import {
   ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
+import { Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { getCompanyList } from '@/services/api/system';
 
@@ -73,10 +74,15 @@ const AdminForm: React.FC<AdminFormProps> = ({
       }}
       onFinish={async (values) => {
         // 将 status 的 boolean 值转换为 1/0
-        const submitValues = {
+        const submitValues: any = {
           ...values,
           status: values.status ? 1 : 0,
         };
+        // admin账号不能修改状态和超级管理员设置，强制使用原始值
+        if (editingRecord && editingRecord.username === 'admin') {
+          submitValues.status = 1; // 强制为正常状态
+          submitValues.is_super = editingRecord.is_super; // 保持原始超级管理员状态
+        }
         await onSubmit(submitValues);
         return true;
       }}
@@ -84,7 +90,11 @@ const AdminForm: React.FC<AdminFormProps> = ({
         editingRecord
           ? {
               ...editingRecord,
-              status: editingRecord.status === 1,
+              // admin账号强制状态为正常
+              status:
+                editingRecord.username === 'admin'
+                  ? true
+                  : editingRecord.status === 1,
             }
           : {
               status: true,
@@ -103,6 +113,12 @@ const AdminForm: React.FC<AdminFormProps> = ({
         fieldProps={{
           placeholder: '请输入用户名',
           disabled: !!editingRecord,
+          suffix:
+            editingRecord && editingRecord.username === 'admin' ? (
+              <Tooltip title="admin账号的用户名不能修改">
+                <span style={{ color: '#999', cursor: 'help' }}>ℹ️</span>
+              </Tooltip>
+            ) : undefined,
         }}
       />
       {!editingRecord && (
@@ -160,18 +176,40 @@ const AdminForm: React.FC<AdminFormProps> = ({
       <ProFormRadio.Group
         name="is_super"
         label="是否超级管理员"
+        extra={
+          editingRecord && editingRecord.username === 'admin' ? (
+            <Tooltip title="admin账号的超级管理员状态不能修改">
+              <span style={{ color: '#999', cursor: 'help', fontSize: '12px' }}>
+                ℹ️ admin账号的超级管理员状态不能修改
+              </span>
+            </Tooltip>
+          ) : undefined
+        }
         options={[
           { label: '是', value: 1 },
           { label: '否', value: 0 },
         ]}
         rules={[{ required: true, message: '请选择是否超级管理员' }]}
+        fieldProps={{
+          disabled: editingRecord && editingRecord.username === 'admin',
+        }}
       />
       <ProFormSwitch
         name="status"
         label="账号状态"
+        extra={
+          editingRecord && editingRecord.username === 'admin' ? (
+            <Tooltip title="admin账号不能禁用，状态固定为正常">
+              <span style={{ color: '#999', cursor: 'help', fontSize: '12px' }}>
+                ℹ️ admin账号不能禁用
+              </span>
+            </Tooltip>
+          ) : undefined
+        }
         fieldProps={{
           checkedChildren: '正常',
           unCheckedChildren: '禁用',
+          disabled: editingRecord && editingRecord.username === 'admin',
         }}
       />
     </DrawerForm>

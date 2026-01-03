@@ -1,7 +1,15 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Segmented, Space, Tag } from 'antd';
+import {
+  Button,
+  message,
+  Popconfirm,
+  Segmented,
+  Space,
+  Tag,
+  Tooltip,
+} from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
@@ -199,11 +207,17 @@ const Admin: React.FC = () => {
       width: 100,
       fixed: 'right',
       hideInSearch: true, // 状态筛选使用 Segmented 组件
-      render: (_, record) => (
-        <Tag color={record.status === 1 ? 'success' : 'error'}>
-          {record.status === 1 ? '正常' : '禁用'}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const statusTag = (
+          <Tag color={record.status === 1 ? 'success' : 'error'}>
+            {record.status === 1 ? '正常' : '禁用'}
+          </Tag>
+        );
+        if (record.username === 'admin') {
+          return <Tooltip title="admin账号不能禁用">{statusTag}</Tooltip>;
+        }
+        return statusTag;
+      },
     },
     {
       title: '是否超级管理员',
@@ -235,24 +249,35 @@ const Admin: React.FC = () => {
       valueType: 'option',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleView(record)}>
-            查看
-          </Button>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
+      render: (_, record) => {
+        const isAdmin = record.username === 'admin';
+        const deleteButton = (
           <Popconfirm
             title="确定要删除这条数据吗？"
             onConfirm={() => handleDelete(record)}
+            disabled={isAdmin}
           >
-            <Button type="link" size="small" danger>
+            <Button type="link" size="small" danger disabled={isAdmin}>
               删除
             </Button>
           </Popconfirm>
-        </Space>
-      ),
+        );
+        return (
+          <Space>
+            <Button type="link" size="small" onClick={() => handleView(record)}>
+              查看
+            </Button>
+            <Button type="link" size="small" onClick={() => handleEdit(record)}>
+              编辑
+            </Button>
+            {isAdmin ? (
+              <Tooltip title="admin账号不能删除">{deleteButton}</Tooltip>
+            ) : (
+              deleteButton
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
