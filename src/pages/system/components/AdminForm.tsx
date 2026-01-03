@@ -61,6 +61,32 @@ const AdminForm: React.FC<AdminFormProps> = ({
     }
   }, [visible, editingRecord]);
 
+  // 设置表单初始值（解决 initialValues 异步加载警告）
+  useEffect(() => {
+    if (visible && formRef.current) {
+      // 先重置表单
+      formRef.current.resetFields();
+
+      if (editingRecord) {
+        // 编辑模式：设置编辑记录的值
+        formRef.current.setFieldsValue({
+          ...editingRecord,
+          // admin账号强制状态为正常
+          status:
+            editingRecord.username === 'admin'
+              ? true
+              : editingRecord.status === 1,
+        });
+      } else {
+        // 新增模式：设置默认值
+        formRef.current.setFieldsValue({
+          status: true,
+          is_super: 0,
+        });
+      }
+    }
+  }, [visible, editingRecord]);
+
   return (
     <DrawerForm
       key={formKey}
@@ -86,21 +112,6 @@ const AdminForm: React.FC<AdminFormProps> = ({
         await onSubmit(submitValues);
         return true;
       }}
-      initialValues={
-        editingRecord
-          ? {
-              ...editingRecord,
-              // admin账号强制状态为正常
-              status:
-                editingRecord.username === 'admin'
-                  ? true
-                  : editingRecord.status === 1,
-            }
-          : {
-              status: true,
-              is_super: 0,
-            }
-      }
       width={800}
       layout="horizontal"
       labelCol={{ span: 6 }}
@@ -176,6 +187,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
       <ProFormRadio.Group
         name="is_super"
         label="是否超级管理员"
+        initialValue={0}
         extra={
           editingRecord && editingRecord.username === 'admin' ? (
             <Tooltip title="admin账号的超级管理员状态不能修改">
@@ -197,6 +209,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
       <ProFormSwitch
         name="status"
         label="账号状态"
+        initialValue={true}
         extra={
           editingRecord && editingRecord.username === 'admin' ? (
             <Tooltip title="admin账号不能禁用，状态固定为正常">
