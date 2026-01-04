@@ -248,9 +248,11 @@ const Register: React.FC = () => {
           }}
         >
           <LoginForm
-            contentStyle={{
-              minWidth: 280,
-              maxWidth: '75vw',
+            styles={{
+              content: {
+                minWidth: 280,
+                maxWidth: '75vw',
+              },
             }}
             logo={<img alt="logo" src="/pokemon.png" />}
             title={process.env.UMI_APP_TITLE || 'GPAdmin管理后台'}

@@ -1,3 +1,4 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
   ProFormDigit,
@@ -8,7 +9,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { Col, Form, Input, Row, Space } from 'antd';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getIconComponent, IconDisplay } from '@/components';
 
 interface MenuFormProps {
@@ -28,6 +29,52 @@ const MenuForm: React.FC<MenuFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const [formKey, setFormKey] = useState<string>(
+    editingRecord?.menu_id || `new-${Date.now()}`,
+  );
+  const formRef = useRef<ProFormInstance>(undefined);
+
+  // 初始化表单 key，确保表单正确重置
+  useEffect(() => {
+    if (visible) {
+      if (!editingRecord) {
+        setFormKey(`new-${Date.now()}`);
+      } else {
+        setFormKey(editingRecord.menu_id || `edit-${Date.now()}`);
+      }
+    }
+  }, [visible, editingRecord]);
+
+  // 设置表单初始值（使用 setFieldsValue 避免 initialValues 警告）
+  useEffect(() => {
+    if (visible && formRef.current) {
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          if (editingRecord) {
+            formRef.current.setFieldsValue({
+              ...editingRecord,
+              parent_id: editingRecord.parent_id ?? 0,
+              menu_type: editingRecord.menu_type || 'menu',
+              status: editingRecord.status ?? 1,
+              sort: editingRecord.sort ?? 0,
+              is_required: editingRecord.is_required ?? 0,
+            });
+          } else {
+            formRef.current.setFieldsValue({
+              parent_id: 0,
+              menu_type: 'menu',
+              status: 1,
+              sort: 0,
+              is_required: 0,
+            });
+          }
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible, editingRecord]);
+
   const IconPreview: React.FC = () => {
     const iconValue = Form.useWatch('menu_icon');
     const IconComponent = getIconComponent(iconValue);
@@ -45,7 +92,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
 
   return (
     <DrawerForm
-      key={editingRecord?.menu_id || 'new'}
+      key={formKey}
+      formRef={formRef}
       title={editingRecord ? '编辑菜单' : '新增菜单'}
       open={visible}
       onOpenChange={(open) => {
@@ -61,24 +109,6 @@ const MenuForm: React.FC<MenuFormProps> = ({
         await onSubmit(submitValues);
         return true;
       }}
-      initialValues={
-        editingRecord
-          ? {
-              ...editingRecord,
-              parent_id: editingRecord.parent_id ?? 0,
-              menu_type: editingRecord.menu_type || 'menu',
-              status: editingRecord.status ?? 1,
-              sort: editingRecord.sort ?? 0,
-              is_required: editingRecord.is_required ?? 0,
-            }
-          : {
-              parent_id: 0,
-              menu_type: 'menu',
-              status: 1,
-              sort: 0,
-              is_required: 0,
-            }
-      }
       width={800}
     >
       <Row gutter={16}>

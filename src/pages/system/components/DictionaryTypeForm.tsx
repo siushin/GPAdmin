@@ -82,15 +82,6 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
       layout="horizontal"
       labelCol={{ span: 6 }}
       wrapperCol={{ span: 18 }}
-      initialValues={
-        editingRecord
-          ? {
-              dictionary_name: editingRecord.dictionary_name,
-              dictionary_value: editingRecord.dictionary_value,
-              dictionary_desc: editingRecord.dictionary_desc || '',
-            }
-          : undefined
-      }
       modalProps={{
         onCancel: () => {
           // 点击取消按钮时，不清空表单，只关闭弹窗

@@ -114,21 +114,21 @@ export default [
 
   // 公司管理
   {
-    path: '/organization',
+    path: '/company',
     name: 'org',
-    redirect: '/organization/company',
+    redirect: '/company/company',
     access: 'canAdmin',
   },
   {
-    path: '/organization/company',
+    path: '/company/company',
     name: 'org.company',
-    component: './organization/Company',
+    component: './company/Company',
     access: 'canAdmin',
   },
   {
-    path: '/organization/department',
+    path: '/company/department',
     name: 'org.dept',
-    component: './organization/Department',
+    component: './company/Department',
     access: 'canAdmin',
   },
 

@@ -4,7 +4,7 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface UserFormProps {
   visible: boolean;
@@ -19,11 +19,48 @@ const UserForm: React.FC<UserFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const [formKey, setFormKey] = useState<string>(
+    editingRecord?.id || editingRecord?.user_id || `new-${Date.now()}`,
+  );
   const formRef = useRef<ProFormInstance>(undefined);
+
+  // 初始化表单 key，确保表单正确重置
+  useEffect(() => {
+    if (visible) {
+      if (!editingRecord) {
+        setFormKey(`new-${Date.now()}`);
+      } else {
+        setFormKey(
+          editingRecord.id || editingRecord.user_id || `edit-${Date.now()}`,
+        );
+      }
+    }
+  }, [visible, editingRecord]);
+
+  // 设置表单初始值（使用 setFieldsValue 避免 initialValues 警告）
+  useEffect(() => {
+    if (visible && formRef.current) {
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          if (editingRecord) {
+            formRef.current.setFieldsValue({
+              ...editingRecord,
+            });
+          } else {
+            formRef.current.setFieldsValue({
+              status: 1,
+            });
+          }
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible, editingRecord]);
 
   return (
     <DrawerForm
-      key={editingRecord?.id || editingRecord?.user_id || 'new'}
+      key={formKey}
       formRef={formRef}
       title={editingRecord ? '编辑用户' : '新增用户'}
       open={visible}
@@ -36,15 +73,6 @@ const UserForm: React.FC<UserFormProps> = ({
         await onSubmit(values);
         return true;
       }}
-      initialValues={
-        editingRecord
-          ? {
-              ...editingRecord,
-            }
-          : {
-              status: 1,
-            }
-      }
       width={800}
       layout="horizontal"
       labelCol={{ span: 6 }}

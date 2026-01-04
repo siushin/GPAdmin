@@ -1,3 +1,4 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormDigit,
@@ -6,7 +7,7 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MODAL_WIDTH } from '@/utils/constants';
 
 interface RoleFormProps {
@@ -24,8 +25,52 @@ const RoleForm: React.FC<RoleFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const [formKey, setFormKey] = useState<string>(
+    editingRecord?.role_id || `new-${Date.now()}`,
+  );
+  const formRef = useRef<ProFormInstance>(undefined);
+
+  // 初始化表单 key，确保表单正确重置
+  useEffect(() => {
+    if (visible) {
+      if (!editingRecord) {
+        setFormKey(`new-${Date.now()}`);
+      } else {
+        setFormKey(editingRecord.role_id || `edit-${Date.now()}`);
+      }
+    }
+  }, [visible, editingRecord]);
+
+  // 设置表单初始值（使用 setFieldsValue 避免 initialValues 警告）
+  useEffect(() => {
+    if (visible && formRef.current) {
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          if (editingRecord) {
+            formRef.current.setFieldsValue({
+              ...editingRecord,
+              status: editingRecord.status ?? 1,
+              account_type: editingRecord.account_type || accountType,
+              sort: editingRecord.sort ?? 0,
+            });
+          } else {
+            formRef.current.setFieldsValue({
+              status: 1,
+              account_type: accountType,
+              sort: 0,
+            });
+          }
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible, editingRecord, accountType]);
+
   return (
     <ModalForm
+      key={formKey}
+      formRef={formRef}
       title={editingRecord ? '编辑角色' : '新增角色'}
       open={visible}
       onOpenChange={(open) => {
@@ -35,12 +80,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
       }}
       onFinish={async (values) => {
         await onSubmit(values);
-      }}
-      initialValues={{
-        ...(editingRecord || {}),
-        status: editingRecord?.status ?? 1,
-        account_type: editingRecord?.account_type || accountType,
-        sort: editingRecord?.sort ?? 0,
       }}
       width={MODAL_WIDTH.MEDIUM}
       layout="horizontal"

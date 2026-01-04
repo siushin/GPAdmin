@@ -37,6 +37,7 @@ const CompanyDetail: React.FC<CompanyDetailProps> = ({
             title: '公司名称',
             dataIndex: 'company_name',
             ellipsis: true,
+            copyable: true,
           },
           {
             title: '公司编码',
@@ -49,40 +50,21 @@ const CompanyDetail: React.FC<CompanyDetailProps> = ({
             copyable: true,
           },
           {
-            title: '关联组织架构ID',
-            dataIndex: 'organization_id',
-            render: (text) => text || '-',
-          },
-          {
             title: '法人代表',
             dataIndex: 'legal_person',
-            render: (text) => text || '-',
+            render: (text) => text || '',
           },
           {
             title: '联系电话',
             dataIndex: 'contact_phone',
             copyable: true,
-            render: (text) => text || '-',
+            render: (text) => text || '',
           },
           {
             title: '联系邮箱',
             dataIndex: 'contact_email',
             copyable: true,
-            render: (text) => text || '-',
-          },
-          {
-            title: '公司地址',
-            dataIndex: 'address',
-            span: 2,
-            ellipsis: true,
-            render: (text) => text || '-',
-          },
-          {
-            title: '公司描述',
-            dataIndex: 'company_desc',
-            span: 2,
-            valueType: 'textarea',
-            render: (text) => text || '-',
+            render: (text) => text || '',
           },
           {
             title: '状态',
@@ -96,6 +78,20 @@ const CompanyDetail: React.FC<CompanyDetailProps> = ({
                 {record?.status === 1 ? '正常' : '禁用'}
               </Tag>
             ),
+          },
+          {
+            title: '公司地址',
+            dataIndex: 'company_address',
+            span: 2,
+            ellipsis: true,
+            render: (text) => text || '',
+          },
+          {
+            title: '公司描述',
+            dataIndex: 'company_desc',
+            span: 2,
+            valueType: 'textarea',
+            render: (text) => text || '',
           },
           {
             title: '创建时间',

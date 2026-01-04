@@ -1,10 +1,11 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
   ProFormRadio,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MODAL_WIDTH } from '@/utils/constants';
 
 interface CompanyFormProps {
@@ -20,8 +21,52 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const [formKey, setFormKey] = useState<string>(
+    editingRecord?.company_id || `new-${Date.now()}`,
+  );
+  const formRef = useRef<ProFormInstance>(undefined);
+
+  // 初始化表单 key，确保表单正确重置
+  useEffect(() => {
+    if (visible) {
+      // 新增时，每次打开都生成新的 key，确保表单被重置
+      if (!editingRecord) {
+        setFormKey(`new-${Date.now()}`);
+      } else {
+        setFormKey(editingRecord.company_id || `edit-${Date.now()}`);
+      }
+    }
+  }, [visible, editingRecord]);
+
+  // 设置表单初始值（使用 setFieldsValue 避免 initialValues 警告）
+  useEffect(() => {
+    if (visible && formRef.current) {
+      // 使用 setTimeout 确保在下一个事件循环中执行，此时表单已经渲染完成
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          if (editingRecord) {
+            // 编辑模式：设置编辑记录的值
+            formRef.current.setFieldsValue({
+              ...editingRecord,
+              status: editingRecord.status ?? 1,
+            });
+          } else {
+            // 新增模式：设置默认值
+            formRef.current.setFieldsValue({
+              status: 1,
+            });
+          }
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible, editingRecord]);
+
   return (
     <DrawerForm
+      key={formKey}
+      formRef={formRef}
       title={editingRecord ? '编辑公司' : '新增公司'}
       open={visible}
       onOpenChange={(open) => {
@@ -32,10 +77,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       onFinish={async (values) => {
         await onSubmit(values);
         return true;
-      }}
-      initialValues={{
-        ...(editingRecord || {}),
-        status: editingRecord?.status ?? 1,
       }}
       width={MODAL_WIDTH.MEDIUM}
       layout="horizontal"
@@ -79,6 +120,24 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       <ProFormText
         name="contact_phone"
         label="联系电话"
+        rules={[
+          {
+            validator: (_rule, value) => {
+              if (!value) {
+                return Promise.resolve();
+              }
+              // 支持手机号和固定电话格式
+              const phonePattern = /^1[3-9]\d{9}$/; // 手机号
+              const landlinePattern = /^0\d{2,3}-?\d{7,8}$/; // 固定电话
+              if (phonePattern.test(value) || landlinePattern.test(value)) {
+                return Promise.resolve();
+              }
+              return Promise.reject(
+                new Error('请输入正确的联系电话（手机号或固定电话）'),
+              );
+            },
+          },
+        ]}
         fieldProps={{
           placeholder: '请输入联系电话（可选）',
         }}
@@ -86,12 +145,18 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       <ProFormText
         name="contact_email"
         label="联系邮箱"
+        rules={[
+          {
+            type: 'email',
+            message: '请输入正确的邮箱地址',
+          },
+        ]}
         fieldProps={{
           placeholder: '请输入联系邮箱（可选）',
         }}
       />
       <ProFormText
-        name="address"
+        name="company_address"
         label="公司地址"
         fieldProps={{
           placeholder: '请输入公司地址（可选）',

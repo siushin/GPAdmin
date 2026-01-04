@@ -20,8 +20,8 @@ import {
   updateOrganizationType,
 } from '@/services/api/system';
 import { SysParamFlag, TABLE_SIZE } from '@/utils/constants';
-import OrganizationForm from '../organization/components/OrganizationForm';
 import DictionaryTypeForm from './components/DictionaryTypeForm';
+import DictTreeForm from './components/DictTreeForm';
 import useStyles from './DictTree.style';
 
 const DictTree: React.FC = () => {
@@ -609,7 +609,7 @@ const DictTree: React.FC = () => {
         </div>
       </div>
 
-      <OrganizationForm
+      <DictTreeForm
         visible={formVisible}
         editingRecord={editingRecord}
         isAddChild={isAddChild}
@@ -625,7 +625,7 @@ const DictTree: React.FC = () => {
       />
 
       {moveFormVisible && (
-        <OrganizationForm
+        <DictTreeForm
           visible={moveFormVisible}
           editingRecord={movingRecord}
           isMove={true}

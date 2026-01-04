@@ -6,7 +6,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { getFullTreeDataForHtml } from '@/services/api/system';
 
-interface OrganizationFormProps {
+interface DictTreeFormProps {
   visible: boolean;
   editingRecord: any;
   isAddChild?: boolean;
@@ -18,7 +18,7 @@ interface OrganizationFormProps {
   selectedTypeForFilter: string;
 }
 
-const OrganizationForm: React.FC<OrganizationFormProps> = ({
+const DictTreeForm: React.FC<DictTreeFormProps> = ({
   visible,
   editingRecord,
   isAddChild = false,
@@ -218,4 +218,4 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({
   );
 };
 
-export default OrganizationForm;
+export default DictTreeForm;

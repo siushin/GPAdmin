@@ -73,6 +73,28 @@ export async function deleteAdmin(
   });
 }
 
+/** 批量移除员工（从公司移除） POST /api/admin/admin/batchRemoveFromCompany */
+export async function batchRemoveAdminFromCompany(
+  body: {
+    account_ids: number[];
+    company_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      count: number;
+      deleted_department_count: number;
+    };
+  }>('/api/admin/admin/batchRemoveFromCompany', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 获取管理员详情 POST /api/admin/admin/getDetail */
 export async function getAdminDetail(
   body: {
