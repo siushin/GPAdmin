@@ -121,7 +121,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
                 parent_id: editingRecord.parent_id ?? 0,
                 manager_id: editingRecord.manager_id,
                 status: editingRecord.status ?? 1,
-                sort_order: editingRecord.sort_order ?? 0,
+                sort: editingRecord.sort ?? 0,
               });
             }
           });
@@ -132,7 +132,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           company_id: editingRecord.company_id,
           parent_id: editingRecord.parent_id ?? 0,
           status: 1,
-          sort_order: 0,
+          sort: 0,
         });
       }
     } else {
@@ -143,7 +143,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           company_id: companyId,
           parent_id: 0,
           status: 1,
-          sort_order: 0,
+          sort: 0,
         });
       }
     }
@@ -343,7 +343,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
             formRef.current.setFieldsValue({
               parent_id: 0,
               status: 1,
-              sort_order: 0,
+              sort: 0,
             });
           }
         }, 100);
@@ -358,7 +358,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
               ...editingRecord,
               parent_id: editingRecord.parent_id ?? 0,
               status: editingRecord.status ?? 1,
-              sort_order: editingRecord.sort_order ?? 0,
+              sort: editingRecord.sort ?? 0,
             });
           }
         }, 100);
@@ -399,7 +399,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           'manager_id',
           'description',
           'status',
-          'sort_order',
+          'sort',
         ];
         // 构建完整的表单值，确保所有字段都被包含
         const completeValues: any = {};
@@ -427,9 +427,9 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
             fieldValue = 0;
           }
 
-          // 特殊处理：sort_order 空字符串或 null 应该转为 0
+          // 特殊处理：sort 空字符串或 null 应该转为 0
           if (
-            field === 'sort_order' &&
+            field === 'sort' &&
             (fieldValue === '' ||
               fieldValue === null ||
               fieldValue === undefined)
@@ -493,17 +493,14 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
           return false;
         }
 
-        // 验证 sort_order 范围（0-999999）
-        if (
-          completeValues.sort_order !== null &&
-          completeValues.sort_order !== undefined
-        ) {
-          const sortOrder = Number(completeValues.sort_order);
-          if (isNaN(sortOrder) || sortOrder < 0 || sortOrder > 999999) {
+        // 验证 sort 范围（0-999999）
+        if (completeValues.sort !== null && completeValues.sort !== undefined) {
+          const sortValue = Number(completeValues.sort);
+          if (isNaN(sortValue) || sortValue < 0 || sortValue > 999999) {
             message.error('排序值必须在0-999999之间');
             return false;
           }
-          completeValues.sort_order = Math.floor(sortOrder); // 确保是整数
+          completeValues.sort = Math.floor(sortValue); // 确保是整数
         }
 
         await onSubmit(completeValues);
@@ -601,7 +598,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         rules={[{ required: true, message: '请选择状态' }]}
       />
       <ProFormDigit
-        name="sort_order"
+        name="sort"
         label="排序"
         rules={[
           {

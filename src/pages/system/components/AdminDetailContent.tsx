@@ -1,5 +1,8 @@
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Card, Descriptions, Divider, Spin, Tabs, Tag } from 'antd';
-import React from 'react';
+import React, { useState } from 'react';
+import { TABLE_SIZE } from '@/utils/constants';
 import AdminLogsSection from './AdminLogsSection';
 
 interface AdminDetailContentProps {
@@ -18,15 +21,29 @@ interface AdminDetailContentProps {
       created_at?: string;
       updated_at?: string;
     }>;
+    departments?: Array<{
+      id: number;
+      department_id: number;
+      department_name: string;
+      department_code?: string;
+      company_id?: number;
+      company_name?: string;
+      sort: number;
+      created_at?: string;
+      updated_at?: string;
+    }>;
   };
   loading?: boolean;
+  onRefresh?: () => void;
 }
 
 const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
   detailData,
   loading,
+  onRefresh,
 }) => {
-  const { account, profile, admin, social } = detailData;
+  const { account, profile, admin, social, departments = [] } = detailData;
+  const [activeTabKey, setActiveTabKey] = useState<string>('account');
 
   // 性别映射
   const genderMap: Record<string, string> = {
@@ -41,6 +58,28 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
     0: { text: '禁用', color: 'error' },
   };
 
+  // 部门列表表格列定义
+  const departmentColumns: ProColumns<any>[] = [
+    {
+      title: '序号',
+      valueType: 'index',
+      width: 80,
+      fixed: 'left',
+    },
+    {
+      title: '部门名称',
+      dataIndex: 'department_name',
+      width: 200,
+      render: (_, record) => record.department_name || '',
+    },
+    {
+      title: '部门编码',
+      dataIndex: 'department_code',
+      width: 150,
+      render: (_, record) => record.department_code || '',
+    },
+  ];
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -52,13 +91,20 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
   return (
     <div>
       <Tabs
+        activeKey={activeTabKey}
+        onChange={setActiveTabKey}
         items={[
           {
             key: 'account',
             label: '账号信息',
             children: (
               <Card>
-                <Descriptions column={2} bordered>
+                <Descriptions
+                  column={2}
+                  bordered
+                  size="small"
+                  styles={{ content: {}, label: {} }}
+                >
                   <Descriptions.Item label="账号ID">
                     {account.id}
                   </Descriptions.Item>
@@ -110,7 +156,12 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
             label: '账号资料',
             children: profile ? (
               <Card>
-                <Descriptions column={2} bordered>
+                <Descriptions
+                  column={2}
+                  bordered
+                  size="small"
+                  styles={{ content: {}, label: {} }}
+                >
                   <Descriptions.Item label="昵称">
                     {profile.nickname || ''}
                   </Descriptions.Item>
@@ -163,12 +214,36 @@ const AdminDetailContent: React.FC<AdminDetailContentProps> = ({
             ),
           },
           {
+            key: 'departments',
+            label: '所属部门',
+            children: (
+              <Card>
+                <ProTable<any>
+                  rowKey="id"
+                  size={TABLE_SIZE}
+                  search={false}
+                  pagination={false}
+                  dateFormatter="string"
+                  scroll={{ x: 'max-content' }}
+                  columns={departmentColumns}
+                  dataSource={departments}
+                  toolBarRender={false}
+                />
+              </Card>
+            ),
+          },
+          {
             key: 'social',
             label: '社交账号',
             children:
               social && social.length > 0 ? (
                 <Card>
-                  <Descriptions column={1} bordered>
+                  <Descriptions
+                    column={1}
+                    bordered
+                    size="small"
+                    styles={{ content: {}, label: {} }}
+                  >
                     {social.map((item) => (
                       <Descriptions.Item key={item.id} label={item.social_type}>
                         <div>

@@ -141,6 +141,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             rules={[{ required: true, message: '请输入菜单名称' }]}
             fieldProps={{
               placeholder: '请输入菜单名称',
+              maxLength: 50,
+              showCount: true,
             }}
           />
         </Col>
@@ -150,6 +152,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             label="菜单Key"
             fieldProps={{
               placeholder: '请输入菜单Key（用于国际化，如：workbench）',
+              maxLength: 100,
+              showCount: true,
             }}
           />
         </Col>
@@ -161,6 +165,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             label="路由路径"
             fieldProps={{
               placeholder: '请输入路由路径',
+              maxLength: 200,
+              showCount: true,
             }}
           />
         </Col>
@@ -212,6 +218,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             fieldProps={{
               placeholder:
                 '请输入组件路径（相对路径，如：./Dashboard/Workplace）',
+              maxLength: 200,
+              showCount: true,
             }}
           />
         </Col>
@@ -221,6 +229,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             label="重定向路径"
             fieldProps={{
               placeholder: '请输入重定向路径（可选）',
+              maxLength: 200,
+              showCount: true,
             }}
           />
         </Col>

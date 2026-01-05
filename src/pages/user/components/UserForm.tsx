@@ -1,7 +1,7 @@
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
-  ProFormSelect,
+  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
@@ -46,10 +46,11 @@ const UserForm: React.FC<UserFormProps> = ({
           if (editingRecord) {
             formRef.current.setFieldsValue({
               ...editingRecord,
+              status: editingRecord.status === 1,
             });
           } else {
             formRef.current.setFieldsValue({
-              status: 1,
+              status: true,
             });
           }
         }
@@ -79,7 +80,12 @@ const UserForm: React.FC<UserFormProps> = ({
           values,
           allFormFields,
         );
-        await onSubmit(completeValues);
+        // 将 status 的 boolean 值转换为 1/0
+        const submitValues = {
+          ...completeValues,
+          status: completeValues.status ? 1 : 0,
+        };
+        await onSubmit(submitValues);
         return true;
       }}
       width={800}
@@ -94,6 +100,8 @@ const UserForm: React.FC<UserFormProps> = ({
         fieldProps={{
           placeholder: '请输入用户名',
           disabled: !!editingRecord,
+          maxLength: 50,
+          showCount: true,
         }}
       />
       {!editingRecord && (
@@ -103,6 +111,7 @@ const UserForm: React.FC<UserFormProps> = ({
           rules={[{ required: true, message: '请输入密码' }]}
           fieldProps={{
             placeholder: '请输入密码',
+            maxLength: 50,
           }}
         />
       )}
@@ -112,20 +121,16 @@ const UserForm: React.FC<UserFormProps> = ({
           label="密码"
           fieldProps={{
             placeholder: '留空则不修改密码',
+            maxLength: 50,
           }}
         />
       )}
-      <ProFormSelect
+      <ProFormSwitch
         name="status"
         label="账号状态"
-        options={[
-          { label: '正常', value: 1 },
-          { label: '禁用', value: 0 },
-        ]}
-        rules={[{ required: true, message: '请选择账号状态' }]}
         fieldProps={{
-          placeholder: '请选择账号状态',
-          style: { width: 200 },
+          checkedChildren: '正常',
+          unCheckedChildren: '禁用',
         }}
       />
     </DrawerForm>

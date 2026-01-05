@@ -151,6 +151,8 @@ const DictionaryForm: React.FC<DictionaryFormProps> = ({
         rules={[{ required: true, message: '请输入字典名称' }]}
         fieldProps={{
           placeholder: '请输入字典名称',
+          maxLength: 100,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -167,6 +169,8 @@ const DictionaryForm: React.FC<DictionaryFormProps> = ({
             !editingRecord &&
             (valueGenerateType === 'auto_increment' ||
               valueGenerateType === 'same_as_name'),
+          maxLength: 100,
+          showCount: true,
         }}
         extra={getValueExtra()}
       />
@@ -176,6 +180,8 @@ const DictionaryForm: React.FC<DictionaryFormProps> = ({
         fieldProps={{
           placeholder: '请输入字典描述',
           rows: 3,
+          maxLength: 500,
+          showCount: true,
         }}
       />
       <ProFormDigit

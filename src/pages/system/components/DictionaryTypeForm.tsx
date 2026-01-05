@@ -120,6 +120,8 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
             sysParamFlag === SysParamFlag.Yes
               ? '系统支撑数据，禁止修改'
               : undefined,
+          maxLength: 100,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -132,6 +134,10 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
           },
         ]}
         placeholder="请输入字典值"
+        fieldProps={{
+          maxLength: 100,
+          showCount: true,
+        }}
       />
       <ProFormTextArea
         name="dictionary_desc"
@@ -139,6 +145,8 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
         placeholder="请输入描述（可选）"
         fieldProps={{
           rows: 3,
+          maxLength: 500,
+          showCount: true,
         }}
       />
     </ModalForm>

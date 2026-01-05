@@ -5,7 +5,7 @@ import type {
   ProTableProps,
 } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Drawer, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, Drawer, Popconfirm, Space, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
@@ -22,6 +22,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import { getMessage } from '@/utils/notification';
 import CompanyDetail from './components/CompanyDetail';
 import CompanyForm from './components/CompanyForm';
 
@@ -63,6 +64,7 @@ const Company: React.FC = () => {
   };
 
   const handleBatchRemoveEmployees = async () => {
+    const message = getMessage();
     if (!selectedEmployeeRows || selectedEmployeeRows.length === 0) {
       message.warning('请至少选择一条数据');
       return;
@@ -98,6 +100,7 @@ const Company: React.FC = () => {
   };
 
   const handleDelete = async (record: any) => {
+    const message = getMessage();
     try {
       const res = await deleteCompany({
         company_id: record.company_id,
@@ -120,6 +123,7 @@ const Company: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
+    const message = getMessage();
     try {
       // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
       const processedValues = processFormValues(values);
@@ -194,6 +198,8 @@ const Company: React.FC = () => {
       copyable: true,
       fieldProps: {
         placeholder: '请输入统一社会信用代码',
+        maxLength: 18,
+        showCount: true,
       },
       render: (_, record) => record.company_credit_code || '',
     },

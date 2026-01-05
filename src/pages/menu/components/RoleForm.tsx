@@ -107,6 +107,8 @@ const RoleForm: React.FC<RoleFormProps> = ({
         rules={[{ required: true, message: '请输入角色名称' }]}
         fieldProps={{
           placeholder: '请输入角色名称',
+          maxLength: 50,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -115,6 +117,8 @@ const RoleForm: React.FC<RoleFormProps> = ({
         rules={[{ required: true, message: '请输入角色编码' }]}
         fieldProps={{
           placeholder: '请输入角色编码',
+          maxLength: 50,
+          showCount: true,
         }}
       />
       <ProFormRadio.Group
@@ -132,6 +136,8 @@ const RoleForm: React.FC<RoleFormProps> = ({
         fieldProps={{
           placeholder: '请输入角色描述（可选）',
           rows: 3,
+          maxLength: 500,
+          showCount: true,
         }}
       />
       <ProFormRadio.Group

@@ -5,7 +5,8 @@ import type {
   ProFormInstance,
 } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, Drawer, message, Popconfirm, Space, Tag } from 'antd';
+import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   addDepartment,
@@ -14,7 +15,14 @@ import {
   getDepartmentList,
   updateDepartment,
 } from '@/services/api/company';
-import { processFormValues, TABLE_SIZE } from '@/utils/constants';
+import * as systemApi from '@/services/api/system';
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGINATION,
+  processFormValues,
+  TABLE_SIZE,
+} from '@/utils/constants';
+import { dateRangeFieldProps } from '@/utils/datePresets';
 import DepartmentDetail from './components/DepartmentDetail';
 import DepartmentForm from './components/DepartmentForm';
 
@@ -31,6 +39,19 @@ const Department: React.FC = () => {
   const [companyOptions, setCompanyOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
+  const [employeeDrawerVisible, setEmployeeDrawerVisible] = useState(false);
+  const [currentDepartmentId, setCurrentDepartmentId] = useState<number | null>(
+    null,
+  );
+  const [currentDepartmentName, setCurrentDepartmentName] =
+    useState<string>('');
+  const [currentDepartmentCompanyId, setCurrentDepartmentCompanyId] = useState<
+    number | null
+  >(null);
+  const employeeActionRef = useRef<ActionType>(null);
+  const [employeePageSize, setEmployeePageSize] =
+    useState<number>(DEFAULT_PAGE_SIZE);
+  const [selectedEmployeeRows, setSelectedEmployeeRows] = useState<any[]>([]);
 
   const handleAdd = () => {
     // 检查是否有可用的公司
@@ -74,6 +95,55 @@ const Department: React.FC = () => {
     }
     setDetailRecord(record);
     setDetailVisible(true);
+  };
+
+  const handleEmployeeList = (record: any) => {
+    // 验证记录是否有效
+    if (!record || !record.department_id) {
+      message.error('部门信息不完整，无法查看员工列表');
+      return;
+    }
+    setCurrentDepartmentId(record.department_id);
+    setCurrentDepartmentName(record.department_name || '');
+    setCurrentDepartmentCompanyId(record.company_id || null);
+    setEmployeeDrawerVisible(true);
+    setSelectedEmployeeRows([]); // 重置选中项
+  };
+
+  const handleBatchRemoveEmployees = async () => {
+    if (!selectedEmployeeRows || selectedEmployeeRows.length === 0) {
+      message.warning('请至少选择一条数据');
+      return;
+    }
+    if (!currentDepartmentCompanyId) {
+      message.error('部门所属公司ID不存在，无法移除员工');
+      return;
+    }
+
+    try {
+      const accountIds = selectedEmployeeRows.map((row) => row.account_id);
+      // 使用批量移除公司员工的API，移除员工会同时清除部门关联
+      const res = await systemApi.batchRemoveAdminFromCompany({
+        account_ids: accountIds,
+        company_id: currentDepartmentCompanyId,
+      });
+      if (res.code === 200) {
+        message.success(
+          `批量移除成功，共移除 ${res.data?.count || 0} 个员工，删除部门关联 ${res.data?.deleted_department_count || 0} 条`,
+        );
+        setSelectedEmployeeRows([]);
+        employeeActionRef.current?.reload();
+      } else {
+        message.error(res.message || '批量移除失败');
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error?.message ||
+        '批量移除失败';
+      message.error(errorMessage);
+    }
   };
 
   const handleDelete = async (record: any) => {
@@ -306,7 +376,7 @@ const Department: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 280,
+      width: 350,
       fixed: 'right',
       render: (_, record) => (
         <Space>
@@ -322,6 +392,13 @@ const Department: React.FC = () => {
           </Button>
           <Button type="link" size="small" onClick={() => handleEdit(record)}>
             编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => handleEmployeeList(record)}
+          >
+            员工列表
           </Button>
           <Popconfirm
             title="确定要删除这条数据吗？"
@@ -475,6 +552,249 @@ const Department: React.FC = () => {
           setDetailRecord(null);
         }}
       />
+      <Drawer
+        title={`${currentDepartmentName} - 员工列表`}
+        open={employeeDrawerVisible}
+        onClose={() => {
+          setEmployeeDrawerVisible(false);
+          setCurrentDepartmentId(null);
+          setCurrentDepartmentName('');
+          setCurrentDepartmentCompanyId(null);
+          setSelectedEmployeeRows([]); // 清空选中项
+        }}
+        width={1200}
+        destroyOnClose
+      >
+        <ProTable<any>
+          actionRef={employeeActionRef}
+          rowKey="account_id"
+          size={TABLE_SIZE}
+          search={{
+            labelWidth: 120,
+            defaultCollapsed: false,
+          }}
+          request={async (params) => {
+            if (!currentDepartmentId) {
+              return {
+                data: [],
+                success: false,
+                total: 0,
+              };
+            }
+            const requestParams: any = {
+              ...params,
+              page: params.page || 1,
+              pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+              department_id: currentDepartmentId,
+            };
+
+            // 处理状态筛选
+            if (
+              params.status !== undefined &&
+              params.status !== null &&
+              params.status !== ''
+            ) {
+              requestParams.status = params.status;
+            }
+
+            // 是否超级管理员筛选
+            if (
+              params.is_super !== undefined &&
+              params.is_super !== null &&
+              params.is_super !== ''
+            ) {
+              requestParams.is_super = params.is_super;
+            }
+
+            const response = await systemApi.getAdminList(requestParams);
+            if (response.code === 200) {
+              return {
+                data: response.data?.data || [],
+                success: true,
+                total: response.data?.page?.total || 0,
+              };
+            }
+            return {
+              data: [],
+              success: false,
+              total: 0,
+            };
+          }}
+          columns={[
+            {
+              title: '序号',
+              valueType: 'index',
+              width: 80,
+              hideInSearch: true,
+              fixed: 'left',
+            },
+            {
+              title: '关键字',
+              dataIndex: 'keyword',
+              hideInTable: true,
+              fieldProps: {
+                placeholder: '用户名、姓名、手机号、邮箱',
+              },
+            },
+            {
+              title: '用户名',
+              dataIndex: 'username',
+              width: 120,
+              fixed: 'left',
+              hideInSearch: true,
+              render: (_, record) => record.username || '',
+            },
+            {
+              title: '姓名',
+              dataIndex: 'nickname',
+              width: 120,
+              hideInSearch: true,
+              render: (_, record) => record.nickname || '',
+            },
+            {
+              title: '手机号',
+              dataIndex: 'phone',
+              hideInSearch: true,
+              width: 130,
+              copyable: true,
+              render: (_, record) => record.phone || '',
+            },
+            {
+              title: '邮箱',
+              dataIndex: 'email',
+              hideInSearch: true,
+              width: 180,
+              ellipsis: true,
+              copyable: true,
+              render: (_, record) => record.email || '',
+            },
+            {
+              title: '最后登录IP',
+              dataIndex: 'last_login_ip',
+              hideInSearch: true,
+              width: 130,
+              render: (_, record) => record.last_login_ip || '',
+            },
+            {
+              title: '最后登录时间',
+              dataIndex: 'last_login_time',
+              valueType: 'dateRange',
+              hideInTable: false,
+              width: 180,
+              fieldProps: dateRangeFieldProps,
+              render: (_, record) => {
+                if (!record.last_login_time) return '';
+                try {
+                  return dayjs(record.last_login_time).format(
+                    'YYYY-MM-DD HH:mm:ss',
+                  );
+                } catch (_e) {
+                  return record.last_login_time;
+                }
+              },
+            },
+            {
+              title: '创建时间',
+              dataIndex: 'created_at',
+              valueType: 'dateRange',
+              hideInTable: false,
+              width: 180,
+              fieldProps: dateRangeFieldProps,
+              render: (_, record) => {
+                if (!record.created_at) return '';
+                try {
+                  return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
+                } catch (_e) {
+                  return record.created_at;
+                }
+              },
+            },
+            {
+              title: '账号状态',
+              dataIndex: 'status',
+              valueType: 'select',
+              valueEnum: {
+                1: { text: '正常', status: 'Success' },
+                0: { text: '禁用', status: 'Error' },
+              },
+              width: 100,
+              fieldProps: {
+                placeholder: '请选择状态',
+                allowClear: true,
+                options: [
+                  { label: '正常', value: 1 },
+                  { label: '禁用', value: 0 },
+                ],
+              },
+              render: (_, record) => (
+                <Tag color={record.status === 1 ? 'success' : 'error'}>
+                  {record.status === 1 ? '正常' : '禁用'}
+                </Tag>
+              ),
+            },
+            {
+              title: '是否超级管理员',
+              dataIndex: 'is_super',
+              valueType: 'select',
+              valueEnum: {
+                1: { text: '是', status: 'Success' },
+                0: { text: '否', status: 'Default' },
+              },
+              width: 120,
+              fieldProps: {
+                placeholder: '请选择',
+                allowClear: true,
+                options: [
+                  { label: '是', value: 1 },
+                  { label: '否', value: 0 },
+                ],
+              },
+              render: (_, record) => (
+                <Tag color={record.is_super === 1 ? 'success' : 'default'}>
+                  {record.is_super === 1 ? '是' : '否'}
+                </Tag>
+              ),
+            },
+          ]}
+          pagination={{
+            ...DEFAULT_PAGINATION,
+            pageSize: employeePageSize,
+            onShowSizeChange: (_current, size) => {
+              setEmployeePageSize(size);
+            },
+          }}
+          dateFormatter="string"
+          headerTitle="员工列表"
+          scroll={{ x: 'max-content' }}
+          rowSelection={{
+            selectedRowKeys: selectedEmployeeRows.map((row) => row.account_id),
+            onChange: (_, selectedRows) => {
+              setSelectedEmployeeRows(selectedRows);
+            },
+          }}
+          tableAlertOptionRender={({ selectedRowKeys, onCleanSelected }) => {
+            return (
+              <Space>
+                <Button size="small" onClick={onCleanSelected}>
+                  取消选择
+                </Button>
+                <Popconfirm
+                  title={`确定要批量移除选中的 ${selectedRowKeys.length} 个员工吗？移除后会将公司ID和部门关联清空。`}
+                  onConfirm={async () => {
+                    await handleBatchRemoveEmployees();
+                    onCleanSelected();
+                  }}
+                >
+                  <Button type="primary" size="small" danger>
+                    批量移除员工
+                  </Button>
+                </Popconfirm>
+              </Space>
+            );
+          }}
+          toolBarRender={false}
+        />
+      </Drawer>
     </PageContainer>
   );
 };

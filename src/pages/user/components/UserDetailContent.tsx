@@ -59,7 +59,12 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
             label: '账号信息',
             children: (
               <Card>
-                <Descriptions column={2} bordered>
+                <Descriptions
+                  column={2}
+                  bordered
+                  size="small"
+                  styles={{ content: {}, label: {} }}
+                >
                   <Descriptions.Item label="账号ID">
                     {account.id}
                   </Descriptions.Item>
@@ -95,7 +100,12 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
             label: '账号资料',
             children: profile ? (
               <Card>
-                <Descriptions column={2} bordered>
+                <Descriptions
+                  column={2}
+                  bordered
+                  size="small"
+                  styles={{ content: {}, label: {} }}
+                >
                   <Descriptions.Item label="昵称">
                     {profile.nickname || ''}
                   </Descriptions.Item>
@@ -153,7 +163,12 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
             children:
               social && social.length > 0 ? (
                 <Card>
-                  <Descriptions column={1} bordered>
+                  <Descriptions
+                    column={1}
+                    bordered
+                    size="small"
+                    styles={{ content: {}, label: {} }}
+                  >
                     {social.map((item) => (
                       <Descriptions.Item key={item.id} label={item.social_type}>
                         <div>

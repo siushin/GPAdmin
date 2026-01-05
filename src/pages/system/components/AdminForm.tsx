@@ -8,6 +8,7 @@ import {
 } from '@ant-design/pro-components';
 import { Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { getDepartmentTreeDataForHtml } from '@/services/api/company';
 import { getCompanyList } from '@/services/api/system';
 import { ensureAllFormFields } from '@/utils/constants';
 
@@ -27,8 +28,18 @@ const AdminForm: React.FC<AdminFormProps> = ({
   const [companyOptions, setCompanyOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
+  const [departmentOptions, setDepartmentOptions] = useState<
+    Array<{ label: string; value: number }>
+  >([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<
+    number | undefined
+  >(undefined);
   const [formKey, setFormKey] = useState<string>(
-    editingRecord?.id || editingRecord?.user_id || `new-${Date.now()}`,
+    editingRecord?.id ||
+      editingRecord?.user_id ||
+      editingRecord?.account_id ||
+      `new-${Date.now()}`,
   );
   const formRef = useRef<ProFormInstance>(undefined);
 
@@ -48,6 +59,51 @@ const AdminForm: React.FC<AdminFormProps> = ({
     }
   }, [visible]);
 
+  // 加载部门列表（根据选择的公司）
+  const loadDepartmentOptions = async (companyId?: number) => {
+    if (!companyId) {
+      setDepartmentOptions([]);
+      setLoadingDepartments(false);
+      return;
+    }
+    try {
+      setLoadingDepartments(true);
+      const params = { company_id: companyId };
+      const res = await getDepartmentTreeDataForHtml(params);
+      if (res.code === 200 && res.data) {
+        setDepartmentOptions(
+          res.data.map((item) => ({
+            label: item.department_name,
+            value: item.department_id,
+          })),
+        );
+      } else {
+        setDepartmentOptions([]);
+      }
+    } catch (error) {
+      console.error('加载部门列表失败:', error);
+      setDepartmentOptions([]);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  // 监听公司选择变化，加载对应的部门列表
+  useEffect(() => {
+    if (visible) {
+      if (editingRecord && editingRecord.company_id) {
+        // 编辑模式下，如果有公司ID，立即加载对应的部门列表
+        setSelectedCompanyId(editingRecord.company_id);
+        loadDepartmentOptions(editingRecord.company_id);
+      } else if (!editingRecord) {
+        // 新增模式下，清空部门列表和选中的公司
+        setDepartmentOptions([]);
+        setLoadingDepartments(false);
+        setSelectedCompanyId(undefined);
+      }
+    }
+  }, [visible, editingRecord]);
+
   // 初始化表单 key
   useEffect(() => {
     if (visible) {
@@ -56,7 +112,10 @@ const AdminForm: React.FC<AdminFormProps> = ({
         setFormKey(`new-${Date.now()}`);
       } else {
         setFormKey(
-          editingRecord.id || editingRecord.user_id || `edit-${Date.now()}`,
+          editingRecord.id ||
+            editingRecord.user_id ||
+            editingRecord.account_id ||
+            `edit-${Date.now()}`,
         );
       }
     }
@@ -70,20 +129,45 @@ const AdminForm: React.FC<AdminFormProps> = ({
 
       if (editingRecord) {
         // 编辑模式：设置编辑记录的值
-        formRef.current.setFieldsValue({
+        const formValues: any = {
           ...editingRecord,
           // admin账号强制状态为正常
           status:
             editingRecord.username === 'admin'
               ? true
               : editingRecord.status === 1,
-        });
+        };
+
+        // 如果有部门ID列表，转换为数组格式
+        if (editingRecord.department_ids) {
+          formValues.department_ids = Array.isArray(
+            editingRecord.department_ids,
+          )
+            ? editingRecord.department_ids
+            : [editingRecord.department_ids];
+        }
+
+        // 延迟设置表单值，确保表单已经渲染完成
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.setFieldsValue(formValues);
+          }
+        }, 50);
+
+        // 如果有公司ID，确保 selectedCompanyId 已设置（部门数据会在另一个 useEffect 中加载）
+        if (editingRecord.company_id) {
+          setSelectedCompanyId(editingRecord.company_id);
+        }
       } else {
         // 新增模式：设置默认值
-        formRef.current.setFieldsValue({
-          status: true,
-          is_super: 0,
-        });
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.setFieldsValue({
+              status: true,
+              is_super: 0,
+            });
+          }
+        }, 50);
       }
     }
   }, [visible, editingRecord]);
@@ -96,6 +180,10 @@ const AdminForm: React.FC<AdminFormProps> = ({
       open={visible}
       onOpenChange={(open) => {
         if (!open) {
+          // 关闭表单时重置状态
+          setDepartmentOptions([]);
+          setLoadingDepartments(false);
+          setSelectedCompanyId(undefined);
           onCancel();
         }
       }}
@@ -108,6 +196,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           'phone',
           'email',
           'company_id',
+          'department_ids',
           'is_super',
           'status',
         ];
@@ -142,6 +231,8 @@ const AdminForm: React.FC<AdminFormProps> = ({
         fieldProps={{
           placeholder: '请输入用户名',
           disabled: !!editingRecord,
+          maxLength: 50,
+          showCount: true,
           suffix:
             editingRecord && editingRecord.username === 'admin' ? (
               <Tooltip title="admin账号的用户名不能修改">
@@ -157,6 +248,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           rules={[{ required: true, message: '请输入密码' }]}
           fieldProps={{
             placeholder: '请输入密码',
+            maxLength: 50,
           }}
         />
       )}
@@ -166,6 +258,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           label="密码"
           fieldProps={{
             placeholder: '留空则不修改密码',
+            maxLength: 50,
           }}
         />
       )}
@@ -174,6 +267,8 @@ const AdminForm: React.FC<AdminFormProps> = ({
         label="姓名"
         fieldProps={{
           placeholder: '请输入姓名',
+          maxLength: 50,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -181,6 +276,8 @@ const AdminForm: React.FC<AdminFormProps> = ({
         label="手机号"
         fieldProps={{
           placeholder: '请输入手机号',
+          maxLength: 20,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -188,6 +285,8 @@ const AdminForm: React.FC<AdminFormProps> = ({
         label="邮箱"
         fieldProps={{
           placeholder: '请输入邮箱',
+          maxLength: 100,
+          showCount: true,
         }}
       />
       <ProFormSelect
@@ -195,12 +294,50 @@ const AdminForm: React.FC<AdminFormProps> = ({
         label="所属公司"
         options={companyOptions}
         fieldProps={{
+          id: 'admin_form_company_id',
           placeholder: '请选择所属公司',
           showSearch: true,
           filterOption: (input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
           style: { minWidth: 200 },
+          onChange: (value: number | undefined) => {
+            // 公司变化时，重新加载部门列表并清空已选择的部门
+            setSelectedCompanyId(value);
+            if (formRef.current) {
+              // 清空已选择的部门
+              formRef.current.setFieldsValue({ department_ids: undefined });
+              // 清空部门列表数据
+              setDepartmentOptions([]);
+              // 如果选择了公司，加载对应的部门列表
+              if (value) {
+                loadDepartmentOptions(value);
+              } else {
+                setLoadingDepartments(false);
+              }
+            }
+          },
         }}
+      />
+      <ProFormSelect
+        name="department_ids"
+        label="所属部门"
+        options={departmentOptions}
+        fieldProps={{
+          placeholder: loadingDepartments
+            ? '正在加载部门数据...'
+            : departmentOptions.length > 0
+              ? '请选择所属部门'
+              : '请先选择所属公司',
+          mode: 'multiple',
+          showSearch: true,
+          filterOption: (input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          style: { minWidth: 200 },
+          maxTagCount: 'responsive',
+          loading: loadingDepartments,
+          disabled: !selectedCompanyId && departmentOptions.length === 0,
+        }}
+        extra="支持多选，请先选择所属公司"
       />
       <ProFormRadio.Group
         name="is_super"

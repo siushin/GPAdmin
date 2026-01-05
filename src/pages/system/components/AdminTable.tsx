@@ -15,6 +15,7 @@ import React, { type ReactNode, useRef, useState } from 'react';
 import {
   addAdmin,
   deleteAdmin,
+  getAdminDetail,
   getAdminList,
   getCompanyList,
   updateAdmin,
@@ -60,9 +61,40 @@ const AdminTable: React.FC<AdminTableProps> = ({
     setFormVisible(true);
   };
 
-  const handleEdit = (record: any) => {
-    setEditingRecord(record);
-    setFormVisible(true);
+  const handleEdit = async (record: any) => {
+    try {
+      // 获取完整的管理员详情数据
+      const res = await getAdminDetail({ account_id: record.account_id });
+      if (res.code === 200 && res.data) {
+        // 将详情数据转换为表单需要的格式
+        const detailData = res.data;
+        const formData: any = {
+          account_id: detailData.account?.id,
+          username: detailData.account?.username,
+          nickname: detailData.profile?.nickname,
+          phone: detailData.social?.find((s: any) => s.social_type === 'phone')
+            ?.social_account,
+          email: detailData.social?.find((s: any) => s.social_type === 'email')
+            ?.social_account,
+          company_id: detailData.admin?.company_id,
+          is_super: detailData.admin?.is_super,
+          status: detailData.account?.status,
+          department_ids:
+            detailData.departments?.map((d: any) => d.department_id) || [],
+        };
+        setEditingRecord(formData);
+        setFormVisible(true);
+      } else {
+        message.error(res.message || '获取管理员详情失败');
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error?.message ||
+        '获取管理员详情失败';
+      message.error(errorMessage);
+    }
   };
 
   const handleView = (record: any) => {

@@ -59,7 +59,11 @@ const AdminDetailDrawer: React.FC<AdminDetailDrawerProps> = ({
     >
       <Watermark content={currentUser?.name || '管理员详情'}>
         {detailData ? (
-          <AdminDetailContent detailData={detailData} loading={loading} />
+          <AdminDetailContent
+            detailData={detailData}
+            loading={loading}
+            onRefresh={loadDetailData}
+          />
         ) : (
           <div style={{ textAlign: 'center', padding: '50px' }}>
             {loading ? '加载中...' : '暂无数据'}

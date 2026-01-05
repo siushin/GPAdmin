@@ -191,6 +191,8 @@ const DictTreeForm: React.FC<DictTreeFormProps> = ({
             fieldProps={{
               placeholder: '请输入组织名称',
               autoFocus: true,
+              maxLength: 100,
+              showCount: true,
             }}
           />
           {isAddChild ? (

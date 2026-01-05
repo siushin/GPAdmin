@@ -1,5 +1,5 @@
 import { ProDescriptions } from '@ant-design/pro-components';
-import { Drawer, Tag } from 'antd';
+import { Drawer, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
 import { MODAL_WIDTH } from '@/utils/constants';
@@ -40,11 +40,17 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({
           },
           {
             title: '所属公司',
-            dataIndex: 'company_id',
-            copyable: {
-              text: company?.label || record.company_name || '',
+            dataIndex: 'company_name',
+            render: () => {
+              const companyName = company?.label || record.company_name || '';
+              return companyName ? (
+                <Typography.Text copyable={{ tooltips: false }}>
+                  {companyName}
+                </Typography.Text>
+              ) : (
+                ''
+              );
             },
-            render: () => company?.label || record.company_name || '',
           },
           {
             title: '部门名称',
@@ -103,19 +109,19 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({
           },
           {
             title: '排序',
-            dataIndex: 'sort_order',
+            dataIndex: 'sort',
             render: (text) => text ?? 0,
           },
           {
             title: '创建时间',
             dataIndex: 'created_at',
             valueType: 'dateTime',
-            render: (text) => {
-              if (!text) return '';
+            render: (_, record) => {
+              if (!record.created_at) return '';
               try {
-                return dayjs(text).format('YYYY-MM-DD HH:mm:ss');
+                return dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss');
               } catch {
-                return text;
+                return record.created_at;
               }
             },
           },
@@ -123,12 +129,12 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({
             title: '更新时间',
             dataIndex: 'updated_at',
             valueType: 'dateTime',
-            render: (text) => {
-              if (!text) return '';
+            render: (_, record) => {
+              if (!record.updated_at) return '';
               try {
-                return dayjs(text).format('YYYY-MM-DD HH:mm:ss');
+                return dayjs(record.updated_at).format('YYYY-MM-DD HH:mm:ss');
               } catch {
-                return text;
+                return record.updated_at;
               }
             },
           },

@@ -152,8 +152,55 @@ export async function getAdminDetail(
         created_at?: string;
         updated_at?: string;
       }>;
+      departments?: Array<{
+        id: number;
+        department_id: number;
+        department_name: string;
+        department_code?: string;
+        company_id?: number;
+        company_name?: string;
+        is_primary: number;
+        start_date?: string;
+        end_date?: string;
+        status: number;
+        sort_order: number;
+        created_at?: string;
+        updated_at?: string;
+      }>;
     };
   }>('/api/admin/admin/getDetail', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取账号所属部门列表 POST /api/admin/admin/getAccountDepartments */
+export async function getAccountDepartments(
+  body: {
+    account_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      id: number;
+      department_id: number;
+      department_name: string;
+      department_code?: string;
+      company_id?: number;
+      company_name?: string;
+      is_primary: number;
+      start_date?: string;
+      end_date?: string;
+      status: number;
+      sort_order: number;
+      created_at?: string;
+      updated_at?: string;
+    }>;
+  }>('/api/admin/admin/getAccountDepartments', {
     method: 'POST',
     data: body,
     ...(options || {}),

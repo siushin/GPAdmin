@@ -34,7 +34,10 @@ import {
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
 import { getUserMenus } from '@/services/api/user';
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants';
-import { setNotificationInstance } from '@/utils/notification';
+import {
+  setMessageInstance,
+  setNotificationInstance,
+} from '@/utils/notification';
 import { clearToken, isTokenExpired } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
@@ -155,12 +158,14 @@ const WelcomeNotification: React.FC<{
   currentUser?: API.CurrentUser;
   children: React.ReactNode;
 }> = ({ currentUser, children }) => {
-  const { notification } = App.useApp();
+  const { notification, message } = App.useApp();
 
   useEffect(() => {
     // 设置全局 notification 实例
     setNotificationInstance(notification);
-  }, [notification]);
+    // 设置全局 message 实例
+    setMessageInstance(message);
+  }, [notification, message]);
 
   useEffect(() => {
     // 检查是否刚刚登录

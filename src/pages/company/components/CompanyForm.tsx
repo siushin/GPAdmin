@@ -107,6 +107,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         rules={[{ required: true, message: '请输入公司名称' }]}
         fieldProps={{
           placeholder: '请输入公司名称',
+          maxLength: 100,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -114,6 +116,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         label="公司编码"
         fieldProps={{
           placeholder: '请输入公司编码（可选）',
+          maxLength: 50,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -126,6 +130,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         fieldProps={{
           placeholder: '请输入18位统一社会信用代码',
           maxLength: 18,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -133,6 +138,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         label="法人代表"
         fieldProps={{
           placeholder: '请输入法人代表（可选）',
+          maxLength: 50,
+          showCount: true,
         }}
       />
       <ProFormText
@@ -178,6 +185,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         label="公司地址"
         fieldProps={{
           placeholder: '请输入公司地址（可选）',
+          maxLength: 200,
+          showCount: true,
         }}
       />
       <ProFormTextArea
@@ -186,6 +195,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         fieldProps={{
           placeholder: '请输入公司描述（可选）',
           rows: 3,
+          maxLength: 500,
+          showCount: true,
         }}
       />
       <ProFormRadio.Group
