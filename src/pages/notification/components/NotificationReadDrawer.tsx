@@ -59,14 +59,14 @@ const NotificationReadDrawer: React.FC<NotificationReadDrawerProps> = ({
       dataIndex: 'account_username',
       hideInSearch: true,
       width: 150,
-      render: (_, record) => record.account?.username || '-',
+      render: (_, record) => record.account?.username || '',
     },
     {
       title: '查看人姓名',
       dataIndex: 'account_nickname',
       hideInSearch: true,
       width: 150,
-      render: (_, record) => record.account?.profile?.nickname || '-',
+      render: (_, record) => record.account?.profile?.nickname || '',
     },
     {
       title: 'IP地址',

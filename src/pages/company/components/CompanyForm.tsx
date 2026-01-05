@@ -6,7 +6,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
-import { MODAL_WIDTH } from '@/utils/constants';
+import { ensureAllFormFields, MODAL_WIDTH } from '@/utils/constants';
 
 interface CompanyFormProps {
   visible: boolean;
@@ -75,7 +75,25 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         }
       }}
       onFinish={async (values) => {
-        await onSubmit(values);
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'company_name',
+          'company_code',
+          'company_credit_code',
+          'legal_person',
+          'contact_phone',
+          'contact_email',
+          'company_address',
+          'company_desc',
+          'status',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
+        await onSubmit(completeValues);
         return true;
       }}
       width={MODAL_WIDTH.MEDIUM}

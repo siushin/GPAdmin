@@ -1,7 +1,9 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
 import { message } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { addRoleMenu } from '@/services/api/system';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface RoleMenuFormProps {
   visible: boolean;
@@ -16,6 +18,7 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
   onSubmit,
   getRoleList,
 }) => {
+  const formRef = useRef<ProFormInstance>(undefined);
   const [roleOptions, setRoleOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
@@ -55,6 +58,7 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
 
   return (
     <DrawerForm
+      formRef={formRef}
       title="新增角色菜单关联"
       open={visible}
       onOpenChange={(open) => {
@@ -64,7 +68,15 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
       }}
       onFinish={async (values) => {
         try {
-          const res = await addRoleMenu(values);
+          // 定义所有表单字段，确保它们都被包含
+          const allFormFields = ['role_id', 'menu_id'];
+          // 确保所有字段都被包含
+          const completeValues = ensureAllFormFields(
+            formRef,
+            values,
+            allFormFields,
+          );
+          const res = await addRoleMenu(completeValues);
           if (res.code === 200) {
             message.success('新增成功');
             await onSubmit();

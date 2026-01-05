@@ -11,6 +11,7 @@ import {
 import { Col, Form, Input, Row, Space } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { getIconComponent, IconDisplay } from '@/components';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface MenuFormProps {
   visible: boolean;
@@ -102,10 +103,31 @@ const MenuForm: React.FC<MenuFormProps> = ({
         }
       }}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'menu_name',
+          'menu_key',
+          'menu_path',
+          'menu_type',
+          'parent_id',
+          'menu_icon',
+          'component',
+          'redirect',
+          'status',
+          'sort',
+          'is_required',
+          'account_type',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 如果是新增菜单，追加 account_type
         const submitValues = editingRecord
-          ? values
-          : { ...values, account_type: accountType };
+          ? completeValues
+          : { ...completeValues, account_type: accountType };
         await onSubmit(submitValues);
         return true;
       }}

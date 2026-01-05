@@ -5,6 +5,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface UserFormProps {
   visible: boolean;
@@ -70,7 +71,15 @@ const UserForm: React.FC<UserFormProps> = ({
         }
       }}
       onFinish={async (values) => {
-        await onSubmit(values);
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = ['username', 'password', 'status'];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
+        await onSubmit(completeValues);
         return true;
       }}
       width={800}

@@ -18,6 +18,7 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  processFormValues,
   SysParamFlag,
   TABLE_SIZE,
 } from '@/utils/constants';
@@ -146,9 +147,12 @@ const Dict: React.FC = () => {
       // 根据 category_id 获取对应的 category_code
       const categoryCode = categoryId ? categoryCodeMap[categoryId] : undefined;
 
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
+
       // 构建提交参数，使用 category_code 而不是 category_id
       const submitValues: any = {
-        ...values,
+        ...processedValues,
       };
 
       // 如果有 category_code，添加到提交参数中

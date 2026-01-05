@@ -9,6 +9,7 @@ import {
 import { Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { getCompanyList } from '@/services/api/system';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface AdminFormProps {
   visible: boolean;
@@ -99,10 +100,27 @@ const AdminForm: React.FC<AdminFormProps> = ({
         }
       }}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'username',
+          'password',
+          'nickname',
+          'phone',
+          'email',
+          'company_id',
+          'is_super',
+          'status',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 将 status 的 boolean 值转换为 1/0
         const submitValues: any = {
-          ...values,
-          status: values.status ? 1 : 0,
+          ...completeValues,
+          status: completeValues.status ? 1 : 0,
         };
         // admin账号不能修改状态和超级管理员设置，强制使用原始值
         if (editingRecord && editingRecord.username === 'admin') {

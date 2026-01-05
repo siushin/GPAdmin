@@ -1,11 +1,11 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import type { FormInstance } from 'antd';
-import React, { useEffect } from 'react';
-import { SysParamFlag } from '@/utils/constants';
+import React, { useEffect, useRef } from 'react';
+import { ensureAllFormFields, SysParamFlag } from '@/utils/constants';
 
 interface DictionaryTypeFormProps {
   visible: boolean;
@@ -33,7 +33,7 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
-  const formRef = React.useRef<FormInstance>();
+  const formRef = useRef<ProFormInstance>(undefined);
 
   useEffect(() => {
     if (visible && formRef.current) {
@@ -58,8 +58,20 @@ const DictionaryTypeForm: React.FC<DictionaryTypeFormProps> = ({
     dictionary_desc?: string;
   }) => {
     try {
+      // 定义所有表单字段，确保它们都被包含
+      const allFormFields = [
+        'dictionary_name',
+        'dictionary_value',
+        'dictionary_desc',
+      ];
+      // 确保所有字段都被包含
+      const completeValues = ensureAllFormFields(
+        formRef,
+        values,
+        allFormFields,
+      );
       await onSubmit({
-        ...values,
+        ...completeValues,
         ...(editingRecord
           ? { dictionary_id: editingRecord.dictionary_id }
           : {}),

@@ -75,16 +75,16 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
                     </Tag>
                   </Descriptions.Item>
                   <Descriptions.Item label="最后登录IP">
-                    {account.last_login_ip || '-'}
+                    {account.last_login_ip || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="最后登录时间">
-                    {account.last_login_time || '-'}
+                    {account.last_login_time || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {account.created_at || '-'}
+                    {account.created_at || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {account.updated_at || '-'}
+                    {account.updated_at || ''}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -97,10 +97,10 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
               <Card>
                 <Descriptions column={2} bordered>
                   <Descriptions.Item label="昵称">
-                    {profile.nickname || '-'}
+                    {profile.nickname || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="性别">
-                    {genderMap[profile.gender] || profile.gender || '-'}
+                    {genderMap[profile.gender] || profile.gender || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="头像">
                     {profile.avatar ? (
@@ -110,26 +110,26 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({
                         style={{ width: 60, height: 60, objectFit: 'cover' }}
                       />
                     ) : (
-                      '-'
+                      ''
                     )}
                   </Descriptions.Item>
                   <Descriptions.Item label="真实姓名">
-                    {profile.real_name || '-'}
+                    {profile.real_name || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="身份证号">
-                    {profile.id_card || '-'}
+                    {profile.id_card || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="认证方式">
-                    {profile.verification_method || '-'}
+                    {profile.verification_method || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="认证时间">
-                    {profile.verified_at || '-'}
+                    {profile.verified_at || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {profile.created_at || '-'}
+                    {profile.created_at || ''}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {profile.updated_at || '-'}
+                    {profile.updated_at || ''}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>

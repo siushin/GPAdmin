@@ -1,11 +1,12 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormDigit,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import React, { useEffect, useState } from 'react';
-import { MODAL_WIDTH } from '@/utils/constants';
+import React, { useEffect, useRef, useState } from 'react';
+import { ensureAllFormFields, MODAL_WIDTH } from '@/utils/constants';
 
 // 自动生成值配置（与后端保持一致）
 // 自动生成值（按照序号自增）
@@ -31,6 +32,7 @@ const DictionaryForm: React.FC<DictionaryFormProps> = ({
   onCancel,
   onSubmit,
 }) => {
+  const formRef = useRef<ProFormInstance>(undefined);
   const [valueGenerateType, setValueGenerateType] = useState<
     'auto_increment' | 'same_as_name' | 'manual'
   >('manual');
@@ -88,9 +90,22 @@ const DictionaryForm: React.FC<DictionaryFormProps> = ({
         }
       }}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'dictionary_name',
+          'dictionary_value',
+          'dictionary_desc',
+          'sort',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 自动添加 category_id（从编辑记录或默认值）
         const submitValues: any = {
-          ...values,
+          ...completeValues,
           category_id:
             editingRecord?.category_id || defaultCategoryId || undefined,
         };

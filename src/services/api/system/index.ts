@@ -19,6 +19,38 @@ export async function getAdminList(
   });
 }
 
+/** 管理员列表（全部，不分页） POST /api/admin/admin/list */
+export async function getAdminListAll(
+  params?: {
+    company_id?: number;
+    status?: number;
+    keyword?: string;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      account_id: number;
+      username: string;
+      nickname?: string;
+      name?: string;
+      account?: string;
+      phone?: string;
+      email?: string;
+      status: number;
+      company_id?: number;
+      [key: string]: any;
+    }>;
+  }>('/api/admin/admin/list', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
 /** 新增管理员 POST /api/admin/admin/add */
 export async function addAdmin(
   body: {
@@ -159,28 +191,6 @@ export async function getCompanyList(options?: { [key: string]: any }) {
   }>('/api/admin/company/list', {
     method: 'POST',
     data: {},
-    ...(options || {}),
-  });
-}
-
-/** 部门列表 POST /api/admin/department/list */
-export async function getDepartmentList(
-  params?: {
-    company_id?: number;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    code: number;
-    message: string;
-    data?: Array<{
-      department_id: number;
-      department_code: string;
-      department_name: string;
-    }>;
-  }>('/api/admin/department/list', {
-    method: 'POST',
-    data: params || {},
     ...(options || {}),
   });
 }

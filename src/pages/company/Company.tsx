@@ -18,6 +18,7 @@ import * as systemApi from '@/services/api/system';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
@@ -120,8 +121,9 @@ const Company: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
       // 处理空字符串：将空字符串转换为 null，以便后端正确处理
-      const processedValues = { ...values };
       const optionalFields = [
         'company_code',
         'legal_person',
@@ -319,7 +321,7 @@ const Company: React.FC = () => {
             员工列表
           </Button>
           <Popconfirm
-            title="确定要删除这条数据吗？删除将同时删除所有子级数据"
+            title="确定要删除这条数据吗？"
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger>

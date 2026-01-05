@@ -158,26 +158,29 @@ const DictTree: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
+
       let res: { code: number; message: string; data?: any };
       if (editingRecord && !isAddChild) {
         // 编辑
         const submitValues: any = {
-          ...values,
+          ...processedValues,
           organization_id: editingRecord.organization_id,
         };
         // 如果 organization_pid 未定义或为空，默认为 0（顶级组织架构）
-        submitValues.organization_pid = values.organization_pid ?? 0;
+        submitValues.organization_pid = processedValues.organization_pid ?? 0;
         res = await updateOrganization(submitValues);
       } else {
         // 新增或添加下级
-        const submitValues: any = { ...values };
+        const submitValues: any = { ...processedValues };
         if (isAddChild) {
           // 添加下级时，使用当前记录的ID作为上级
           submitValues.organization_pid = editingRecord?.organization_id || 0;
         } else {
           // 新增时，如果未选择上级组织架构，传递 0（表示顶级）
           // 但前端表单不显示默认值 0，让用户明确选择或不选择
-          submitValues.organization_pid = values.organization_pid ?? 0;
+          submitValues.organization_pid = processedValues.organization_pid ?? 0;
         }
         res = await addOrganization({
           ...submitValues,
@@ -204,9 +207,12 @@ const DictTree: React.FC = () => {
 
   const handleMoveSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
+
       const res = await moveOrganization({
         organization_id: movingRecord.organization_id,
-        belong_organization_id: values.belong_organization_id ?? 0,
+        belong_organization_id: processedValues.belong_organization_id ?? 0,
       });
       if (res.code === 200) {
         message.success('移动成功');
@@ -474,7 +480,7 @@ const DictTree: React.FC = () => {
               移动
             </Button>
             <Popconfirm
-              title="确定要删除这条数据吗？删除将同时删除所有子级数据"
+              title="确定要删除这条数据吗？"
               onConfirm={() => handleDelete(record)}
             >
               <Button type="link" size="small" danger>

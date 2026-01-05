@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
 import MenuForm from './MenuForm';
@@ -63,14 +64,17 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
+
       let res: { code: number; message: string; data?: any };
       if (editingRecord) {
         res = await updateMenu({
-          ...values,
+          ...processedValues,
           menu_id: editingRecord.menu_id,
         });
       } else {
-        res = await addMenu(values);
+        res = await addMenu(processedValues);
       }
       if (res.code === 200) {
         message.success(editingRecord ? '更新成功' : '新增成功');

@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
@@ -66,10 +67,12 @@ const Message: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
       // 处理目标平台：单选框直接使用值
       const submitValues = {
-        ...values,
-        target_platform: values.target_platform || 'all',
+        ...processedValues,
+        target_platform: processedValues.target_platform || 'all',
       };
 
       let res: { code: number; message: string; data?: any };

@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
@@ -66,10 +67,12 @@ const SystemNotification: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      // 将 undefined 转换为 null，确保清空的下拉框值也能传递到后端
+      const processedValues = processFormValues(values);
       // 处理目标平台：单选框直接使用值
       const submitValues = {
-        ...values,
-        target_platform: values.target_platform || 'all',
+        ...processedValues,
+        target_platform: processedValues.target_platform || 'all',
       };
 
       let res: { code: number; message: string; data?: any };
@@ -214,7 +217,7 @@ const SystemNotification: React.FC = () => {
         placeholder: '请选择通知类型',
       },
       render: (_, record) => {
-        if (!record.type) return '-';
+        if (!record.type) return '';
         const typeMap: Record<string, { text: string; color: string }> = {
           system: { text: '系统通知', color: 'blue' },
           business: { text: '业务通知', color: 'green' },
@@ -277,7 +280,7 @@ const SystemNotification: React.FC = () => {
 
         // 如果都没有开始和结束时间，使用创建时间
         if (!startTime && !endTime) {
-          if (!record.created_at) return '-';
+          if (!record.created_at) return '';
           const createdTime = dayjs(record.created_at);
           timeText = createdTime.format('YYYY-MM-DD HH:mm:ss');
           displayText = createdTime.format('YYYY-MM-DD');

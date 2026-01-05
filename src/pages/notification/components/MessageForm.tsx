@@ -9,6 +9,7 @@ import {
 } from '@ant-design/pro-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import RichTextEditor from '@/components/RichTextEditor';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface MessageFormProps {
   visible: boolean;
@@ -88,10 +89,24 @@ const MessageForm: React.FC<MessageFormProps> = ({
       }}
       submitter={isReadOnly ? false : undefined}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'title',
+          'receiver_id',
+          'target_platform',
+          'status',
+          'content',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 将开关的布尔值转换为数字
         const submitValues = {
-          ...values,
-          status: values.status ? 1 : 0,
+          ...completeValues,
+          status: completeValues.status ? 1 : 0,
         };
         await onSubmit(submitValues);
         return true;

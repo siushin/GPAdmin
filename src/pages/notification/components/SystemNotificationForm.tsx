@@ -11,6 +11,7 @@ import {
 import dayjs, { type Dayjs } from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import RichTextEditor from '@/components/RichTextEditor';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface SystemNotificationFormProps {
   visible: boolean;
@@ -101,16 +102,32 @@ const SystemNotificationForm: React.FC<SystemNotificationFormProps> = ({
       }}
       submitter={isReadOnly ? false : undefined}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = [
+          'title',
+          'type',
+          'target_platform',
+          'start_time',
+          'end_time',
+          'status',
+          'content',
+        ];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 将开关的布尔值转换为数字，将时间对象转换为字符串
         const submitValues = {
-          ...values,
-          status: values.status ? 1 : 0,
-          start_time: values.start_time
-            ? dayjs(values.start_time).format('YYYY-MM-DD HH:mm:ss')
-            : null,
-          end_time: values.end_time
-            ? dayjs(values.end_time).format('YYYY-MM-DD HH:mm:ss')
-            : null,
+          ...completeValues,
+          status: completeValues.status ? 1 : 0,
+          start_time: completeValues.start_time
+            ? dayjs(completeValues.start_time).format('YYYY-MM-DD HH:mm:ss')
+            : '',
+          end_time: completeValues.end_time
+            ? dayjs(completeValues.end_time).format('YYYY-MM-DD HH:mm:ss')
+            : '',
         };
         await onSubmit(submitValues);
         return true;

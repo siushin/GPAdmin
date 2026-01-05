@@ -1,7 +1,9 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
 import { message } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { addUserRole } from '@/services/api/system';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface UserRoleFormProps {
   visible: boolean;
@@ -18,6 +20,7 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
   getAdminList,
   getRoleList,
 }) => {
+  const formRef = useRef<ProFormInstance>(undefined);
   const [userOptions, setUserOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
@@ -59,6 +62,7 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
 
   return (
     <DrawerForm
+      formRef={formRef}
       title="新增用户角色关联"
       open={visible}
       onOpenChange={(open) => {
@@ -68,7 +72,15 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
       }}
       onFinish={async (values) => {
         try {
-          const res = await addUserRole(values);
+          // 定义所有表单字段，确保它们都被包含
+          const allFormFields = ['user_id', 'role_id'];
+          // 确保所有字段都被包含
+          const completeValues = ensureAllFormFields(
+            formRef,
+            values,
+            allFormFields,
+          );
+          const res = await addUserRole(completeValues);
           if (res.code === 200) {
             message.success('新增成功');
             await onSubmit();

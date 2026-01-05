@@ -21,6 +21,30 @@ export async function getCompanyList(
   });
 }
 
+/** 公司列表（全部） POST /api/admin/company/list */
+export async function getCompanyListAll(
+  params?: {
+    status?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      company_id: number;
+      company_name: string;
+      company_code?: string;
+      [key: string]: any;
+    }>;
+  }>('/api/admin/company/list', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
 /** 新增公司 POST /api/admin/company/add */
 export async function addCompany(
   body: {
@@ -95,7 +119,7 @@ export async function moveCompany(
 
 // ========== 部门管理 API ==========
 
-/** 部门列表 POST /api/admin/department/index */
+/** 部门列表 POST /api/admin/department/list */
 export async function getDepartmentList(
   params?: {
     [key: string]: any;
@@ -106,7 +130,26 @@ export async function getDepartmentList(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/department/index', {
+  }>('/api/admin/department/list', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+/** 获取部门树状Html数据 POST /api/admin/department/getTreeDataForHtml */
+export async function getDepartmentTreeDataForHtml(
+  params?: {
+    company_id?: number;
+    [key: string]: any;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{ department_id: number; department_name: string }>;
+  }>('/api/admin/department/getTreeDataForHtml', {
     method: 'POST',
     data: params,
     ...(options || {}),

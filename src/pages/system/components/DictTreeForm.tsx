@@ -1,10 +1,12 @@
+import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getFullTreeDataForHtml } from '@/services/api/system';
+import { ensureAllFormFields } from '@/utils/constants';
 
 interface DictTreeFormProps {
   visible: boolean;
@@ -29,6 +31,7 @@ const DictTreeForm: React.FC<DictTreeFormProps> = ({
   getOrganizationList,
   selectedTypeForFilter,
 }) => {
+  const formRef = useRef<ProFormInstance>(undefined);
   const [parentOptions, setParentOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
@@ -128,6 +131,7 @@ const DictTreeForm: React.FC<DictTreeFormProps> = ({
 
   return (
     <ModalForm
+      formRef={formRef}
       title={getTitle()}
       open={visible}
       modalProps={{
@@ -137,11 +141,21 @@ const DictTreeForm: React.FC<DictTreeFormProps> = ({
         destroyOnHidden: true,
       }}
       onFinish={async (values) => {
+        // 定义所有表单字段，确保它们都被包含
+        const allFormFields = isMove
+          ? ['belong_organization_id']
+          : ['organization_name', 'organization_pid'];
+        // 确保所有字段都被包含
+        const completeValues = ensureAllFormFields(
+          formRef,
+          values,
+          allFormFields,
+        );
         // 如果是添加下级，确保 organization_pid 被正确设置
         if (isAddChild && editingRecord) {
-          values.organization_pid = editingRecord.organization_id;
+          completeValues.organization_pid = editingRecord.organization_id;
         }
-        await onSubmit(values);
+        await onSubmit(completeValues);
         return true;
       }}
       initialValues={getInitialValues()}
