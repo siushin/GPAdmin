@@ -583,7 +583,6 @@ const Department: React.FC = () => {
             }
             const requestParams: any = {
               ...params,
-              page: params.page || 1,
               pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
               department_id: currentDepartmentId,
             };

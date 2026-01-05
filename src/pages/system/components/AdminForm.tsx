@@ -3,7 +3,6 @@ import {
   DrawerForm,
   ProFormRadio,
   ProFormSelect,
-  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import { Tooltip } from 'antd';
@@ -361,7 +360,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           disabled: editingRecord && editingRecord.username === 'admin',
         }}
       />
-      <ProFormSwitch
+      <ProFormRadio.Group
         name="status"
         label="账号状态"
         initialValue={true}
@@ -374,9 +373,11 @@ const AdminForm: React.FC<AdminFormProps> = ({
             </Tooltip>
           ) : undefined
         }
+        options={[
+          { label: '正常', value: true },
+          { label: '禁用', value: false },
+        ]}
         fieldProps={{
-          checkedChildren: '正常',
-          unCheckedChildren: '禁用',
           disabled: editingRecord && editingRecord.username === 'admin',
         }}
       />

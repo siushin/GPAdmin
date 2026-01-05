@@ -579,7 +579,6 @@ const AdminLogsSection: React.FC<AdminLogsSectionProps> = ({ accountId }) => {
         ...params,
         account_id: accountId,
         log_type: tab,
-        page: params.page || 1,
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
       };
 

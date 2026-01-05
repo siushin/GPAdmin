@@ -1,6 +1,6 @@
 import type { ProFormInstance } from '@ant-design/pro-components';
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
-import { message } from 'antd';
+import { App } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { addRoleMenu } from '@/services/api/system';
 import { ensureAllFormFields } from '@/utils/constants';
@@ -18,6 +18,7 @@ const RoleMenuForm: React.FC<RoleMenuFormProps> = ({
   onSubmit,
   getRoleList,
 }) => {
+  const { message } = App.useApp();
   const formRef = useRef<ProFormInstance>(undefined);
   const [roleOptions, setRoleOptions] = useState<
     Array<{ label: string; value: number }>

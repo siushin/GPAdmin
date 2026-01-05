@@ -5,7 +5,6 @@ import {
   ProFormItem,
   ProFormRadio,
   ProFormSelect,
-  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import { Col, Form, Input, Row, Space } from 'antd';
@@ -260,13 +259,13 @@ const MenuForm: React.FC<MenuFormProps> = ({
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <ProFormSwitch
+          <ProFormRadio.Group
             name="is_required"
             label="是否必须选中"
-            fieldProps={{
-              checkedChildren: '是',
-              unCheckedChildren: '否',
-            }}
+            options={[
+              { label: '是', value: 1 },
+              { label: '否', value: 0 },
+            ]}
           />
         </Col>
       </Row>

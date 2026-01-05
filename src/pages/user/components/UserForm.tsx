@@ -1,7 +1,7 @@
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
-  ProFormSwitch,
+  ProFormRadio,
   ProFormText,
 } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
@@ -125,13 +125,13 @@ const UserForm: React.FC<UserFormProps> = ({
           }}
         />
       )}
-      <ProFormSwitch
+      <ProFormRadio.Group
         name="status"
         label="账号状态"
-        fieldProps={{
-          checkedChildren: '正常',
-          unCheckedChildren: '禁用',
-        }}
+        options={[
+          { label: '正常', value: true },
+          { label: '禁用', value: false },
+        ]}
       />
     </DrawerForm>
   );

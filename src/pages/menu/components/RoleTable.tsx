@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { App, Button, Popconfirm, Space, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   addRole,
@@ -22,6 +22,7 @@ interface RoleTableProps {
 }
 
 const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
@@ -172,7 +173,6 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
             account_type: accountType,
           };

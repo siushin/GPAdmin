@@ -3,7 +3,6 @@ import {
   ModalForm,
   ProFormDigit,
   ProFormRadio,
-  ProFormSelect,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
@@ -50,13 +49,11 @@ const RoleForm: React.FC<RoleFormProps> = ({
             formRef.current.setFieldsValue({
               ...editingRecord,
               status: editingRecord.status ?? 1,
-              account_type: editingRecord.account_type || accountType,
               sort: editingRecord.sort ?? 0,
             });
           } else {
             formRef.current.setFieldsValue({
               status: 1,
-              account_type: accountType,
               sort: 0,
             });
           }
@@ -65,7 +62,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [visible, editingRecord, accountType]);
+  }, [visible, editingRecord]);
 
   return (
     <ModalForm
@@ -83,7 +80,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
         const allFormFields = [
           'role_name',
           'role_code',
-          'account_type',
           'description',
           'status',
           'sort',
@@ -94,7 +90,12 @@ const RoleForm: React.FC<RoleFormProps> = ({
           values,
           allFormFields,
         );
-        await onSubmit(completeValues);
+        // 新增时追加账号类型参数，编辑时不追加
+        if (editingRecord) {
+          await onSubmit(completeValues);
+        } else {
+          await onSubmit({ ...completeValues, account_type: accountType });
+        }
       }}
       width={MODAL_WIDTH.MEDIUM}
       layout="horizontal"
@@ -120,15 +121,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
           maxLength: 50,
           showCount: true,
         }}
-      />
-      <ProFormRadio.Group
-        name="account_type"
-        label="账号类型"
-        options={[
-          { label: '管理员', value: 'admin' },
-          { label: '用户', value: 'user' },
-        ]}
-        rules={[{ required: true, message: '请选择账号类型' }]}
       />
       <ProFormTextArea
         name="description"

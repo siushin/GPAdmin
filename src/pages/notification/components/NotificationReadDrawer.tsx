@@ -123,7 +123,6 @@ const NotificationReadDrawer: React.FC<NotificationReadDrawerProps> = ({
             ...params,
             read_type: readType,
             target_id: targetId,
-            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
           const response = await getNotificationReadList(requestParams);

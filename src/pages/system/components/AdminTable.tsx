@@ -420,7 +420,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
 

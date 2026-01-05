@@ -1,6 +1,6 @@
 import type { ProFormInstance } from '@ant-design/pro-components';
 import { DrawerForm, ProFormSelect } from '@ant-design/pro-components';
-import { message } from 'antd';
+import { App } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { addUserRole } from '@/services/api/system';
 import { ensureAllFormFields } from '@/utils/constants';
@@ -20,6 +20,7 @@ const UserRoleForm: React.FC<UserRoleFormProps> = ({
   getAdminList,
   getRoleList,
 }) => {
+  const { message } = App.useApp();
   const formRef = useRef<ProFormInstance>(undefined);
   const [userOptions, setUserOptions] = useState<
     Array<{ label: string; value: number }>

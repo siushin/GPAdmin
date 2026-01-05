@@ -3,7 +3,6 @@ import type { RequestConfig } from '@umijs/max';
 import { history } from '@umijs/max';
 import { message } from 'antd';
 import { getNotification } from '@/utils/notification';
-import { normalizePaginationParams } from '@/utils/pagination';
 import {
   clearToken,
   getToken,
@@ -122,15 +121,6 @@ export const errorConfig: RequestConfig = {
       if (token && config.headers) {
         // 添加Authorization头
         config.headers.Authorization = `Bearer ${token}`;
-      }
-
-      // 统一处理分页参数：确保使用 page 参数
-      if (
-        config.data &&
-        typeof config.data === 'object' &&
-        !Array.isArray(config.data)
-      ) {
-        config.data = normalizePaginationParams(config.data);
       }
 
       return config;

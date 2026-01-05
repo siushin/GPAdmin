@@ -4,7 +4,6 @@ import {
   ProFormDigit,
   ProFormItem,
   ProFormRadio,
-  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -146,12 +145,14 @@ const MessageForm: React.FC<MessageFormProps> = ({
         ]}
         disabled={isReadOnly}
       />
-      <ProFormSwitch
+      <ProFormRadio.Group
         name="status"
         label="状态"
-        checkedChildren="已读"
-        unCheckedChildren="未读"
         initialValue={false}
+        options={[
+          { label: '已读', value: true },
+          { label: '未读', value: false },
+        ]}
         disabled={isReadOnly}
       />
       <ProFormItem

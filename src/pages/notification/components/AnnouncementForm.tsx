@@ -4,7 +4,6 @@ import {
   ProFormDateTimePicker,
   ProFormItem,
   ProFormRadio,
-  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -336,12 +335,14 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({
         }}
         extra="留空则长期有效，必须晚于开始时间"
       />
-      <ProFormSwitch
+      <ProFormRadio.Group
         name="status"
         label="状态"
-        checkedChildren="启用"
-        unCheckedChildren="禁用"
         initialValue={true}
+        options={[
+          { label: '启用', value: true },
+          { label: '禁用', value: false },
+        ]}
         disabled={isReadOnly}
       />
       <ProFormItem

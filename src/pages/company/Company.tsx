@@ -352,7 +352,6 @@ const Company: React.FC = () => {
         request={async (params) => {
           const requestParams: any = {
             ...params,
-            page: params.page || 1,
             pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
           };
           const response = await getCompanyList(requestParams);
