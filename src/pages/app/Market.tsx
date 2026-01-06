@@ -24,6 +24,13 @@ import { type AppItem, mockApps } from './mock';
 const { Title, Paragraph } = Typography;
 const FormItem = Form.Item;
 
+// 来源显示映射
+const sourceLabels: Record<string, string> = {
+  official: '官方',
+  third_party: '第三方',
+  custom: '自定义',
+};
+
 const Market: React.FC = () => {
   const [form] = Form.useForm();
   const [apps, setApps] = useState<AppItem[]>([]);
@@ -47,12 +54,16 @@ const Market: React.FC = () => {
       if (keyword !== undefined && keyword !== '') {
         const keywordLower = keyword.toLowerCase();
         data = data.filter((app) => {
-          const matchAlias = app.alias.toLowerCase().includes(keywordLower);
-          const matchName = app.name.toLowerCase().includes(keywordLower);
-          const matchDescription = app.description
+          const matchAlias = app.module_alias
             .toLowerCase()
             .includes(keywordLower);
-          const matchKeywords = app.keywords.some((kw) =>
+          const matchName = app.module_name
+            .toLowerCase()
+            .includes(keywordLower);
+          const matchDescription = app.module_desc
+            .toLowerCase()
+            .includes(keywordLower);
+          const matchKeywords = app.module_keywords.some((kw) =>
             kw.toLowerCase().includes(keywordLower),
           );
           return matchAlias || matchName || matchDescription || matchKeywords;
@@ -78,8 +89,8 @@ const Market: React.FC = () => {
   const availableSources = useMemo(() => {
     const sources = new Set<string>();
     apps.forEach((app) => {
-      if (app.source) {
-        sources.add(app.source);
+      if (app.module_source) {
+        sources.add(app.module_source);
       }
     });
     return Array.from(sources);
@@ -89,7 +100,9 @@ const Market: React.FC = () => {
   const filteredApps = useMemo(() => {
     let result = apps;
     if (selectedSources.length > 0) {
-      result = apps.filter((app) => selectedSources.includes(app.source));
+      result = apps.filter((app) =>
+        selectedSources.includes(app.module_source),
+      );
     }
     return result;
   }, [apps, selectedSources]);
@@ -139,7 +152,7 @@ const Market: React.FC = () => {
               <TagSelect expandable>
                 {availableSources.map((source) => (
                   <TagSelect.Option value={source} key={source}>
-                    {source}
+                    {sourceLabels[source] || source}
                   </TagSelect.Option>
                 ))}
               </TagSelect>
@@ -159,7 +172,14 @@ const Market: React.FC = () => {
             <>
               <Row gutter={[16, 16]}>
                 {paginatedApps.map((app) => (
-                  <Col xs={24} sm={12} md={8} lg={6} xl={6} key={app.name}>
+                  <Col
+                    xs={24}
+                    sm={12}
+                    md={8}
+                    lg={6}
+                    xl={6}
+                    key={app.module_name}
+                  >
                     <Card
                       hoverable
                       style={{
@@ -183,14 +203,15 @@ const Market: React.FC = () => {
                           <AppstoreOutlined
                             style={{
                               fontSize: 24,
-                              color: app.enabled ? '#52c41a' : '#d9d9d9',
+                              color:
+                                app.module_status === 1 ? '#52c41a' : '#d9d9d9',
                               marginRight: 8,
                             }}
                           />
                           <Title level={5} style={{ margin: 0, flex: 1 }}>
-                            {app.alias}
+                            {app.module_alias}
                           </Title>
-                          {app.enabled ? (
+                          {app.module_status === 1 ? (
                             <Tag icon={<CheckCircleOutlined />} color="success">
                               已启用
                             </Tag>
@@ -204,32 +225,38 @@ const Market: React.FC = () => {
                           ellipsis={{ rows: 2, expandable: false }}
                           style={{ margin: 0, color: '#666', fontSize: 14 }}
                         >
-                          {app.description || '暂无描述'}
+                          {app.module_desc || '暂无描述'}
                         </Paragraph>
                       </div>
-                      {app.keywords && app.keywords.length > 0 && (
-                        <div style={{ marginTop: 12 }}>
-                          {app.keywords.map((keyword) => (
-                            <Tag
-                              key={`${app.name}-${keyword}`}
-                              style={{ marginBottom: 4 }}
-                            >
-                              {keyword}
-                            </Tag>
-                          ))}
-                        </div>
-                      )}
+                      {app.module_keywords &&
+                        app.module_keywords.length > 0 && (
+                          <div style={{ marginTop: 12 }}>
+                            {app.module_keywords.map((keyword) => (
+                              <Tag
+                                key={`${app.module_name}-${keyword}`}
+                                style={{ marginBottom: 4 }}
+                              >
+                                {keyword}
+                              </Tag>
+                            ))}
+                          </div>
+                        )}
                       <div
                         style={{ marginTop: 12, fontSize: 12, color: '#999' }}
                       >
-                        模块名: {app.name}
+                        模块名: {app.module_name}
                       </div>
-                      {app.source && (
+                      {app.module_source && (
                         <div style={{ marginTop: 8 }}>
                           <Tag
-                            color={app.source === '官方' ? 'blue' : 'orange'}
+                            color={
+                              app.module_source === 'official'
+                                ? 'blue'
+                                : 'orange'
+                            }
                           >
-                            {app.source}
+                            {sourceLabels[app.module_source] ||
+                              app.module_source}
                           </Tag>
                         </div>
                       )}
