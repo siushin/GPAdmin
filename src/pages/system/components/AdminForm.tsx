@@ -1,3 +1,4 @@
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
@@ -235,7 +236,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           suffix:
             editingRecord && editingRecord.username === 'admin' ? (
               <Tooltip title="admin账号的用户名不能修改">
-                <span style={{ color: '#999', cursor: 'help' }}>ℹ️</span>
+                <ExclamationCircleOutlined style={{ color: '#999' }} />
               </Tooltip>
             ) : undefined,
         }}
@@ -345,8 +346,9 @@ const AdminForm: React.FC<AdminFormProps> = ({
         extra={
           editingRecord && editingRecord.username === 'admin' ? (
             <Tooltip title="admin账号的超级管理员状态不能修改">
-              <span style={{ color: '#999', cursor: 'help', fontSize: '12px' }}>
-                ℹ️ admin账号的超级管理员状态不能修改
+              <span style={{ color: '#999', fontSize: '12px' }}>
+                <ExclamationCircleOutlined style={{ marginRight: 4 }} />
+                admin账号的超级管理员状态不能修改
               </span>
             </Tooltip>
           ) : undefined
@@ -367,8 +369,9 @@ const AdminForm: React.FC<AdminFormProps> = ({
         extra={
           editingRecord && editingRecord.username === 'admin' ? (
             <Tooltip title="admin账号不能禁用，状态固定为正常">
-              <span style={{ color: '#999', cursor: 'help', fontSize: '12px' }}>
-                ℹ️ admin账号不能禁用
+              <span style={{ color: '#999', fontSize: '12px' }}>
+                <ExclamationCircleOutlined style={{ marginRight: 4 }} />
+                admin账号不能禁用
               </span>
             </Tooltip>
           ) : undefined

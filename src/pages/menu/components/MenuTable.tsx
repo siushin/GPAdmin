@@ -7,7 +7,9 @@ import { IconDisplay } from '@/components';
 import {
   addMenu,
   deleteMenu,
+  getMenuDirTree,
   getMenuList,
+  getMenuTree,
   updateMenu,
 } from '@/services/api/system';
 import {
@@ -31,12 +33,79 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
   const [parentMenuOptions, setParentMenuOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
+  const [dirTreeOptions, setDirTreeOptions] = useState<
+    Array<{ label: string; value: number }>
+  >([]);
 
-  // 当 accountType 变化时，重新加载表格数据
+  // 加载目录树选项（用于筛选）
+  const loadDirTreeOptions = async () => {
+    try {
+      const res = await getMenuDirTree({ account_type: accountType });
+      if (res.code === 200 && res.data) {
+        // 递归扁平化目录树
+        const flattenDirs = (
+          dirs: any[],
+          level = 0,
+        ): Array<{ label: string; value: number }> => {
+          const result: Array<{ label: string; value: number }> = [];
+          dirs.forEach((dir) => {
+            const prefix = level > 0 ? '　'.repeat(level) + '├ ' : '';
+            result.push({
+              label: `${prefix}${dir.menu_name}`,
+              value: dir.menu_id,
+            });
+            if (dir.children && dir.children.length > 0) {
+              result.push(...flattenDirs(dir.children, level + 1));
+            }
+          });
+          return result;
+        };
+        setDirTreeOptions(flattenDirs(res.data));
+      }
+    } catch (error) {
+      console.error('加载目录树选项失败:', error);
+    }
+  };
+
+  // 加载父菜单选项
+  const loadParentMenuOptions = async () => {
+    try {
+      const res = await getMenuTree({ account_type: accountType });
+      if (res.code === 200 && res.data) {
+        // 递归扁平化菜单树，生成父菜单选项
+        const flattenMenus = (
+          menus: any[],
+          level = 0,
+        ): Array<{ label: string; value: number }> => {
+          const result: Array<{ label: string; value: number }> = [];
+          menus.forEach((menu) => {
+            // 目录和菜单类型都可以作为父级
+            if (menu.menu_type === 'dir' || menu.menu_type === 'menu') {
+              const prefix = level > 0 ? '　'.repeat(level) + '├ ' : '';
+              const typeTag = menu.menu_type === 'dir' ? '[目录] ' : '';
+              result.push({
+                label: `${prefix}${typeTag}${menu.menu_name}`,
+                value: menu.menu_id,
+              });
+              if (menu.children && menu.children.length > 0) {
+                result.push(...flattenMenus(menu.children, level + 1));
+              }
+            }
+          });
+          return result;
+        };
+        setParentMenuOptions(flattenMenus(res.data));
+      }
+    } catch (error) {
+      console.error('加载父菜单选项失败:', error);
+    }
+  };
+
+  // 当 accountType 变化时，重新加载表格数据和父菜单选项
   useEffect(() => {
     actionRef.current?.reload();
-    // 暂时使用伪数据作为父菜单选项
-    setParentMenuOptions([{ label: '顶级菜单', value: 0 }]);
+    loadParentMenuOptions();
+    loadDirTreeOptions();
   }, [accountType]);
 
   const handleAdd = () => {
@@ -99,19 +168,49 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       fixed: 'left',
     },
     {
-      title: '菜单名称',
-      dataIndex: 'menu_name',
+      title: '父级目录',
+      dataIndex: 'parent_id',
       width: 150,
+      valueType: 'select',
       fieldProps: {
-        placeholder: '请输入菜单名称',
+        placeholder: '请选择父级目录',
+        showSearch: true,
+        filterOption: (input: string, option: any) =>
+          (option?.label ?? '')
+            .toString()
+            .toLowerCase()
+            .includes(input.toLowerCase()),
+        options: dirTreeOptions,
+      },
+      render: (_, record) => {
+        if (!record.parent_id || record.parent_id === 0) {
+          return '-';
+        }
+        // 从 parentMenuOptions 中查找父级菜单名称
+        const parent = parentMenuOptions.find(
+          (item) => item.value === record.parent_id,
+        );
+        // 去除前缀标记，只显示纯名称
+        if (parent) {
+          return parent.label.replace(/^[　├\s]*(\[目录\]\s*)?/, '');
+        }
+        return record.parent_id;
       },
     },
     {
-      title: '菜单Key',
+      title: '名称',
+      dataIndex: 'menu_name',
+      width: 150,
+      fieldProps: {
+        placeholder: '请输入名称',
+      },
+    },
+    {
+      title: 'Key',
       dataIndex: 'menu_key',
       width: 200,
       fieldProps: {
-        placeholder: '请输入菜单Key',
+        placeholder: '请输入Key',
       },
     },
     {
@@ -123,12 +222,14 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       },
     },
     {
-      title: '菜单类型',
+      title: '类型',
       dataIndex: 'menu_type',
       valueType: 'select',
       valueEnum: {
+        dir: { text: '目录', status: 'Processing' },
         menu: { text: '菜单', status: 'Success' },
         button: { text: '按钮', status: 'Default' },
+        link: { text: '链接', status: 'Warning' },
       },
       width: 100,
     },
@@ -224,7 +325,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
           },
         }}
         dateFormatter="string"
-        headerTitle="菜单列表"
+        headerTitle="菜单管理"
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           <Button

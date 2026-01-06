@@ -350,6 +350,29 @@ export async function getMenuTree(
   });
 }
 
+/** 目录树形列表（仅目录类型，用于筛选） POST /api/admin/menu/dirTree */
+export async function getMenuDirTree(
+  params: {
+    account_type: 'admin' | 'user';
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      menu_id: number;
+      menu_name: string;
+      menu_key: string;
+      children?: any[];
+    }>;
+  }>('/api/admin/menu/dirTree', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
 /** 新增菜单 POST /api/admin/menu/add */
 export async function addMenu(
   body: {
