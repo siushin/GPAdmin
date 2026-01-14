@@ -13,3 +13,24 @@ export async function getMyApps(options?: { [key: string]: any }) {
     ...(options || {}),
   });
 }
+
+/** 更新本地模块 POST /api/admin/app/updateModules */
+export async function updateModules(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      success: Array<{
+        module_name: string;
+        path: string;
+      }>;
+      failed: Array<{
+        path: string;
+        message: string;
+      }>;
+    };
+  }>('/api/admin/app/updateModules', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}

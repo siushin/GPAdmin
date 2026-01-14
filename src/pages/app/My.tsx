@@ -2,22 +2,27 @@ import {
   AppstoreOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import {
+  Button,
   Card,
   Col,
   Empty,
   Form,
   Input,
+  Modal,
+  message,
   Pagination,
+  Radio,
   Row,
   Spin,
   Tag,
   Typography,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
-import { getMyApps } from '@/services/api/app';
+import { getMyApps, updateModules } from '@/services/api/app';
 import StandardFormRow from './components/StandardFormRow';
 import TagSelect from './components/TagSelect';
 import type { AppItem } from './mock';
@@ -34,12 +39,16 @@ const sourceLabels: Record<string, string> = {
 
 const My: React.FC = () => {
   const [form] = Form.useForm();
+  const [updateForm] = Form.useForm();
   const [apps, setApps] = useState<AppItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(12);
+  const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
+  const [updateLoading, setUpdateLoading] = useState<boolean>(false);
+  const [updateType, setUpdateType] = useState<'all' | 'specified'>('all');
 
   useEffect(() => {
     fetchApps();
@@ -112,8 +121,78 @@ const My: React.FC = () => {
     }
   };
 
+  const handleUpdateModules = async () => {
+    try {
+      const values = await updateForm.validateFields();
+      setUpdateLoading(true);
+
+      const params: { [key: string]: any } = {};
+      if (values.update_type === 'specified' && values.module_path) {
+        params.module_path = values.module_path.trim();
+      } else {
+        // 全部更新时，不传 module_path 或传空字符串
+        params.module_path = '';
+      }
+
+      const response = await updateModules({
+        data: params,
+      });
+
+      if (response.code === 200) {
+        const { success = [], failed = [] } = response.data || {};
+        let successMsg = '';
+        if (success.length > 0) {
+          successMsg = `成功更新 ${success.length} 个模块`;
+          if (success.length <= 5) {
+            successMsg += `: ${success.map((s) => s.module_name).join(', ')}`;
+          }
+        }
+        if (failed.length > 0) {
+          const failMsg = `失败 ${failed.length} 个模块`;
+          message.warning(`${successMsg || '更新完成'}，${failMsg}`);
+        } else {
+          message.success(successMsg || '更新完成');
+        }
+        setUpdateModalVisible(false);
+        updateForm.resetFields();
+        setUpdateType('all');
+        // 刷新应用列表
+        fetchApps(searchKeyword);
+      } else {
+        message.error(response.message || '更新失败');
+      }
+    } catch (error: any) {
+      if (error?.errorFields) {
+        // 表单验证错误
+        return;
+      }
+      console.error('更新模块失败:', error);
+      message.error(error?.message || '更新模块失败');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleUpdateModalCancel = () => {
+    setUpdateModalVisible(false);
+    updateForm.resetFields();
+    setUpdateType('all');
+  };
+
   return (
-    <PageContainer>
+    <PageContainer
+      title="我的应用"
+      extra={[
+        <Button
+          key="update"
+          type="primary"
+          icon={<ReloadOutlined />}
+          onClick={() => setUpdateModalVisible(true)}
+        >
+          更新本地模块
+        </Button>,
+      ]}
+    >
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <Input.Search
           placeholder="请输入"
@@ -269,6 +348,65 @@ const My: React.FC = () => {
           )}
         </Spin>
       </Card>
+
+      <Modal
+        title="更新本地模块"
+        open={updateModalVisible}
+        onOk={handleUpdateModules}
+        onCancel={handleUpdateModalCancel}
+        confirmLoading={updateLoading}
+        okText="确定"
+        cancelText="取消"
+        width={600}
+      >
+        <Form
+          form={updateForm}
+          layout="vertical"
+          initialValues={{ update_type: 'all' }}
+        >
+          <Form.Item
+            name="update_type"
+            label="更新方式"
+            rules={[{ required: true, message: '请选择更新方式' }]}
+          >
+            <Radio.Group
+              onChange={(e) => {
+                setUpdateType(e.target.value);
+                if (e.target.value === 'all') {
+                  updateForm.setFieldsValue({ module_path: undefined });
+                }
+              }}
+            >
+              <Radio value="all">全部（扫描所有模块）</Radio>
+              <Radio value="specified">指定模块路径</Radio>
+            </Radio.Group>
+          </Form.Item>
+
+          {updateType === 'specified' && (
+            <Form.Item
+              name="module_path"
+              label="模块路径"
+              rules={[
+                { required: true, message: '请输入模块路径' },
+                {
+                  validator: (_rule, value) => {
+                    if (!value || value.trim() === '') {
+                      return Promise.reject(new Error('请输入模块路径'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+              help="支持相对路径（如：Base、Sms）或绝对路径（如：/path/to/Modules/Base）"
+            >
+              <Input
+                placeholder="请输入模块路径，如：Base 或 /path/to/Modules/Base"
+                allowClear
+              />
+            </Form.Item>
+          )}
+        </Form>
+      </Modal>
     </PageContainer>
   );
 };
