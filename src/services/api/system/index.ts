@@ -472,9 +472,10 @@ export async function deleteMenu(
   });
 }
 
-/** 移动菜单组到新模块 POST /api/admin/menu/moveToModule */
+/** 移动菜单组到新模块 POST /api/admin/role/moveMenuToModule */
 export async function moveMenuToModule(
   body: {
+    role_id: number;
     menu_ids: number[];
     target_module_id: number;
   },
@@ -484,16 +485,17 @@ export async function moveMenuToModule(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/menu/moveToModule', {
+  }>('/api/admin/role/moveMenuToModule', {
     method: 'POST',
     data: body,
     ...(options || {}),
   });
 }
 
-/** 将菜单组移回原模块 POST /api/admin/menu/moveBackToOriginal */
+/** 将菜单组移回原模块 POST /api/admin/role/moveMenuBackToOriginal */
 export async function moveMenuBackToOriginal(
   body: {
+    role_id: number;
     menu_ids: number[];
   },
   options?: { [key: string]: any },
@@ -502,7 +504,7 @@ export async function moveMenuBackToOriginal(
     code: number;
     message: string;
     data?: any;
-  }>('/api/admin/menu/moveBackToOriginal', {
+  }>('/api/admin/role/moveMenuBackToOriginal', {
     method: 'POST',
     data: body,
     ...(options || {}),
@@ -634,6 +636,7 @@ export async function getRoleMenus(
           module_id: number;
           module_name: string;
           module_alias: string;
+          module_title?: string;
         };
         menus: Array<{
           menu_id: number;
@@ -641,12 +644,14 @@ export async function getRoleMenus(
           menu_key: string;
           menu_type: string;
           parent_id: number;
+          module_id?: number | null;
           is_required?: number;
-          original_module_id?: number | null;
+          target_module_id?: number | null;
           children?: any[];
         }>;
       }>;
       checked_menu_ids: number[];
+      menu_move_map: Record<number, number>;
     };
   }>('/api/admin/role/getMenus', {
     method: 'POST',
@@ -660,6 +665,7 @@ export async function updateRoleMenus(
   body: {
     role_id: number;
     menu_ids: number[];
+    menu_move_map?: Record<number, number>;
   },
   options?: { [key: string]: any },
 ) {
@@ -687,6 +693,27 @@ export async function getModuleList(options?: { [key: string]: any }) {
   }>('/api/admin/role/getModuleList', {
     method: 'POST',
     data: {},
+    ...(options || {}),
+  });
+}
+
+/** 将指定模块下所有已移入的菜单组移回原模块 POST /api/admin/role/moveAllBackByModule */
+export async function moveAllBackByModule(
+  body: {
+    role_id: number;
+    module_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      count: number;
+    };
+  }>('/api/admin/role/moveAllBackByModule', {
+    method: 'POST',
+    data: body,
     ...(options || {}),
   });
 }

@@ -5,6 +5,7 @@ import {
   Checkbox,
   Drawer,
   Modal,
+  Popconfirm,
   Select,
   Space,
   Spin,
@@ -16,6 +17,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   getModuleList,
   getRoleMenus,
+  moveAllBackByModule,
   moveMenuBackToOriginal,
   moveMenuToModule,
   updateRoleMenus,
@@ -42,8 +44,9 @@ interface MenuData {
   menu_key: string;
   menu_type: string;
   parent_id: number;
+  module_id?: number | null;
   is_required?: number;
-  original_module_id?: number | null;
+  target_module_id?: number | null;
   children?: MenuData[];
 }
 
@@ -60,8 +63,10 @@ interface MenuGroup {
   allMenuIds: number[];
   // 是否为独立菜单组（没有目录的顶级菜单）
   isStandalone?: boolean;
-  // 原始模块ID（如果该组是从其他模块移动过来的）
+  // 原始模块ID（菜单本身所属的模块）
   originalModuleId?: number | null;
+  // 目标模块ID（如果该组被移动到其他模块）
+  targetModuleId?: number | null;
 }
 
 const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
@@ -81,6 +86,9 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
 
   // 所有模块列表
   const [allModules, setAllModules] = useState<ModuleData[]>([]);
+
+  // 菜单移动映射：menu_id => target_module_id
+  const [menuMoveMap, setMenuMoveMap] = useState<Record<number, number>>({});
 
   // 移动弹窗状态
   const [moveModalVisible, setMoveModalVisible] = useState(false);
@@ -141,8 +149,10 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
         account_type: accountType,
       });
       if (res.code === 200 && res.data) {
-        const { modules_with_menus, checked_menu_ids } = res.data;
+        const { modules_with_menus, checked_menu_ids, menu_move_map } =
+          res.data;
         setMenusByModule(modules_with_menus || []);
+        setMenuMoveMap(menu_move_map || {});
 
         // 收集所有 is_required=1 的菜单ID
         const requiredIds = new Set<number>();
@@ -184,7 +194,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   // 将菜单树转换为按目录分组的结构
   const convertToMenuGroups = (
     menus: MenuData[],
-    _currentModuleId: number,
+    currentModuleId: number,
   ): MenuGroup[] => {
     const groups: MenuGroup[] = [];
     const standaloneMenus: MenuData[] = [];
@@ -195,12 +205,16 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
         const children = collectAllChildren(menu.children || []);
         // 收集所有菜单ID（目录本身 + 所有子菜单）
         const allMenuIds = [menu.menu_id, ...children.map((c) => c.menu_id)];
+
+        // 检查该菜单组是否被移动（以目录的 menu_id 为准）
+        const targetModuleId = menuMoveMap[menu.menu_id] || null;
+
         groups.push({
           dir: menu,
           children: children,
           allMenuIds: allMenuIds,
-          // 如果目录有 original_module_id，说明是从其他模块移动过来的
-          originalModuleId: menu.original_module_id,
+          originalModuleId: menu.module_id,
+          targetModuleId: targetModuleId,
         });
       } else {
         // 非目录类型的顶级菜单（如工作台），作为独立菜单
@@ -214,15 +228,16 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
 
     // 如果有独立菜单，添加到最前面
     if (standaloneMenus.length > 0) {
-      // 检查独立菜单是否有 original_module_id
-      const firstStandaloneOriginalModuleId =
-        standaloneMenus[0]?.original_module_id;
+      const firstStandaloneModuleId = standaloneMenus[0]?.module_id;
+      const firstStandaloneTargetModuleId =
+        menuMoveMap[standaloneMenus[0]?.menu_id] || null;
       groups.unshift({
         dir: null,
         children: standaloneMenus,
         allMenuIds: standaloneMenus.map((m) => m.menu_id),
         isStandalone: true,
-        originalModuleId: firstStandaloneOriginalModuleId,
+        originalModuleId: firstStandaloneModuleId,
+        targetModuleId: firstStandaloneTargetModuleId,
       });
     }
 
@@ -241,48 +256,40 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     return result;
   };
 
-  // 获取模块下所有菜单ID
-  const _getAllMenuIdsInModule = (moduleId: number): number[] => {
-    const currentModule = menusByModule.find(
-      (m) => m.module.module_id === moduleId,
+  // 检查菜单组是否被移动到其他模块
+  // 如果 targetModuleId 存在且与当前模块不同，且不等于原始模块，说明已被移动
+  const isGroupMoved = (group: MenuGroup, currentModuleId: number): boolean => {
+    return (
+      group.targetModuleId !== null &&
+      group.targetModuleId !== undefined &&
+      group.targetModuleId !== currentModuleId &&
+      group.targetModuleId !== group.originalModuleId
     );
-    if (!currentModule) return [];
-
-    const allMenuIds: number[] = [];
-    const collectMenuIds = (menus: MenuData[]) => {
-      menus.forEach((menu) => {
-        allMenuIds.push(menu.menu_id);
-        if (menu.children) {
-          collectMenuIds(menu.children);
-        }
-      });
-    };
-    collectMenuIds(currentModule.menus);
-    return allMenuIds;
   };
 
-  // 检查菜单组是否是从其他模块移动过来的
-  // 只有当 original_module_id 存在且与当前模块ID不同时，才算是移入的
+  // 检查菜单组是否是从其他模块移入的
+  // 如果 targetModuleId 等于当前模块ID，且不等于原始模块ID，说明是移入的
   const isGroupMovedIn = (
     group: MenuGroup,
     currentModuleId: number,
   ): boolean => {
     return (
+      group.targetModuleId !== null &&
+      group.targetModuleId !== undefined &&
+      group.targetModuleId === currentModuleId &&
       group.originalModuleId !== null &&
       group.originalModuleId !== undefined &&
       group.originalModuleId !== currentModuleId
     );
   };
 
-  // 获取原始模块名称
-  const getOriginalModuleName = (originalModuleId: number): string => {
-    const module = menusByModule.find(
-      (m) => m.module.module_id === originalModuleId,
-    );
+  // 获取模块名称
+  const getModuleName = (moduleId: number): string => {
+    const module = menusByModule.find((m) => m.module.module_id === moduleId);
     if (module) {
       return module.module.module_title || module.module.module_name;
     }
-    const allModule = allModules.find((m) => m.module_id === originalModuleId);
+    const allModule = allModules.find((m) => m.module_id === moduleId);
     return allModule?.module_title || allModule?.module_name || '未知模块';
   };
 
@@ -323,13 +330,28 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     }
   };
 
-  // 检查目录分组是否全选
+  // 检查目录分组是否全选（只检查子菜单是否全选）
   const isGroupAllChecked = (group: MenuGroup): boolean => {
+    // 对于目录类型，只检查 children 是否全选
+    if (group.dir && !group.isStandalone) {
+      return group.children.every((child) =>
+        checkedMenuIds.includes(child.menu_id),
+      );
+    }
+    // 对于独立菜单组，检查所有菜单
     return group.allMenuIds.every((id) => checkedMenuIds.includes(id));
   };
 
-  // 检查目录分组是否部分选中
+  // 检查目录分组是否部分选中（只检查子菜单）
   const isGroupIndeterminate = (group: MenuGroup): boolean => {
+    // 对于目录类型，只检查 children
+    if (group.dir && !group.isStandalone) {
+      const checkedCount = group.children.filter((child) =>
+        checkedMenuIds.includes(child.menu_id),
+      ).length;
+      return checkedCount > 0 && checkedCount < group.children.length;
+    }
+    // 对于独立菜单组，检查所有菜单
     const checkedCount = group.allMenuIds.filter((id) =>
       checkedMenuIds.includes(id),
     ).length;
@@ -352,53 +374,99 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   // 获取模块的选中菜单数和总菜单数
   const getModuleMenuStats = (
     moduleId: number,
-  ): { checked: number; total: number; movedInCount: number } => {
+  ): {
+    checked: number;
+    total: number;
+    movedInCount: number;
+    movedOutCount: number;
+  } => {
     const currentModule = menusByModule.find(
       (m) => m.module.module_id === moduleId,
     );
-    if (!currentModule) return { checked: 0, total: 0, movedInCount: 0 };
+    if (!currentModule)
+      return { checked: 0, total: 0, movedInCount: 0, movedOutCount: 0 };
 
     const groups = convertToMenuGroups(currentModule.menus, moduleId);
 
-    // 统计非移入的菜单（原生菜单）
     let totalNative = 0;
     let checkedNative = 0;
     let movedInCount = 0;
+    let movedOutCount = 0;
 
     groups.forEach((group) => {
-      if (isGroupMovedIn(group, moduleId)) {
+      const isMoved = isGroupMoved(group, moduleId);
+      const isMovedIn = isGroupMovedIn(group, moduleId);
+
+      if (isMoved) {
+        // 被移出的菜单组
+        movedOutCount++;
+      } else if (isMovedIn) {
+        // 被移入的菜单组
         movedInCount++;
       } else {
+        // 正常的菜单组
         totalNative += group.allMenuIds.length;
-        checkedNative += group.allMenuIds.filter((id) =>
-          checkedMenuIds.includes(id),
-        ).length;
+
+        if (group.dir && !group.isStandalone) {
+          const childrenCheckedCount = group.children.filter((child) =>
+            checkedMenuIds.includes(child.menu_id),
+          ).length;
+          checkedNative +=
+            childrenCheckedCount + (childrenCheckedCount > 0 ? 1 : 0);
+        } else {
+          checkedNative += group.allMenuIds.filter((id) =>
+            checkedMenuIds.includes(id),
+          ).length;
+        }
       }
     });
 
-    return { checked: checkedNative, total: totalNative, movedInCount };
+    return {
+      checked: checkedNative,
+      total: totalNative,
+      movedInCount,
+      movedOutCount,
+    };
   };
 
-  // 计算总统计数据（排除已移入的菜单）
+  // 计算总统计数据
   const totalStats = useMemo(() => {
     let totalChecked = 0;
     let modulesWithChecked = 0;
     let totalMovedIn = 0;
+    let totalMovedOut = 0;
 
     menusByModule.forEach((item) => {
       const groups = convertToMenuGroups(item.menus, item.module.module_id);
       let moduleHasChecked = false;
 
       groups.forEach((group) => {
-        if (isGroupMovedIn(group, item.module.module_id)) {
+        const isMoved = isGroupMoved(group, item.module.module_id);
+        const isMovedIn = isGroupMovedIn(group, item.module.module_id);
+
+        if (isMoved) {
+          totalMovedOut++;
+        } else if (isMovedIn) {
           totalMovedIn++;
         } else {
-          const checkedInGroup = group.allMenuIds.filter((id) =>
-            checkedMenuIds.includes(id),
-          ).length;
-          totalChecked += checkedInGroup;
-          if (checkedInGroup > 0) {
-            moduleHasChecked = true;
+          if (group.dir && !group.isStandalone) {
+            const childrenCheckedCount = group.children.filter((child) =>
+              checkedMenuIds.includes(child.menu_id),
+            ).length;
+            const checkedInGroup =
+              childrenCheckedCount + (childrenCheckedCount > 0 ? 1 : 0);
+            totalChecked += checkedInGroup;
+            if (checkedInGroup > 0) {
+              moduleHasChecked = true;
+            }
+          } else {
+            const checkedInGroup = group.allMenuIds.filter((id) =>
+              checkedMenuIds.includes(id),
+            ).length;
+            totalChecked += checkedInGroup;
+            if (checkedInGroup > 0) {
+              moduleHasChecked = true;
+            }
           }
         }
       });
@@ -412,10 +480,11 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       moduleCount: modulesWithChecked,
       menuCount: totalChecked,
       movedInCount: totalMovedIn,
+      movedOutCount: totalMovedOut,
     };
-  }, [menusByModule, checkedMenuIds]);
+  }, [menusByModule, checkedMenuIds, menuMoveMap]);
 
-  // 全选当前模块（排除移入的菜单组）
+  // 全选当前模块（排除移动的菜单组）
   const handleSelectAll = (moduleId: number) => {
     const currentModule = menusByModule.find(
       (m) => m.module.module_id === moduleId,
@@ -426,7 +495,9 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     const nativeMenuIds: number[] = [];
 
     groups.forEach((group) => {
-      if (!isGroupMovedIn(group, moduleId)) {
+      const isMoved = isGroupMoved(group, moduleId);
+      const isMovedIn = isGroupMovedIn(group, moduleId);
+      if (!isMoved && !isMovedIn) {
         nativeMenuIds.push(...group.allMenuIds);
       }
     });
@@ -435,7 +506,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     setCheckedMenuIds(Array.from(newIds));
   };
 
-  // 取消全选当前模块（保留必选菜单，排除移入的菜单组）
+  // 取消全选当前模块（保留必选菜单，排除移动的菜单组）
   const handleDeselectAll = (moduleId: number) => {
     const currentModule = menusByModule.find(
       (m) => m.module.module_id === moduleId,
@@ -446,7 +517,9 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     const nativeMenuIdsSet = new Set<number>();
 
     groups.forEach((group) => {
-      if (!isGroupMovedIn(group, moduleId)) {
+      const isMoved = isGroupMoved(group, moduleId);
+      const isMovedIn = isGroupMovedIn(group, moduleId);
+      if (!isMoved && !isMovedIn) {
         group.allMenuIds.forEach((id) => {
           nativeMenuIdsSet.add(id);
         });
@@ -484,6 +557,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     setMoveModalLoading(true);
     try {
       const res = await moveMenuToModule({
+        role_id: roleRecord.role_id,
         menu_ids: moveModalGroup.allMenuIds,
         target_module_id: moveModalTargetModuleId,
       });
@@ -491,8 +565,22 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       if (res.code === 200) {
         message.success(`已将「${groupTitle}」移到新模块`);
         setMoveModalVisible(false);
-        // 重新加载数据
-        loadRoleMenus();
+        // 更新本地状态
+        const newMenuMoveMap = { ...menuMoveMap };
+        const originalModuleId = moveModalGroup.originalModuleId;
+        moveModalGroup.allMenuIds.forEach((id) => {
+          // 如果目标模块等于原始模块，则从map中移除（或保持null）
+          if (
+            moveModalTargetModuleId !== null &&
+            moveModalTargetModuleId !== originalModuleId
+          ) {
+            newMenuMoveMap[id] = moveModalTargetModuleId;
+          } else {
+            // 如果移回原模块，则从map中移除
+            delete newMenuMoveMap[id];
+          }
+        });
+        setMenuMoveMap(newMenuMoveMap);
       } else {
         message.error(res.message || '移动失败');
       }
@@ -507,11 +595,36 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   const handleMoveBack = async (menuIds: number[]) => {
     try {
       const res = await moveMenuBackToOriginal({
+        role_id: roleRecord.role_id,
         menu_ids: menuIds,
       });
 
       if (res.code === 200) {
         message.success('已移回原处');
+        // 更新本地状态
+        const newMenuMoveMap = { ...menuMoveMap };
+        menuIds.forEach((id) => {
+          delete newMenuMoveMap[id];
+        });
+        setMenuMoveMap(newMenuMoveMap);
+      } else {
+        message.error(res.message || '移回失败');
+      }
+    } catch (_error) {
+      message.error('移回失败');
+    }
+  };
+
+  // 全部移回（将当前模块下所有已移入的菜单移回原处）
+  const handleMoveAllBack = async (moduleId: number) => {
+    try {
+      const res = await moveAllBackByModule({
+        role_id: roleRecord.role_id,
+        module_id: moduleId,
+      });
+
+      if (res.code === 200) {
+        message.success(res.message || '已全部移回原处');
         // 重新加载数据
         loadRoleMenus();
       } else {
@@ -522,24 +635,46 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     }
   };
 
-  // 保存角色菜单（排除已移入的菜单）
+  // 保存角色菜单
   const handleSave = async () => {
-    // 收集所有移入的菜单ID（这些不应该被保存）
-    const movedInMenuIds = new Set<number>();
+    // 构建菜单原始模块ID映射
+    const menuOriginalModuleMap: Record<number, number | null> = {};
     menusByModule.forEach((item) => {
-      const groups = convertToMenuGroups(item.menus, item.module.module_id);
-      groups.forEach((group) => {
-        if (isGroupMovedIn(group, item.module.module_id)) {
-          group.allMenuIds.forEach((id) => {
-            movedInMenuIds.add(id);
-          });
-        }
-      });
+      const collectMenuModule = (menus: MenuData[]) => {
+        menus.forEach((menu) => {
+          menuOriginalModuleMap[menu.menu_id] = menu.module_id || null;
+          if (menu.children) {
+            collectMenuModule(menu.children);
+          }
+        });
+      };
+      collectMenuModule(item.menus);
     });
 
-    // 过滤掉已移入的菜单ID
+    // 过滤menu_move_map，只保留target_module_id不等于原始module_id的项
+    const filteredMenuMoveMap: Record<number, number> = {};
+    Object.keys(menuMoveMap).forEach((menuIdStr) => {
+      const menuId = parseInt(menuIdStr);
+      const targetModuleId = menuMoveMap[menuId];
+      const originalModuleId = menuOriginalModuleMap[menuId];
+      // 只有当目标模块不等于原始模块时，才包含在map中
+      if (
+        targetModuleId !== null &&
+        targetModuleId !== undefined &&
+        targetModuleId !== originalModuleId
+      ) {
+        filteredMenuMoveMap[menuId] = targetModuleId;
+      }
+    });
+
+    // 收集所有被移动的菜单ID（这些不应该被保存在原模块）
+    const movedMenuIds = new Set<number>(
+      Object.keys(filteredMenuMoveMap).map((id) => parseInt(id)),
+    );
+
+    // 过滤掉已移动的菜单ID
     const effectiveMenuIds = checkedMenuIds.filter(
-      (id) => !movedInMenuIds.has(id),
+      (id) => !movedMenuIds.has(id),
     );
 
     setSaving(true);
@@ -547,6 +682,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       const res = await updateRoleMenus({
         role_id: roleRecord.role_id,
         menu_ids: effectiveMenuIds,
+        menu_move_map: filteredMenuMoveMap,
       });
       if (res.code === 200) {
         message.success('保存成功');
@@ -589,11 +725,92 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       <div>
         {groups.map((group, index) => {
           const groupTitle = getGroupTitle(group);
+          const isMoved = isGroupMoved(group, moduleId);
           const isMovedIn = isGroupMovedIn(group, moduleId);
+
+          // 如果菜单组被移出到其他模块，显示禁用状态
+          if (isMoved) {
+            const targetModuleName = getModuleName(
+              group.targetModuleId as number,
+            );
+
+            return (
+              <Card
+                key={group.dir?.menu_id || `standalone-${index}`}
+                size="small"
+                title={
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Checkbox
+                      checked
+                      disabled
+                      style={{ textDecoration: 'line-through' }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          textDecoration: 'line-through',
+                          color: token.colorTextDisabled,
+                        }}
+                      >
+                        {groupTitle}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          color: token.colorTextDescription,
+                        }}
+                      >
+                        (已移到: {targetModuleName})
+                      </span>
+                    </Checkbox>
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={() => handleMoveBack(group.allMenuIds)}
+                    >
+                      移回原处
+                    </Button>
+                  </div>
+                }
+                style={{
+                  marginBottom: 12,
+                  opacity: 0.6,
+                  backgroundColor: token.colorFillAlter,
+                }}
+                styles={{
+                  body: { padding: '12px 16px' },
+                }}
+              >
+                <div
+                  style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}
+                >
+                  {group.children.map((menu) => (
+                    <Checkbox
+                      key={menu.menu_id}
+                      checked={checkedMenuIds.includes(menu.menu_id)}
+                      disabled
+                      style={{ textDecoration: 'line-through' }}
+                    >
+                      <span style={{ textDecoration: 'line-through' }}>
+                        {menu.menu_name}
+                      </span>
+                    </Checkbox>
+                  ))}
+                </div>
+              </Card>
+            );
+          }
 
           // 如果是从其他模块移入的，显示禁用状态
           if (isMovedIn) {
-            const originalModuleName = getOriginalModuleName(
+            const originalModuleName = getModuleName(
               group.originalModuleId as number,
             );
 
@@ -770,9 +987,10 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
               {totalStats.menuCount}
             </span>{' '}
             个菜单
-            {totalStats.movedInCount > 0 && (
+            {(totalStats.movedInCount > 0 || totalStats.movedOutCount > 0) && (
               <span style={{ marginLeft: 8, color: token.colorWarning }}>
-                (有 {totalStats.movedInCount} 个菜单组已移入)
+                (移入: {totalStats.movedInCount}, 移出:{' '}
+                {totalStats.movedOutCount})
               </span>
             )}
           </div>
@@ -798,17 +1016,24 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
                   <span>
                     {item.module.module_title || item.module.module_name} (
                     {stats.checked}/{stats.total})
-                    {stats.movedInCount > 0 && (
+                    {(stats.movedInCount > 0 || stats.movedOutCount > 0) && (
                       <span style={{ color: token.colorWarning }}>
                         {' '}
-                        +{stats.movedInCount}
+                        +{stats.movedInCount}/-{stats.movedOutCount}
                       </span>
                     )}
                   </span>
                 ),
                 children: (
                   <div>
-                    <div style={{ marginBottom: 16 }}>
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
                       <Space>
                         <Button
                           size="small"
@@ -825,6 +1050,21 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
                           取消全选
                         </Button>
                       </Space>
+                      {stats.movedInCount > 0 && (
+                        <Popconfirm
+                          title="全部移回"
+                          description={`确定要将该模块下所有已移入的 ${stats.movedInCount} 个菜单组移回原处吗？`}
+                          onConfirm={() =>
+                            handleMoveAllBack(item.module.module_id)
+                          }
+                          okText="确定"
+                          cancelText="取消"
+                        >
+                          <Button size="small" danger>
+                            全部移回
+                          </Button>
+                        </Popconfirm>
+                      )}
                     </div>
                     {renderMenuGroups(item.menus, item.module.module_id)}
                   </div>
@@ -876,7 +1116,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
           />
         </div>
         <div style={{ color: token.colorTextDescription, fontSize: 12 }}>
-          注意：移动后，该菜单组将在新模块中显示为已移入状态（禁用且带删除线），可随时移回原处。
+          注意：移动后，该菜单组将在目标模块中显示为已移入状态（禁用且带删除线），可随时移回原处。
         </div>
       </Modal>
     </Drawer>
