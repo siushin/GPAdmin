@@ -1,4 +1,14 @@
-import { App, Button, Card, Checkbox, Drawer, Space, Spin, Tabs } from 'antd';
+import {
+  App,
+  Button,
+  Card,
+  Checkbox,
+  Drawer,
+  Space,
+  Spin,
+  Tabs,
+  theme,
+} from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getRoleMenus, updateRoleMenus } from '@/services/api/system';
@@ -50,6 +60,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   onSuccess,
 }) => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string>('');
@@ -261,10 +272,38 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   // 获取分组的显示名称
   const getGroupTitle = (group: MenuGroup): string => {
     if (group.isStandalone) {
-      return '独立菜单';
+      return '';
     }
-    return group.dir?.menu_name || '未命名';
+    return group.dir?.menu_name || '';
   };
+
+  // 获取模块的选中菜单数和总菜单数
+  const getModuleMenuStats = (
+    moduleId: number,
+  ): { checked: number; total: number } => {
+    const allMenuIds = getAllMenuIdsInModule(moduleId);
+    const checkedCount = allMenuIds.filter((id) =>
+      checkedMenuIds.includes(id),
+    ).length;
+    return { checked: checkedCount, total: allMenuIds.length };
+  };
+
+  // 计算总统计数据
+  const totalStats = useMemo(() => {
+    // 计算有选中菜单的模块数
+    const modulesWithChecked = menusByModule.filter((item) => {
+      const allMenuIds = getAllMenuIdsInModule(item.module.module_id);
+      return allMenuIds.some((id) => checkedMenuIds.includes(id));
+    }).length;
+
+    // 计算总选中菜单数
+    const totalChecked = checkedMenuIds.length;
+
+    return {
+      moduleCount: modulesWithChecked,
+      menuCount: totalChecked,
+    };
+  }, [menusByModule, checkedMenuIds]);
 
   // 全选当前模块
   const handleSelectAll = (moduleId: number) => {
@@ -318,7 +357,13 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
 
     if (groups.length === 0) {
       return (
-        <div style={{ textAlign: 'center', padding: '20px 0', color: '#999' }}>
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '20px 0',
+            color: token.colorTextTertiary,
+          }}
+        >
           暂无菜单数据
         </div>
       );
@@ -331,19 +376,26 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
             key={group.dir?.menu_id || `standalone-${index}`}
             size="small"
             title={
-              <Checkbox
-                checked={isGroupAllChecked(group)}
-                indeterminate={isGroupIndeterminate(group)}
-                disabled={isGroupAllRequired(group)}
-                onChange={(e: CheckboxChangeEvent) =>
-                  handleDirCheckAll(group, e.target.checked)
-                }
-              >
-                <span style={{ fontWeight: 500 }}>{getGroupTitle(group)}</span>
-              </Checkbox>
+              group.isStandalone ? null : (
+                <Checkbox
+                  checked={isGroupAllChecked(group)}
+                  indeterminate={isGroupIndeterminate(group)}
+                  disabled={isGroupAllRequired(group)}
+                  onChange={(e: CheckboxChangeEvent) =>
+                    handleDirCheckAll(group, e.target.checked)
+                  }
+                >
+                  <span style={{ fontWeight: 500 }}>
+                    {getGroupTitle(group)}
+                  </span>
+                </Checkbox>
+              )
             }
             style={{ marginBottom: 12 }}
-            styles={{ body: { padding: '12px 16px' } }}
+            styles={{
+              header: group.isStandalone ? { display: 'none' } : undefined,
+              body: { padding: '12px 16px' },
+            }}
           >
             {group.children.length > 0 ? (
               <div
@@ -363,7 +415,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
                 ))}
               </div>
             ) : (
-              <div style={{ color: '#999', fontSize: 12 }}>暂无子菜单</div>
+              <div style={{ color: token.colorTextTertiary }}>暂无子菜单</div>
             )}
           </Card>
         ))}
@@ -383,7 +435,24 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
         },
       }}
       footer={
-        <div style={{ textAlign: 'right' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ color: token.colorTextSecondary }}>
+            共分配{' '}
+            <span style={{ color: token.colorPrimary, fontWeight: 500 }}>
+              {totalStats.moduleCount}
+            </span>{' '}
+            个模块， 共选择{' '}
+            <span style={{ color: token.colorPrimary, fontWeight: 500 }}>
+              {totalStats.menuCount}
+            </span>{' '}
+            个菜单
+          </div>
           <Space>
             <Button onClick={onClose}>取消</Button>
             <Button type="primary" onClick={handleSave} loading={saving}>
@@ -398,35 +467,44 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
           <Tabs
             activeKey={activeModuleId}
             onChange={handleTabChange}
-            items={menusByModule.map((item) => ({
-              key: String(item.module.module_id),
-              label: item.module.module_name || item.module.module_alias,
-              children: (
-                <div>
-                  <div style={{ marginBottom: 16 }}>
-                    <Space>
-                      <Button
-                        size="small"
-                        onClick={() => handleSelectAll(item.module.module_id)}
-                      >
-                        全选
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() => handleDeselectAll(item.module.module_id)}
-                      >
-                        取消全选
-                      </Button>
-                    </Space>
+            items={menusByModule.map((item) => {
+              const stats = getModuleMenuStats(item.module.module_id);
+              return {
+                key: String(item.module.module_id),
+                label: `${item.module.module_name || item.module.module_alias} (${stats.checked}/${stats.total})`,
+                children: (
+                  <div>
+                    <div style={{ marginBottom: 16 }}>
+                      <Space>
+                        <Button
+                          size="small"
+                          onClick={() => handleSelectAll(item.module.module_id)}
+                        >
+                          全选
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() =>
+                            handleDeselectAll(item.module.module_id)
+                          }
+                        >
+                          取消全选
+                        </Button>
+                      </Space>
+                    </div>
+                    {renderMenuGroups(item.menus)}
                   </div>
-                  {renderMenuGroups(item.menus)}
-                </div>
-              ),
-            }))}
+                ),
+              };
+            })}
           />
         ) : (
           <div
-            style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}
+            style={{
+              textAlign: 'center',
+              padding: '40px 0',
+              color: token.colorTextTertiary,
+            }}
           >
             暂无菜单数据
           </div>
