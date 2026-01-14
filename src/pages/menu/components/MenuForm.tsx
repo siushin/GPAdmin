@@ -175,6 +175,10 @@ const MenuForm: React.FC<MenuFormProps> = ({
           completeValues.menu_icon = '';
           completeValues.component = '';
           completeValues.redirect = '';
+        } else if (menuType === 'link') {
+          // 链接类型：不需要组件路径和重定向
+          completeValues.component = '';
+          completeValues.redirect = '';
         }
 
         // 如果是新增菜单，追加 account_type

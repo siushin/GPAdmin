@@ -27,6 +27,7 @@ import {
   TABLE_SIZE,
 } from '@/utils/constants';
 import { dateRangeFieldProps } from '@/utils/datePresets';
+import AccountRoleDrawer from './AccountRoleDrawer';
 import AdminDetailDrawer from './AdminDetailDrawer';
 import AdminForm from './AdminForm';
 
@@ -55,6 +56,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const [viewingRecord, setViewingRecord] = useState<any>(null);
   // 账号状态筛选：'all' | 0 | 1，默认 'all'
   const [statusFilter, setStatusFilter] = useState<'all' | 0 | 1>('all');
+  // 角色分配抽屉
+  const [roleDrawerVisible, setRoleDrawerVisible] = useState(false);
+  const [roleRecord, setRoleRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -100,6 +104,11 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const handleView = (record: any) => {
     setViewingRecord(record);
     setDetailVisible(true);
+  };
+
+  const handleAssignRole = (record: any) => {
+    setRoleRecord(record);
+    setRoleDrawerVisible(true);
   };
 
   const handleDelete = async (record: any) => {
@@ -340,7 +349,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
     {
       title: '操作',
       valueType: 'option',
-      width: 150,
+      width: 200,
       fixed: 'right',
       render: (_, record) => {
         const isAdmin = record.username === 'admin';
@@ -363,6 +372,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
             <Button type="link" size="small" onClick={() => handleEdit(record)}>
               编辑
             </Button>
+            {record.is_super !== 1 && (
+              <Button
+                type="link"
+                size="small"
+                onClick={() => handleAssignRole(record)}
+              >
+                分配角色
+              </Button>
+            )}
             {isAdmin ? (
               <Tooltip title="admin账号不能删除">{deleteButton}</Tooltip>
             ) : (
@@ -494,6 +512,17 @@ const AdminTable: React.FC<AdminTableProps> = ({
         onClose={() => {
           setDetailVisible(false);
           setViewingRecord(null);
+        }}
+      />
+      <AccountRoleDrawer
+        visible={roleDrawerVisible}
+        record={roleRecord}
+        onClose={() => {
+          setRoleDrawerVisible(false);
+          setRoleRecord(null);
+        }}
+        onSuccess={() => {
+          actionRef.current?.reload();
         }}
       />
     </>

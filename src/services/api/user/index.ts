@@ -277,3 +277,48 @@ export async function getUserLogs(
     ...(options || {}),
   });
 }
+
+/** 获取用户角色 POST /api/admin/user/getRoles */
+export async function getUserRoles(
+  body: {
+    account_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      all_roles: Array<{
+        role_id: number;
+        role_name: string;
+        role_code: string;
+        description?: string;
+      }>;
+      checked_role_ids: number[];
+    };
+  }>('/api/admin/user/getRoles', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新用户角色 POST /api/admin/user/updateRoles */
+export async function updateUserRoles(
+  body: {
+    account_id: number;
+    role_ids: number[];
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/user/updateRoles', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}

@@ -16,6 +16,7 @@ import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
   processFormValues,
+  SysParamFlag,
   TABLE_SIZE,
 } from '@/utils/constants';
 import MenuForm from './MenuForm';
@@ -49,7 +50,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
         ): Array<{ label: string; value: number }> => {
           const result: Array<{ label: string; value: number }> = [];
           dirs.forEach((dir) => {
-            const prefix = level > 0 ? '　'.repeat(level) + '├ ' : '';
+            const prefix = level > 0 ? `${'　'.repeat(level)}├ ` : '';
             result.push({
               label: `${prefix}${dir.menu_name}`,
               value: dir.menu_id,
@@ -81,7 +82,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
           menus.forEach((menu) => {
             // 目录和菜单类型都可以作为父级
             if (menu.menu_type === 'dir' || menu.menu_type === 'menu') {
-              const prefix = level > 0 ? '　'.repeat(level) + '├ ' : '';
+              const prefix = level > 0 ? `${'　'.repeat(level)}├ ` : '';
               const typeTag = menu.menu_type === 'dir' ? '[目录] ' : '';
               result.push({
                 label: `${prefix}${typeTag}${menu.menu_name}`,
@@ -124,6 +125,9 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       if (res.code === 200) {
         message.success('删除成功');
         actionRef.current?.reload();
+        // 刷新父菜单选项和目录树选项
+        loadParentMenuOptions();
+        loadDirTreeOptions();
       } else {
         message.error(res.message || '删除失败');
       }
@@ -151,6 +155,9 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
         setFormVisible(false);
         setEditingRecord(null);
         actionRef.current?.reload();
+        // 刷新父菜单选项和目录树选项
+        loadParentMenuOptions();
+        loadDirTreeOptions();
       } else {
         message.error(res.message || (editingRecord ? '更新失败' : '新增失败'));
       }
@@ -200,10 +207,22 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
     {
       title: '名称',
       dataIndex: 'menu_name',
-      width: 150,
       fieldProps: {
         placeholder: '请输入名称',
       },
+      render: (_, record) => (
+        <>
+          {record.sys_param_flag === SysParamFlag.Yes && (
+            <Tag
+              color="default"
+              style={{ marginRight: 0, fontSize: 12, lineHeight: '16px' }}
+            >
+              系统
+            </Tag>
+          )}
+          {record.menu_name}
+        </>
+      ),
     },
     {
       title: 'Key',
@@ -266,21 +285,26 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       valueType: 'option',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) => {
+        const canDelete = record.sys_param_flag !== SysParamFlag.Yes;
+        return (
+          <Space>
+            <Button type="link" size="small" onClick={() => handleEdit(record)}>
+              编辑
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            {canDelete && (
+              <Popconfirm
+                title="确定要删除这条数据吗？"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button type="link" size="small" danger>
+                  删除
+                </Button>
+              </Popconfirm>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

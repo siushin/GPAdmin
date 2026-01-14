@@ -34,6 +34,21 @@ export const SysParamFlag = {
 } as const;
 
 /**
+ * 受保护的角色编码列表
+ * 这些角色不允许删除
+ */
+export const PROTECTED_ROLE_CODES = ['normal_user'] as const;
+
+/**
+ * 检查角色是否受保护（不可删除）
+ * @param roleCode 角色编码
+ * @returns 是否受保护
+ */
+export const isProtectedRole = (roleCode: string): boolean => {
+  return PROTECTED_ROLE_CODES.includes(roleCode as any);
+};
+
+/**
  * 弹窗尺寸常量
  */
 export const MODAL_WIDTH = {

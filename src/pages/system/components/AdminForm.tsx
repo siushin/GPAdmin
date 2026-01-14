@@ -2,6 +2,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
   DrawerForm,
+  ProFormDependency,
   ProFormRadio,
   ProFormSelect,
   ProFormText,
@@ -9,7 +10,7 @@ import {
 import { Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { getDepartmentTreeDataForHtml } from '@/services/api/company';
-import { getCompanyList } from '@/services/api/system';
+import { getAdminRoles, getCompanyList } from '@/services/api/system';
 import { ensureAllFormFields } from '@/utils/constants';
 
 interface AdminFormProps {
@@ -32,6 +33,10 @@ const AdminForm: React.FC<AdminFormProps> = ({
     Array<{ label: string; value: number }>
   >([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [roleOptions, setRoleOptions] = useState<
+    Array<{ label: string; value: number }>
+  >([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<
     number | undefined
   >(undefined);
@@ -58,6 +63,48 @@ const AdminForm: React.FC<AdminFormProps> = ({
       });
     }
   }, [visible]);
+
+  // 加载角色列表
+  const loadRoleOptions = async (accountId?: number) => {
+    setLoadingRoles(true);
+    try {
+      // 如果有 accountId，获取该账号的角色；否则获取所有可用角色
+      const res = await getAdminRoles({ account_id: accountId || 0 });
+      if (res.code === 200 && res.data) {
+        setRoleOptions(
+          res.data.all_roles.map((item) => ({
+            label: item.role_name,
+            value: item.role_id,
+          })),
+        );
+        return res.data.checked_role_ids || [];
+      }
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    } finally {
+      setLoadingRoles(false);
+    }
+    return [];
+  };
+
+  // 加载角色选项
+  useEffect(() => {
+    if (visible) {
+      if (editingRecord?.account_id) {
+        // 编辑模式：加载角色并设置已选中的角色
+        loadRoleOptions(editingRecord.account_id).then((checkedRoleIds) => {
+          if (formRef.current && checkedRoleIds.length > 0) {
+            setTimeout(() => {
+              formRef.current?.setFieldsValue({ role_ids: checkedRoleIds });
+            }, 100);
+          }
+        });
+      } else {
+        // 新增模式：只加载角色选项
+        loadRoleOptions();
+      }
+    }
+  }, [visible, editingRecord?.account_id]);
 
   // 加载部门列表（根据选择的公司）
   const loadDepartmentOptions = async (companyId?: number) => {
@@ -91,7 +138,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
   // 监听公司选择变化，加载对应的部门列表
   useEffect(() => {
     if (visible) {
-      if (editingRecord && editingRecord.company_id) {
+      if (editingRecord?.company_id) {
         // 编辑模式下，如果有公司ID，立即加载对应的部门列表
         setSelectedCompanyId(editingRecord.company_id);
         loadDepartmentOptions(editingRecord.company_id);
@@ -184,6 +231,8 @@ const AdminForm: React.FC<AdminFormProps> = ({
           setDepartmentOptions([]);
           setLoadingDepartments(false);
           setSelectedCompanyId(undefined);
+          setRoleOptions([]);
+          setLoadingRoles(false);
           onCancel();
         }
       }}
@@ -197,6 +246,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           'email',
           'company_id',
           'department_ids',
+          'role_ids',
           'is_super',
           'status',
         ];
@@ -360,8 +410,40 @@ const AdminForm: React.FC<AdminFormProps> = ({
         rules={[{ required: true, message: '请选择是否超级管理员' }]}
         fieldProps={{
           disabled: editingRecord && editingRecord.username === 'admin',
+          onChange: (e) => {
+            // 切换为超管时，清空已选择的角色
+            if (e.target.value === 1 && formRef.current) {
+              formRef.current.setFieldsValue({ role_ids: [] });
+            }
+          },
         }}
       />
+      <ProFormDependency name={['is_super']}>
+        {({ is_super }) =>
+          is_super !== 1 && (
+            <ProFormSelect
+              name="role_ids"
+              label="分配角色"
+              options={roleOptions}
+              fieldProps={{
+                placeholder: loadingRoles
+                  ? '正在加载角色数据...'
+                  : '请选择角色',
+                mode: 'multiple',
+                showSearch: true,
+                filterOption: (input, option) =>
+                  (option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase()),
+                style: { minWidth: 200 },
+                maxTagCount: 'responsive',
+                loading: loadingRoles,
+              }}
+              extra="支持多选"
+            />
+          )
+        }
+      </ProFormDependency>
       <ProFormRadio.Group
         name="status"
         label="账号状态"

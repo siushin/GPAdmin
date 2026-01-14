@@ -36,6 +36,7 @@ import {
 import { dateRangeFieldProps } from '@/utils/datePresets';
 import UserDetailDrawer from './UserDetailDrawer';
 import UserForm from './UserForm';
+import UserRoleDrawer from './UserRoleDrawer';
 
 interface UserListProps {
   isPending?: boolean; // true: 待审核列表, false: 用户列表
@@ -59,6 +60,9 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
   );
   // 用户列表状态筛选：'all' | 0 | 1，默认 'all'
   const [statusFilter, setStatusFilter] = useState<'all' | 0 | 1>('all');
+  // 角色分配抽屉
+  const [roleDrawerVisible, setRoleDrawerVisible] = useState(false);
+  const [roleRecord, setRoleRecord] = useState<any>(null);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -73,6 +77,11 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
   const handleView = (record: any) => {
     setViewingRecord(record);
     setDetailVisible(true);
+  };
+
+  const handleAssignRole = (record: any) => {
+    setRoleRecord(record);
+    setRoleDrawerVisible(true);
   };
 
   const handleDelete = async (record: any) => {
@@ -127,7 +136,7 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
         if (data) {
           if (data.fail_count > 0) {
             message.warning(
-              `${data.message}${data.fail_usernames.length > 0 ? '，失败用户：' + data.fail_usernames.join('、') : ''}`,
+              `${data.message}${data.fail_usernames.length > 0 ? `，失败用户：${data.fail_usernames.join('、')}` : ''}`,
             );
           } else {
             message.success(data.message || '批量审核成功');
@@ -163,7 +172,7 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
         if (data) {
           if (data.fail_count > 0) {
             message.warning(
-              `${data.message}${data.fail_usernames.length > 0 ? '，失败用户：' + data.fail_usernames.join('、') : ''}`,
+              `${data.message}${data.fail_usernames.length > 0 ? `，失败用户：${data.fail_usernames.join('、')}` : ''}`,
             );
           } else {
             message.success(data.message || '批量删除成功');
@@ -321,94 +330,97 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
     {
       title: '操作',
       valueType: 'option',
-      width: isPending ? 200 : 150,
+      width: isPending ? 200 : 200,
       fixed: 'right',
       render: (_, record) => (
         <Space>
           <Button type="link" size="small" onClick={() => handleView(record)}>
             查看
           </Button>
-          {!isPending && (
-            <>
-              {record.status === 0 ? (
-                // 禁用状态，禁用按钮并显示 tooltip
-                <>
-                  <Tooltip title="禁用的用户不能编辑">
-                    <Button type="link" size="small" danger disabled>
-                      编辑
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="禁用的用户不能删除">
-                    <Button type="link" size="small" danger disabled>
-                      删除
-                    </Button>
-                  </Tooltip>
-                </>
-              ) : (
-                // 正常状态，正常显示按钮
-                <>
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => handleEdit(record)}
-                  >
+          {!isPending &&
+            (record.status === 0 ? (
+              // 禁用状态，禁用按钮并显示 tooltip
+              <>
+                <Tooltip title="禁用的用户不能编辑">
+                  <Button type="link" size="small" danger disabled>
                     编辑
                   </Button>
-                  <Popconfirm
-                    title="确定要删除这条数据吗？"
-                    onConfirm={() => handleDelete(record)}
-                  >
-                    <Button type="link" size="small" danger>
-                      删除
-                    </Button>
-                  </Popconfirm>
-                </>
-              )}
-            </>
-          )}
-          {isPending && activeTab !== 'rejected' && (
-            <>
-              {record.status === -2 ? (
-                // 已拒绝状态，禁用按钮并显示 tooltip
-                <>
-                  <Tooltip title="已拒绝的用户不能再次审核">
-                    <Button type="link" size="small" danger disabled>
-                      通过
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="已拒绝的用户不能再次审核">
-                    <Button type="link" size="small" danger disabled>
-                      拒绝
-                    </Button>
-                  </Tooltip>
-                </>
-              ) : (
-                // 待审核状态，正常显示按钮
-                <>
-                  <Popconfirm
-                    title="确定要通过审核吗？"
-                    onConfirm={() => handleAudit(record, 1)}
-                  >
-                    <Button
-                      type="link"
-                      size="small"
-                      style={{ color: '#52c41a' }}
-                    >
-                      通过
-                    </Button>
-                  </Popconfirm>
-                  <Popconfirm
-                    title="确定要拒绝审核吗？"
-                    onConfirm={() => handleAudit(record, -2)}
-                  >
-                    <Button type="link" size="small" danger>
-                      拒绝
-                    </Button>
-                  </Popconfirm>
-                </>
-              )}
-            </>
-          )}
+                </Tooltip>
+                <Tooltip title="禁用的用户不能分配角色">
+                  <Button type="link" size="small" disabled>
+                    分配角色
+                  </Button>
+                </Tooltip>
+                <Tooltip title="禁用的用户不能删除">
+                  <Button type="link" size="small" danger disabled>
+                    删除
+                  </Button>
+                </Tooltip>
+              </>
+            ) : (
+              // 正常状态，正常显示按钮
+              <>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => handleEdit(record)}
+                >
+                  编辑
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => handleAssignRole(record)}
+                >
+                  分配角色
+                </Button>
+                <Popconfirm
+                  title="确定要删除这条数据吗？"
+                  onConfirm={() => handleDelete(record)}
+                >
+                  <Button type="link" size="small" danger>
+                    删除
+                  </Button>
+                </Popconfirm>
+              </>
+            ))}
+          {isPending &&
+            activeTab !== 'rejected' &&
+            (record.status === -2 ? (
+              // 已拒绝状态，禁用按钮并显示 tooltip
+              <>
+                <Tooltip title="已拒绝的用户不能再次审核">
+                  <Button type="link" size="small" danger disabled>
+                    通过
+                  </Button>
+                </Tooltip>
+                <Tooltip title="已拒绝的用户不能再次审核">
+                  <Button type="link" size="small" danger disabled>
+                    拒绝
+                  </Button>
+                </Tooltip>
+              </>
+            ) : (
+              // 待审核状态，正常显示按钮
+              <>
+                <Popconfirm
+                  title="确定要通过审核吗？"
+                  onConfirm={() => handleAudit(record, 1)}
+                >
+                  <Button type="link" size="small" style={{ color: '#52c41a' }}>
+                    通过
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="确定要拒绝审核吗？"
+                  onConfirm={() => handleAudit(record, -2)}
+                >
+                  <Button type="link" size="small" danger>
+                    拒绝
+                  </Button>
+                </Popconfirm>
+              </>
+            ))}
         </Space>
       ),
     },
@@ -639,6 +651,17 @@ const UserList: React.FC<UserListProps> = ({ isPending = false }) => {
           </div>
         </Modal>
       )}
+      <UserRoleDrawer
+        visible={roleDrawerVisible}
+        record={roleRecord}
+        onClose={() => {
+          setRoleDrawerVisible(false);
+          setRoleRecord(null);
+        }}
+        onSuccess={() => {
+          actionRef.current?.reload();
+        }}
+      />
     </PageContainer>
   );
 };

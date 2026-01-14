@@ -207,6 +207,51 @@ export async function getAccountDepartments(
   });
 }
 
+/** 获取管理员角色 POST /api/admin/admin/getRoles */
+export async function getAdminRoles(
+  body: {
+    account_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      all_roles: Array<{
+        role_id: number;
+        role_name: string;
+        role_code: string;
+        description?: string;
+      }>;
+      checked_role_ids: number[];
+    };
+  }>('/api/admin/admin/getRoles', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新管理员角色 POST /api/admin/admin/updateRoles */
+export async function updateAdminRoles(
+  body: {
+    account_id: number;
+    role_ids: number[];
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/admin/updateRoles', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 获取管理员日志 POST /api/admin/admin/getLogs */
 export async function getAdminLogs(
   params: {
@@ -529,6 +574,62 @@ export async function deleteRoleMenu(
     message: string;
     data?: any;
   }>('/api/admin/roleMenu/delete', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取角色菜单（按模块分组） POST /api/admin/role/getMenus */
+export async function getRoleMenus(
+  body: {
+    role_id: number;
+    account_type: 'admin' | 'user';
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      modules_with_menus: Array<{
+        module: {
+          module_id: number;
+          module_name: string;
+          module_alias: string;
+        };
+        menus: Array<{
+          menu_id: number;
+          menu_name: string;
+          menu_key: string;
+          menu_type: string;
+          parent_id: number;
+          is_required?: number;
+          children?: any[];
+        }>;
+      }>;
+      checked_menu_ids: number[];
+    };
+  }>('/api/admin/role/getMenus', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 更新角色菜单 POST /api/admin/role/updateMenus */
+export async function updateRoleMenus(
+  body: {
+    role_id: number;
+    menu_ids: number[];
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/role/updateMenus', {
     method: 'POST',
     data: body,
     ...(options || {}),

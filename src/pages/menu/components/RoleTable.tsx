@@ -1,7 +1,7 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { MenuOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { App, Button, Popconfirm, Space, Tag } from 'antd';
+import { App, Button, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   addRole,
@@ -12,10 +12,12 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  isProtectedRole,
   processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
 import RoleForm from './RoleForm';
+import RoleMenuDrawer from './RoleMenuDrawer';
 
 interface RoleTableProps {
   accountType: 'admin' | 'user';
@@ -27,6 +29,8 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [menuDrawerVisible, setMenuDrawerVisible] = useState(false);
+  const [currentRoleForMenu, setCurrentRoleForMenu] = useState<any>(null);
 
   // 当 accountType 变化时，重新加载表格数据
   useEffect(() => {
@@ -41,6 +45,11 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
   const handleEdit = (record: any) => {
     setEditingRecord(record);
     setFormVisible(true);
+  };
+
+  const handleMenuClick = (record: any) => {
+    setCurrentRoleForMenu(record);
+    setMenuDrawerVisible(true);
   };
 
   const handleDelete = async (record: any) => {
@@ -140,23 +149,45 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
     {
       title: '操作',
       valueType: 'option',
-      width: 150,
+      width: 200,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条数据吗？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) => {
+        const isProtected = isProtectedRole(record.role_code);
+        return (
+          <Space>
+            <Button type="link" size="small" onClick={() => handleEdit(record)}>
+              编辑
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            {/* 超级管理员不显示菜单按钮 */}
+            {record.role_code !== 'super_admin' && (
+              <Button
+                type="link"
+                size="small"
+                icon={<MenuOutlined />}
+                onClick={() => handleMenuClick(record)}
+              >
+                菜单
+              </Button>
+            )}
+            {isProtected ? (
+              <Tooltip title="系统默认角色，禁止删除">
+                <Button type="link" size="small" danger disabled>
+                  删除
+                </Button>
+              </Tooltip>
+            ) : (
+              <Popconfirm
+                title="确定要删除这条数据吗？"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button type="link" size="small" danger>
+                  删除
+                </Button>
+              </Popconfirm>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -221,6 +252,15 @@ const RoleTable: React.FC<RoleTableProps> = ({ accountType }) => {
           setEditingRecord(null);
         }}
         onSubmit={handleFormSubmit}
+      />
+      <RoleMenuDrawer
+        visible={menuDrawerVisible}
+        roleRecord={currentRoleForMenu}
+        accountType={accountType}
+        onClose={() => {
+          setMenuDrawerVisible(false);
+          setCurrentRoleForMenu(null);
+        }}
       />
     </>
   );
