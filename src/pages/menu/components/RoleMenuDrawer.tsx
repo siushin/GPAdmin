@@ -33,7 +33,7 @@ interface ModuleData {
   module_id: number;
   module_name: string;
   module_alias: string;
-  module_title: string;
+  module_title?: string;
 }
 
 interface MenuData {
@@ -262,9 +262,15 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
   };
 
   // 检查菜单组是否是从其他模块移动过来的
-  const isGroupMovedIn = (group: MenuGroup): boolean => {
+  // 只有当 original_module_id 存在且与当前模块ID不同时，才算是移入的
+  const isGroupMovedIn = (
+    group: MenuGroup,
+    currentModuleId: number,
+  ): boolean => {
     return (
-      group.originalModuleId !== null && group.originalModuleId !== undefined
+      group.originalModuleId !== null &&
+      group.originalModuleId !== undefined &&
+      group.originalModuleId !== currentModuleId
     );
   };
 
@@ -360,7 +366,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     let movedInCount = 0;
 
     groups.forEach((group) => {
-      if (isGroupMovedIn(group)) {
+      if (isGroupMovedIn(group, moduleId)) {
         movedInCount++;
       } else {
         totalNative += group.allMenuIds.length;
@@ -384,7 +390,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       let moduleHasChecked = false;
 
       groups.forEach((group) => {
-        if (isGroupMovedIn(group)) {
+        if (isGroupMovedIn(group, item.module.module_id)) {
           totalMovedIn++;
         } else {
           const checkedInGroup = group.allMenuIds.filter((id) =>
@@ -420,7 +426,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     const nativeMenuIds: number[] = [];
 
     groups.forEach((group) => {
-      if (!isGroupMovedIn(group)) {
+      if (!isGroupMovedIn(group, moduleId)) {
         nativeMenuIds.push(...group.allMenuIds);
       }
     });
@@ -440,7 +446,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     const nativeMenuIdsSet = new Set<number>();
 
     groups.forEach((group) => {
-      if (!isGroupMovedIn(group)) {
+      if (!isGroupMovedIn(group, moduleId)) {
         group.allMenuIds.forEach((id) => {
           nativeMenuIdsSet.add(id);
         });
@@ -523,7 +529,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
     menusByModule.forEach((item) => {
       const groups = convertToMenuGroups(item.menus, item.module.module_id);
       groups.forEach((group) => {
-        if (isGroupMovedIn(group)) {
+        if (isGroupMovedIn(group, item.module.module_id)) {
           group.allMenuIds.forEach((id) => {
             movedInMenuIds.add(id);
           });
@@ -583,7 +589,7 @@ const RoleMenuDrawer: React.FC<RoleMenuDrawerProps> = ({
       <div>
         {groups.map((group, index) => {
           const groupTitle = getGroupTitle(group);
-          const isMovedIn = isGroupMovedIn(group);
+          const isMovedIn = isGroupMovedIn(group, moduleId);
 
           // 如果是从其他模块移入的，显示禁用状态
           if (isMovedIn) {
