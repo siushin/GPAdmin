@@ -472,6 +472,43 @@ export async function deleteMenu(
   });
 }
 
+/** 移动菜单组到新模块 POST /api/admin/menu/moveToModule */
+export async function moveMenuToModule(
+  body: {
+    menu_ids: number[];
+    target_module_id: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/menu/moveToModule', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 将菜单组移回原模块 POST /api/admin/menu/moveBackToOriginal */
+export async function moveMenuBackToOriginal(
+  body: {
+    menu_ids: number[];
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/menu/moveBackToOriginal', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
 // ========== 用户角色关联 API ==========
 
 /** 用户角色关联列表 POST /api/admin/userRole/index */
@@ -605,6 +642,7 @@ export async function getRoleMenus(
           menu_type: string;
           parent_id: number;
           is_required?: number;
+          original_module_id?: number | null;
           children?: any[];
         }>;
       }>;
@@ -632,6 +670,23 @@ export async function updateRoleMenus(
   }>('/api/admin/role/updateMenus', {
     method: 'POST',
     data: body,
+    ...(options || {}),
+  });
+}
+
+/** 获取所有模块列表 POST /api/admin/role/getModuleList */
+export async function getModuleList(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: Array<{
+      module_id: number;
+      module_name: string;
+      module_alias: string;
+    }>;
+  }>('/api/admin/role/getModuleList', {
+    method: 'POST',
+    data: {},
     ...(options || {}),
   });
 }

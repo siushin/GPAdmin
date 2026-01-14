@@ -2,6 +2,7 @@ export interface AppItem {
   module_id?: number;
   module_name: string;
   module_alias: string;
+  module_title: string;
   module_desc: string;
   module_icon?: string;
   module_version?: string;
@@ -24,7 +25,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 1,
     module_name: 'Base',
-    module_alias: '基础服务',
+    module_alias: 'base',
+    module_title: '基础服务',
     module_desc:
       'LaravelAPI 基础服务，提供用户认证、权限管理、日志记录等核心功能',
     module_icon: 'AppstoreOutlined',
@@ -41,7 +43,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 2,
     module_name: 'Sms',
-    module_alias: '短信服务',
+    module_alias: 'sms',
+    module_title: '短信服务',
     module_desc: '提供短信发送、验证码管理等功能，支持多种短信服务商',
     module_icon: 'MessageOutlined',
     module_version: '1.0.0',
@@ -57,7 +60,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 3,
     module_name: 'Payment',
-    module_alias: '支付服务',
+    module_alias: 'payment',
+    module_title: '支付服务',
     module_desc: '集成多种支付方式，包括支付宝、微信支付、银联等',
     module_icon: 'PayCircleOutlined',
     module_version: '1.0.0',
@@ -72,7 +76,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 4,
     module_name: 'Oss',
-    module_alias: '对象存储',
+    module_alias: 'oss',
+    module_title: '对象存储',
     module_desc: '支持阿里云OSS、腾讯云COS、七牛云等对象存储服务',
     module_icon: 'CloudUploadOutlined',
     module_version: '1.0.0',
@@ -87,7 +92,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 5,
     module_name: 'Notification',
-    module_alias: '消息通知',
+    module_alias: 'notification',
+    module_title: '消息通知',
     module_desc: '统一的消息通知服务，支持邮件、短信、站内信等多种通知方式',
     module_icon: 'BellOutlined',
     module_version: '1.0.0',
@@ -102,7 +108,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 6,
     module_name: 'Analytics',
-    module_alias: '数据分析',
+    module_alias: 'analytics',
+    module_title: '数据分析',
     module_desc: '提供数据统计、分析报表等功能，帮助了解业务运营情况',
     module_icon: 'LineChartOutlined',
     module_version: '1.0.0',
@@ -117,7 +124,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 7,
     module_name: 'Search',
-    module_alias: '搜索服务',
+    module_alias: 'search',
+    module_title: '搜索服务',
     module_desc: '全文搜索服务，支持 Elasticsearch、Algolia 等搜索引擎',
     module_icon: 'SearchOutlined',
     module_version: '1.0.0',
@@ -132,7 +140,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 8,
     module_name: 'Cache',
-    module_alias: '缓存服务',
+    module_alias: 'cache',
+    module_title: '缓存服务',
     module_desc: '高性能缓存服务，支持 Redis、Memcached 等缓存系统',
     module_icon: 'ThunderboltOutlined',
     module_version: '1.0.0',
@@ -147,7 +156,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 9,
     module_name: 'Queue',
-    module_alias: '队列服务',
+    module_alias: 'queue',
+    module_title: '队列服务',
     module_desc: '异步任务队列服务，支持 RabbitMQ、Kafka 等消息队列',
     module_icon: 'OrderedListOutlined',
     module_version: '1.0.0',
@@ -162,7 +172,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 10,
     module_name: 'Log',
-    module_alias: '日志服务',
+    module_alias: 'log',
+    module_title: '日志服务',
     module_desc: '集中式日志管理服务，支持日志收集、查询、分析等功能',
     module_icon: 'FileTextOutlined',
     module_version: '1.0.0',
@@ -177,7 +188,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 11,
     module_name: 'Monitor',
-    module_alias: '监控服务',
+    module_alias: 'monitor',
+    module_title: '监控服务',
     module_desc: '系统监控服务，提供性能监控、告警通知等功能',
     module_icon: 'DashboardOutlined',
     module_version: '1.0.0',
@@ -192,7 +204,8 @@ export const mockApps: AppItem[] = [
   {
     module_id: 12,
     module_name: 'ApiGateway',
-    module_alias: 'API网关',
+    module_alias: 'api-gateway',
+    module_title: 'API网关',
     module_desc: 'API 网关服务，提供路由、限流、鉴权等功能',
     module_icon: 'ApiOutlined',
     module_version: '1.0.0',

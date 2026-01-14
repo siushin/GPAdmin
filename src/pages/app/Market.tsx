@@ -57,6 +57,9 @@ const Market: React.FC = () => {
           const matchAlias = app.module_alias
             .toLowerCase()
             .includes(keywordLower);
+          const matchTitle = app.module_title
+            .toLowerCase()
+            .includes(keywordLower);
           const matchName = app.module_name
             .toLowerCase()
             .includes(keywordLower);
@@ -66,7 +69,13 @@ const Market: React.FC = () => {
           const matchKeywords = app.module_keywords.some((kw) =>
             kw.toLowerCase().includes(keywordLower),
           );
-          return matchAlias || matchName || matchDescription || matchKeywords;
+          return (
+            matchAlias ||
+            matchTitle ||
+            matchName ||
+            matchDescription ||
+            matchKeywords
+          );
         });
       }
 
@@ -143,7 +152,7 @@ const Market: React.FC = () => {
         <Form
           layout="inline"
           form={form}
-          onValuesChange={(changedValues, allValues) => {
+          onValuesChange={(_changedValues, allValues) => {
             handleSourceChange(allValues.source || []);
           }}
         >
@@ -209,7 +218,7 @@ const Market: React.FC = () => {
                             }}
                           />
                           <Title level={5} style={{ margin: 0, flex: 1 }}>
-                            {app.module_alias}
+                            {app.module_title}
                           </Title>
                           {app.module_status === 1 ? (
                             <Tag icon={<CheckCircleOutlined />} color="success">

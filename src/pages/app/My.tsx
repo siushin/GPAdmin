@@ -129,7 +129,7 @@ const My: React.FC = () => {
         <Form
           layout="inline"
           form={form}
-          onValuesChange={(changedValues, allValues) => {
+          onValuesChange={(_changedValues, allValues) => {
             handleSourceChange(allValues.source || []);
           }}
         >
@@ -195,7 +195,7 @@ const My: React.FC = () => {
                             }}
                           />
                           <Title level={5} style={{ margin: 0, flex: 1 }}>
-                            {app.module_alias}
+                            {app.module_title}
                           </Title>
                           {app.module_status === 1 ? (
                             <Tag icon={<CheckCircleOutlined />} color="success">
