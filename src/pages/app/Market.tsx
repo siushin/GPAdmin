@@ -2,14 +2,17 @@ import {
   AppstoreOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import {
+  Button,
   Card,
   Col,
   Empty,
   Form,
   Input,
+  message,
   Pagination,
   Row,
   Spin,
@@ -17,9 +20,33 @@ import {
   Typography,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
+import { getMarketApps, installModule } from '@/services/api/app';
 import StandardFormRow from './components/StandardFormRow';
 import TagSelect from './components/TagSelect';
-import { type AppItem, mockApps } from './mock';
+
+// AppItem 类型定义（从 mock.ts 移过来，因为其他地方可能还在使用）
+export interface AppItem {
+  module_id?: number;
+  module_name: string;
+  module_alias: string;
+  module_title: string;
+  module_desc: string;
+  module_icon?: string;
+  module_version?: string;
+  module_priority: number;
+  module_source: 'official' | 'third_party' | 'custom';
+  module_status: 0 | 1; // 0禁用, 1启用
+  module_is_core: 0 | 1; // 0否, 1是
+  module_is_installed: 0 | 1; // 0否, 1是
+  module_installed_at?: string;
+  module_author?: string;
+  module_author_email?: string;
+  module_homepage?: string;
+  module_keywords: string[];
+  module_providers?: string[];
+  module_dependencies?: string[];
+  is_account_installed?: 0 | 1; // 当前账号是否已安装: 0否, 1是
+}
 
 const { Title, Paragraph } = Typography;
 const FormItem = Form.Item;
@@ -41,48 +68,28 @@ const Market: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(12);
 
   useEffect(() => {
-    fetchApps();
+    fetchApps(searchKeyword, selectedSources);
   }, []);
 
-  const fetchApps = async (keyword?: string) => {
+  const fetchApps = async (keyword?: string, sources?: string[]) => {
     try {
       setLoading(true);
-      // 使用 mock 数据
-      let data = [...mockApps];
+      // 请求后端接口
+      const response = await getMarketApps({
+        keyword: keyword || '',
+        source: sources && sources.length > 0 ? sources : undefined,
+      });
 
-      // 如果有搜索关键词，进行筛选
-      if (keyword !== undefined && keyword !== '') {
-        const keywordLower = keyword.toLowerCase();
-        data = data.filter((app) => {
-          const matchAlias = app.module_alias
-            .toLowerCase()
-            .includes(keywordLower);
-          const matchTitle = app.module_title
-            .toLowerCase()
-            .includes(keywordLower);
-          const matchName = app.module_name
-            .toLowerCase()
-            .includes(keywordLower);
-          const matchDescription = app.module_desc
-            .toLowerCase()
-            .includes(keywordLower);
-          const matchKeywords = app.module_keywords.some((kw) =>
-            kw.toLowerCase().includes(keywordLower),
-          );
-          return (
-            matchAlias ||
-            matchTitle ||
-            matchName ||
-            matchDescription ||
-            matchKeywords
-          );
-        });
+      if (response && (response as any).code === 200) {
+        const data = (response as any).data || [];
+        setApps(data);
+      } else {
+        console.error('获取应用列表失败:', response);
+        setApps([]);
       }
-
-      setApps(data);
     } catch (error) {
       console.error('获取应用列表失败:', error);
-      setApps(mockApps);
+      setApps([]);
     } finally {
       setLoading(false);
     }
@@ -91,7 +98,7 @@ const Market: React.FC = () => {
   const handleFormSubmit = (value: string) => {
     setSearchKeyword(value);
     setCurrentPage(1);
-    fetchApps(value);
+    fetchApps(value, selectedSources);
   };
 
   // 获取所有可用的来源
@@ -124,14 +131,40 @@ const Market: React.FC = () => {
   }, [filteredApps, currentPage, pageSize]);
 
   const handleSourceChange = (values: (string | number)[]) => {
-    setSelectedSources(values as string[]);
+    const sources = values as string[];
+    setSelectedSources(sources);
     setCurrentPage(1);
+    fetchApps(searchKeyword, sources);
   };
 
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
     if (size) {
       setPageSize(size);
+    }
+  };
+
+  const handleInstall = async (app: AppItem) => {
+    if (!app.module_id) {
+      message.error('模块ID不存在');
+      return;
+    }
+
+    try {
+      const response = await installModule({
+        data: { module_id: app.module_id },
+      });
+
+      if (response.code === 200) {
+        message.success('安装成功');
+        // 刷新应用列表
+        fetchApps(searchKeyword, selectedSources);
+      } else {
+        message.error(response.message || '安装失败');
+      }
+    } catch (error: any) {
+      console.error('安装模块失败:', error);
+      message.error(error?.message || '安装模块失败');
     }
   };
 
@@ -158,7 +191,7 @@ const Market: React.FC = () => {
         >
           <StandardFormRow title="应用来源" block style={{ paddingBottom: 11 }}>
             <FormItem name="source">
-              <TagSelect expandable>
+              <TagSelect>
                 {availableSources.map((source) => (
                   <TagSelect.Option value={source} key={source}>
                     {sourceLabels[source] || source}
@@ -255,8 +288,15 @@ const Market: React.FC = () => {
                       >
                         模块名: {app.module_name}
                       </div>
-                      {app.module_source && (
-                        <div style={{ marginTop: 8 }}>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {app.module_source && (
                           <Tag
                             color={
                               app.module_source === 'official'
@@ -267,8 +307,23 @@ const Market: React.FC = () => {
                             {sourceLabels[app.module_source] ||
                               app.module_source}
                           </Tag>
-                        </div>
-                      )}
+                        )}
+                        {!app.module_source && <div />}
+                        {app.is_account_installed === 1 ? (
+                          <span style={{ color: '#999', fontSize: 12 }}>
+                            已安装
+                          </span>
+                        ) : (
+                          <Button
+                            type="primary"
+                            size="small"
+                            icon={<DownloadOutlined />}
+                            onClick={() => handleInstall(app)}
+                          >
+                            安装
+                          </Button>
+                        )}
+                      </div>
                     </Card>
                   </Col>
                 ))}

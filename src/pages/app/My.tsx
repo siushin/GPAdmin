@@ -2,6 +2,7 @@ import {
   AppstoreOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DeleteOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
@@ -15,6 +16,7 @@ import {
   Modal,
   message,
   Pagination,
+  Popconfirm,
   Radio,
   Row,
   Spin,
@@ -22,10 +24,10 @@ import {
   Typography,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
-import { getMyApps, updateModules } from '@/services/api/app';
+import { getMyApps, uninstallModule, updateModules } from '@/services/api/app';
 import StandardFormRow from './components/StandardFormRow';
 import TagSelect from './components/TagSelect';
-import type { AppItem } from './mock';
+import type { AppItem } from './Market';
 
 const { Title, Paragraph } = Typography;
 const FormItem = Form.Item;
@@ -179,6 +181,25 @@ const My: React.FC = () => {
     setUpdateType('all');
   };
 
+  const handleUninstall = async (app: AppItem) => {
+    try {
+      const response = await uninstallModule({
+        data: { module_id: app.module_id },
+      });
+
+      if (response.code === 200) {
+        message.success('卸载模块成功');
+        // 刷新应用列表
+        fetchApps(searchKeyword);
+      } else {
+        message.error(response.message || '卸载模块失败');
+      }
+    } catch (error: any) {
+      console.error('卸载模块失败:', error);
+      message.error(error?.message || '卸载模块失败');
+    }
+  };
+
   return (
     <PageContainer
       title="我的应用"
@@ -214,7 +235,7 @@ const My: React.FC = () => {
         >
           <StandardFormRow title="应用来源" block style={{ paddingBottom: 11 }}>
             <FormItem name="source">
-              <TagSelect expandable>
+              <TagSelect>
                 {availableSources.map((source) => (
                   <TagSelect.Option value={source} key={source}>
                     {sourceLabels[source] || source}
@@ -311,8 +332,15 @@ const My: React.FC = () => {
                       >
                         模块名: {app.module_name}
                       </div>
-                      {app.module_source && (
-                        <div style={{ marginTop: 8 }}>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {app.module_source && (
                           <Tag
                             color={
                               app.module_source === 'official'
@@ -323,8 +351,29 @@ const My: React.FC = () => {
                             {sourceLabels[app.module_source] ||
                               app.module_source}
                           </Tag>
-                        </div>
-                      )}
+                        )}
+                        {!app.module_source && <div />}
+                        {app.module_is_core !== 1 && (
+                          <Popconfirm
+                            title="确定要卸载此模块吗？"
+                            description="卸载后将删除模块代码、菜单数据和账号关联，此操作不可恢复！"
+                            onConfirm={() => handleUninstall(app)}
+                            okText="确定"
+                            cancelText="取消"
+                            okButtonProps={{ danger: true }}
+                          >
+                            <Button
+                              type="link"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                            >
+                              卸载
+                            </Button>
+                          </Popconfirm>
+                        )}
+                        {app.module_is_core === 1 && <div />}
+                      </div>
                     </Card>
                   </Col>
                 ))}

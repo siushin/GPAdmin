@@ -61,6 +61,9 @@ const TagSelect: FC<TagSelectProps> & {
     actionsText = {},
   } = props;
   const [expand, setExpand] = useState<boolean>(false);
+  // 用于跟踪"全部"是否被用户明确点击过（而不是因为所有选项被选中而自动选中）
+  const [allExplicitlyChecked, setAllExplicitlyChecked] =
+    useState<boolean>(false);
 
   const [value, setValue] = useMergedState<(string | number)[]>(
     props.defaultValue || [],
@@ -85,13 +88,20 @@ const TagSelect: FC<TagSelectProps> & {
     return checkedTags || [];
   };
   const onSelectAll = (checked: boolean) => {
-    let checkedTags: (string | number)[] = [];
     if (checked) {
-      checkedTags = getAllTags();
+      // 用户选择了"全部"，清空所有具体选项，只保留"全部"的选中状态
+      setAllExplicitlyChecked(true);
+      setValue([]); // 清空具体选项
+    } else {
+      // 用户取消选中"全部"
+      setAllExplicitlyChecked(false);
+      setValue([]);
     }
-    setValue(checkedTags);
   };
   const handleTagChange = (tag: string | number, checked: boolean) => {
+    // 当用户点击具体选项时，先清除"全部"的选中状态
+    setAllExplicitlyChecked(false);
+
     const checkedTags: (string | number)[] = [...(value || [])];
     const index = checkedTags.indexOf(tag);
     if (checked && index === -1) {
@@ -101,7 +111,9 @@ const TagSelect: FC<TagSelectProps> & {
     }
     setValue(checkedTags);
   };
-  const checkedAll = getAllTags().length === value?.length;
+  // "全部"只在用户明确点击时才显示为选中状态
+  // 当选择了具体选项时，"全部"不应该被选中
+  const checkedAll = allExplicitlyChecked && (value?.length || 0) === 0;
   const {
     expandText = '展开',
     collapseText = '收起',
