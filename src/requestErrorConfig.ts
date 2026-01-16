@@ -165,8 +165,21 @@ export const errorConfig: RequestConfig = {
           // 静默处理，不显示错误消息
           return response;
         }
-        const errorMsg = data.message || '请求失败！';
-        message.error(errorMsg);
+
+        // 检查是否是登录接口，如果是则不在这里显示错误消息（由调用方处理）
+        const requestUrl =
+          (response as any).config?.url ||
+          (response as any).request?.responseURL ||
+          '';
+        const isLoginRequest =
+          requestUrl.includes('/api/login/account') ||
+          requestUrl.includes('/api/login/code');
+
+        // 如果不是登录接口，显示错误消息
+        if (!isLoginRequest) {
+          const errorMsg = data.message || '请求失败！';
+          message.error(errorMsg);
+        }
       }
       return response;
     },

@@ -32,6 +32,36 @@ export async function getFakeCaptcha(
   });
 }
 
+/** 手机号验证码登录接口 POST /api/login/code */
+export async function loginByCode(
+  body: { phone: string; code: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.LoginResult>('/api/login/code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 发送验证码接口 POST /api/sms/send */
+export async function sendCaptcha(
+  body: { phone: string; type: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.FakeCaptcha>('/api/sms/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** 登录接口 POST /api/login/outLogin */
 export async function outLogin(options?: { [key: string]: any }) {
   return request<Record<string, any>>('/api/login/outLogin', {

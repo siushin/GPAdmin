@@ -200,7 +200,11 @@ export async function getInitialState(): Promise<{
       const msg = await queryCurrentUser({
         skipErrorHandler: true,
       });
-      return msg.data;
+      // 后端返回格式：{ code: 200, data: {...} }
+      if ((msg as any).code === 200 && (msg as any).data) {
+        return (msg as any).data;
+      }
+      return msg as API.CurrentUser;
     } catch (_error) {
       history.push(loginPath);
     }
@@ -419,26 +423,6 @@ export const layout: RunTimeLayoutConfig = ({
         history.replace('/workbench');
       }
     },
-    bgLayoutImgList: [
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/D2LWSqNny4sAAAAAAAAAAAAAFl94AQBr',
-        left: 85,
-        bottom: 100,
-        height: '303px',
-      },
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/C2TWRpJpiC0AAAAAAAAAAAAAFl94AQBr',
-        bottom: -68,
-        right: -45,
-        height: '303px',
-      },
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/F6vSTbj8KpYAAAAAAAAAAAAAFl94AQBr',
-        bottom: 0,
-        left: 0,
-        width: '331px',
-      },
-    ],
     links: isDev
       ? [
           <Link key="doc" to="//doc.gpadmin.siushin.com/" target="_blank">

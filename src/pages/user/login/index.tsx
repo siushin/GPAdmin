@@ -30,8 +30,11 @@ import { createStyles } from 'antd-style';
 import React, { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
-import { login } from '@/services/ant-design-pro/api';
-import { loginByCode, sendCaptcha } from '@/services/ant-design-pro/login';
+import {
+  login,
+  loginByCode,
+  sendCaptcha,
+} from '@/services/ant-design-pro/login';
 import { getUserMenus } from '@/services/api/user';
 import { saveToken } from '@/utils/token';
 import Settings from '../../../../config/defaultSettings';
@@ -225,17 +228,21 @@ const Login: React.FC = () => {
   const handleSubmit = async (values: API.LoginParams) => {
     try {
       // 根据登录类型调用不同的登录接口
+      // 使用 skipErrorHandler 避免错误被拦截器处理，由我们的 catch 块统一处理
       let msg: any;
       if (type === 'phone') {
         // 手机号验证码登录
         const formValues = values as any;
-        msg = await loginByCode({
-          phone: formValues.mobile || '',
-          code: formValues.captcha || '',
-        });
+        msg = await loginByCode(
+          {
+            phone: formValues.mobile || '',
+            code: formValues.captcha || '',
+          },
+          { skipErrorHandler: true },
+        );
       } else {
         // 账号密码登录
-        msg = await login({ ...values, type });
+        msg = await login({ ...values, type }, { skipErrorHandler: true });
       }
 
       // 后端统一响应标准：code === 200 表示成功
@@ -325,12 +332,19 @@ const Login: React.FC = () => {
       const errorMsg = (msg as any).message || defaultErrorMsg;
       message.error(errorMsg);
       setUserLoginState({ ...msg, status: 'error' });
-    } catch (error) {
-      const defaultLoginFailureMessage = intl.formatMessage({
-        id: 'pages.login.failure',
-        defaultMessage: '登录失败，请重试！',
-      });
-      message.error(defaultLoginFailureMessage);
+    } catch (error: any) {
+      // 优先显示后端返回的错误信息
+      const errorMsg =
+        error?.info?.errorMessage ||
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error?.message ||
+        intl.formatMessage({
+          id: 'pages.login.failure',
+          defaultMessage: '登录失败，请重试！',
+        });
+      message.error(errorMsg);
+      setUserLoginState({ status: 'error', type: type });
     }
   };
   const { status, type: loginType } = userLoginState;
