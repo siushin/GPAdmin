@@ -217,6 +217,22 @@ export async function deleteAnnouncement(
   });
 }
 
+/** 获取公告列表搜索数据 POST /api/admin/announcement/getAnnouncementListSearchData */
+export async function getAnnouncementListSearchData(options?: {
+  [key: string]: any;
+}) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      position?: Array<{ label: string; value: string }>;
+    };
+  }>('/api/admin/announcement/getAnnouncementListSearchData', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 // ========== 通知查看记录管理 API ==========
 
 /** 通知查看记录列表 POST /api/admin/notificationRead/index */

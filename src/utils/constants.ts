@@ -105,3 +105,23 @@ export const ensureAllFormFields = (
   });
   return completeValues;
 };
+
+/**
+ * 目标平台名称映射
+ */
+export const PLATFORM_MAP: Record<string, string> = {
+  all: '全平台',
+  user: '用户端',
+  admin: '管理端',
+  miniapp: '小程序',
+};
+
+/**
+ * 目标平台排序规则
+ */
+export const PLATFORM_SORT_ORDER: Record<string, number> = {
+  all: 0,
+  user: 1,
+  admin: 2,
+  miniapp: 3,
+};

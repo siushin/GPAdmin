@@ -3,16 +3,19 @@ import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   addAnnouncement,
   deleteAnnouncement,
   getAnnouncementList,
+  getAnnouncementListSearchData,
   updateAnnouncement,
 } from '@/services/api/notification';
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  PLATFORM_MAP,
+  PLATFORM_SORT_ORDER,
   processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
@@ -30,6 +33,7 @@ const Announcement: React.FC = () => {
   const [viewingRecord, setViewingRecord] = useState<any>(null);
   const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
   const [detailRecord, setDetailRecord] = useState<any>(null);
+  const [positionList, setPositionList] = useState<string[]>([]);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -107,6 +111,26 @@ const Announcement: React.FC = () => {
     setDetailDrawerVisible(true);
   };
 
+  // 获取搜索数据
+  useEffect(() => {
+    const fetchSearchData = async () => {
+      try {
+        const response = await getAnnouncementListSearchData();
+        if (response.code === 200 && response.data) {
+          const positionData = response.data.position || [];
+          setPositionList(
+            positionData.map(
+              (item: { label: string; value: string }) => item.value,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error('获取搜索数据失败:', error);
+      }
+    };
+    fetchSearchData();
+  }, []);
+
   const columns: ProColumns<any>[] = [
     {
       title: '序号',
@@ -173,30 +197,14 @@ const Announcement: React.FC = () => {
           .filter(Boolean);
         if (platforms.length === 0) return '';
 
-        // 平台名称映射
-        const platformMap: Record<string, string> = {
-          all: '全平台',
-          user: '用户端',
-          admin: '管理端',
-          miniapp: '小程序',
-        };
-
-        // 排序规则：all 排在最前面，然后是 user, admin, miniapp
-        const sortOrder: Record<string, number> = {
-          all: 0,
-          user: 1,
-          admin: 2,
-          miniapp: 3,
-        };
-
         // 排序并转换为中文名称
         const sortedPlatforms = platforms
           .sort((a: string, b: string) => {
-            const orderA = sortOrder[a] ?? 999;
-            const orderB = sortOrder[b] ?? 999;
+            const orderA = PLATFORM_SORT_ORDER[a] ?? 999;
+            const orderB = PLATFORM_SORT_ORDER[b] ?? 999;
             return orderA - orderB;
           })
-          .map((p: string) => platformMap[p] || p);
+          .map((p: string) => PLATFORM_MAP[p] || p);
 
         return sortedPlatforms.join('、');
       },
@@ -205,8 +213,18 @@ const Announcement: React.FC = () => {
       title: '显示位置',
       dataIndex: 'position',
       width: 120,
+      valueType: 'select',
+      valueEnum: positionList.reduce(
+        (acc, position) => {
+          acc[position] = { text: position };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
       fieldProps: {
-        placeholder: '请输入显示位置',
+        placeholder: '请选择显示位置',
+        showSearch: true,
+        allowClear: true,
       },
     },
     {

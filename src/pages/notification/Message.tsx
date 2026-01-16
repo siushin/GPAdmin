@@ -13,6 +13,8 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGINATION,
+  PLATFORM_MAP,
+  PLATFORM_SORT_ORDER,
   processFormValues,
   TABLE_SIZE,
 } from '@/utils/constants';
@@ -193,30 +195,14 @@ const Message: React.FC = () => {
           .filter(Boolean);
         if (platforms.length === 0) return '';
 
-        // 平台名称映射
-        const platformMap: Record<string, string> = {
-          all: '全平台',
-          user: '用户端',
-          admin: '管理端',
-          miniapp: '小程序',
-        };
-
-        // 排序规则：all 排在最前面，然后是 user, admin, miniapp
-        const sortOrder: Record<string, number> = {
-          all: 0,
-          user: 1,
-          admin: 2,
-          miniapp: 3,
-        };
-
         // 排序并转换为中文名称
         const sortedPlatforms = platforms
           .sort((a: string, b: string) => {
-            const orderA = sortOrder[a] ?? 999;
-            const orderB = sortOrder[b] ?? 999;
+            const orderA = PLATFORM_SORT_ORDER[a] ?? 999;
+            const orderB = PLATFORM_SORT_ORDER[b] ?? 999;
             return orderA - orderB;
           })
-          .map((p: string) => platformMap[p] || p);
+          .map((p: string) => PLATFORM_MAP[p] || p);
 
         return sortedPlatforms.join('、');
       },
