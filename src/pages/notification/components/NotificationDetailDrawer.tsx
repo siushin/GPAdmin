@@ -2,7 +2,7 @@ import { Drawer, Space, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 interface NotificationDetailDrawerProps {
   visible: boolean;
@@ -175,16 +175,16 @@ const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> = ({
           )}
           {type === 'message' && (
             <>
-              {record.sender_id && (
+              {record.sender_name && (
                 <Space>
-                  <Text type="secondary">发送者ID：</Text>
-                  <Text>{record.sender_id}</Text>
+                  <Text type="secondary">发送者：</Text>
+                  <Text>{record.sender_name}</Text>
                 </Space>
               )}
-              {record.receiver_id && (
+              {record.receiver_name && (
                 <Space>
-                  <Text type="secondary">接收者ID：</Text>
-                  <Text>{record.receiver_id}</Text>
+                  <Text type="secondary">接收者：</Text>
+                  <Text>{record.receiver_name}</Text>
                 </Space>
               )}
             </>
@@ -220,17 +220,16 @@ const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> = ({
         />
 
         {/* 正文内容 */}
-        <Paragraph
+        <div
           style={{
             fontSize: 16,
             lineHeight: 1.8,
             color: '#333',
-            whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
           }}
-        >
-          {record.content}
-        </Paragraph>
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: 富文本内容需要渲染HTML
+          dangerouslySetInnerHTML={{ __html: record.content || '' }}
+        />
       </div>
     </Drawer>
   );

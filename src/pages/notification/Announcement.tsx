@@ -191,7 +191,7 @@ const Announcement: React.FC = () => {
 
         // 排序并转换为中文名称
         const sortedPlatforms = platforms
-          .sort((a, b) => {
+          .sort((a: string, b: string) => {
             const orderA = sortOrder[a] ?? 999;
             const orderB = sortOrder[b] ?? 999;
             return orderA - orderB;
@@ -398,6 +398,15 @@ const Announcement: React.FC = () => {
           if (Array.isArray(requestParams.target_platform)) {
             requestParams.target_platform =
               requestParams.target_platform.join(',');
+          }
+          // 处理日期范围参数 - 转换为后端期望的 date_range 格式
+          if (
+            requestParams.created_at &&
+            Array.isArray(requestParams.created_at) &&
+            requestParams.created_at.length === 2
+          ) {
+            requestParams.date_range = `${requestParams.created_at[0]},${requestParams.created_at[1]}`;
+            delete requestParams.created_at;
           }
           const response = await getAnnouncementList(requestParams);
           if (response.code === 200) {

@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Space, Tag } from 'antd';
+import { Button, message, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import {
@@ -152,16 +152,22 @@ const Message: React.FC = () => {
     },
     {
       title: '发送者',
-      dataIndex: 'sender_id',
+      dataIndex: 'sender_name',
       hideInSearch: true,
-      width: 120,
+      width: 150,
+      render: (_text: any, record: any) => {
+        return record.sender_name || record.sender_id || '-';
+      },
     },
     {
       title: '接收者',
-      dataIndex: 'receiver_id',
-      width: 120,
+      dataIndex: 'receiver_name',
+      width: 150,
       fieldProps: {
         placeholder: '请输入接收者ID',
+      },
+      render: (_text: any, record: any) => {
+        return record.receiver_name || record.receiver_id || '-';
       },
     },
     {
@@ -252,7 +258,7 @@ const Message: React.FC = () => {
       width: 150,
       fixed: 'right',
       render: (_, record) => {
-        const isDisabled = record.status === 1; // 已读状态不能编辑和删除
+        const isRead = record.status === 1; // 已读状态不能编辑和删除
         return (
           <Space>
             <Button
@@ -262,29 +268,31 @@ const Message: React.FC = () => {
             >
               查看记录
             </Button>
-            <Button
-              type="link"
-              size="small"
-              onClick={() => handleEdit(record)}
-              disabled={isDisabled}
-              title={isDisabled ? '已读的站内信不能编辑' : ''}
-            >
-              编辑
-            </Button>
-            <Popconfirm
-              title="确定要删除这条数据吗？"
-              onConfirm={() => handleDelete(record)}
-              disabled={isDisabled}
-            >
+            {isRead ? (
+              <Tooltip title="已读的站内信不能编辑">
+                <Button type="link" size="small" disabled>
+                  编辑
+                </Button>
+              </Tooltip>
+            ) : (
               <Button
                 type="link"
                 size="small"
-                danger
-                disabled={isDisabled}
-                title={isDisabled ? '已读的站内信不能删除' : ''}
+                onClick={() => handleEdit(record)}
               >
-                删除
+                编辑
               </Button>
+            )}
+            <Popconfirm
+              title="确定要删除这条数据吗？"
+              onConfirm={() => handleDelete(record)}
+              disabled={isRead}
+            >
+              <Tooltip title={isRead ? '已读的站内信不能删除' : ''}>
+                <Button type="link" size="small" danger disabled={isRead}>
+                  删除
+                </Button>
+              </Tooltip>
             </Popconfirm>
           </Space>
         );
@@ -311,6 +319,15 @@ const Message: React.FC = () => {
           if (Array.isArray(requestParams.target_platform)) {
             requestParams.target_platform =
               requestParams.target_platform.join(',');
+          }
+          // 处理日期范围参数 - 转换为后端期望的 date_range 格式
+          if (
+            requestParams.created_at &&
+            Array.isArray(requestParams.created_at) &&
+            requestParams.created_at.length === 2
+          ) {
+            requestParams.date_range = `${requestParams.created_at[0]},${requestParams.created_at[1]}`;
+            delete requestParams.created_at;
           }
           const response = await getMessageList(requestParams);
           if (response.code === 200) {

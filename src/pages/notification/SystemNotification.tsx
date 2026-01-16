@@ -430,6 +430,15 @@ const SystemNotification: React.FC = () => {
             requestParams.effective_time =
               requestParams.effective_time.join(',');
           }
+          // 处理日期范围参数 - 转换为后端期望的 date_range 格式
+          if (
+            requestParams.created_at &&
+            Array.isArray(requestParams.created_at) &&
+            requestParams.created_at.length === 2
+          ) {
+            requestParams.date_range = `${requestParams.created_at[0]},${requestParams.created_at[1]}`;
+            delete requestParams.created_at;
+          }
           const response = await getSystemNotificationList(requestParams);
           if (response.code === 200) {
             return {

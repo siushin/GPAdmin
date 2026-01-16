@@ -50,7 +50,7 @@ const MessageForm: React.FC<MessageFormProps> = ({
     if (visible && editingRecord) {
       formRef.current?.setFieldsValue({
         ...editingRecord,
-        status: editingRecord.status === 1 ? true : false,
+        status: editingRecord.status === 1,
       });
       const content = editingRecord.content || '';
       // 只有当内容真正改变时才更新，避免循环引用
@@ -61,8 +61,8 @@ const MessageForm: React.FC<MessageFormProps> = ({
     } else if (visible && !editingRecord) {
       formRef.current?.resetFields();
       formRef.current?.setFieldsValue({
-        status: false,
         target_platform: 'all', // 默认选中第一个：全平台
+        // 新增时不需要设置 status，默认未读（在提交时处理）
       });
       setContentValue('');
       lastContentValueRef.current = '';
@@ -89,13 +89,9 @@ const MessageForm: React.FC<MessageFormProps> = ({
       submitter={isReadOnly ? false : undefined}
       onFinish={async (values) => {
         // 定义所有表单字段，确保它们都被包含
-        const allFormFields = [
-          'title',
-          'receiver_id',
-          'target_platform',
-          'status',
-          'content',
-        ];
+        const allFormFields = editingRecord
+          ? ['title', 'receiver_id', 'target_platform', 'status', 'content']
+          : ['title', 'receiver_id', 'target_platform', 'content'];
         // 确保所有字段都被包含
         const completeValues = ensureAllFormFields(
           formRef,
@@ -105,7 +101,8 @@ const MessageForm: React.FC<MessageFormProps> = ({
         // 将开关的布尔值转换为数字
         const submitValues = {
           ...completeValues,
-          status: completeValues.status ? 1 : 0,
+          // 新增时默认未读（status = 0），编辑时使用表单值
+          status: editingRecord ? (completeValues.status ? 1 : 0) : 0,
         };
         await onSubmit(submitValues);
         return true;
@@ -145,16 +142,18 @@ const MessageForm: React.FC<MessageFormProps> = ({
         ]}
         disabled={isReadOnly}
       />
-      <ProFormRadio.Group
-        name="status"
-        label="状态"
-        initialValue={false}
-        options={[
-          { label: '已读', value: true },
-          { label: '未读', value: false },
-        ]}
-        disabled={isReadOnly}
-      />
+      {editingRecord && (
+        <ProFormRadio.Group
+          name="status"
+          label="状态"
+          initialValue={false}
+          options={[
+            { label: '已读', value: true },
+            { label: '未读', value: false },
+          ]}
+          disabled={isReadOnly}
+        />
+      )}
       <ProFormItem
         name="content"
         label="内容"

@@ -33,7 +33,6 @@ import {
 } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
 import { getUserMenus } from '@/services/api/user';
-import { DEFAULT_PAGE_SIZE } from '@/utils/constants';
 import {
   setMessageInstance,
   setNotificationInstance,
@@ -124,7 +123,7 @@ const patchMenuIcon = (menuData: any[], parentName?: string): any[] => {
       // 如果 ProLayout 会自动拼接父路由的 name，我们需要调整子路由的 name
       // 如果子路由的 name 以父路由的 name 开头，移除父路由的 name 前缀
       // 这样 ProLayout 拼接后就能得到正确的完整路径
-      if (parentName && newItem.name.startsWith(parentName + '.')) {
+      if (parentName && newItem.name.startsWith(`${parentName}.`)) {
         // 子路由的 name 已经包含父路由的 name，为了避免 ProLayout 重复拼接
         // 我们只保留相对于父路由的部分
         const relativeName = newItem.name.substring(parentName.length + 1);
