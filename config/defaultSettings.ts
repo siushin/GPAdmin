@@ -15,6 +15,7 @@ const Settings: ProLayoutProps & {
   contentWidth: 'Fluid',
   fixedHeader: false,
   fixSiderbar: true,
+  splitMenus: true,
   colorWeak: false,
   title: process.env.UMI_APP_TITLE || 'GPAdmin管理后台',
   pwa: true,

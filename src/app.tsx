@@ -1,23 +1,5 @@
-import {
-  ApartmentOutlined,
-  AppstoreOutlined,
-  BellOutlined,
-  BlockOutlined,
-  BookOutlined,
-  FileTextOutlined,
-  GithubOutlined,
-  IdcardOutlined,
-  LinkOutlined,
-  MessageOutlined,
-  NotificationOutlined,
-  ProfileOutlined,
-  SettingOutlined,
-  ShareAltOutlined,
-  ShopOutlined,
-  SoundOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import * as Icons from '@ant-design/icons';
+import { GithubOutlined, LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { ProConfigProvider, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
@@ -42,40 +24,23 @@ import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import '@ant-design/v5-patch-for-react-19';
 
-// 图标映射表，支持通过字符串名称获取图标组件
-const iconMap: Record<string, React.ComponentType<any>> = {
-  AppstoreOutlined,
-  BellOutlined,
-  SettingOutlined,
-  NotificationOutlined,
-  MessageOutlined,
-  SoundOutlined,
-  UserOutlined,
-  ProfileOutlined,
-  BlockOutlined,
-  ApartmentOutlined,
-  BookOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  IdcardOutlined,
-  ShareAltOutlined,
-  ShopOutlined,
-};
-
 /**
- * 根据字符串名称获取图标组件
- * @param iconName 图标名称，如 'AppstoreOutlined'
+ * 根据字符串名称动态获取图标组件
+ * @param iconName 图标名称，如 'AppstoreOutlined', 'DeploymentUnitOutlined'
  * @returns 图标组件类型，如果不存在则返回 null
  */
 const getIconComponent = (
   iconName: string,
 ): React.ComponentType<any> | null => {
-  // 从映射表中获取图标组件
-  const IconComponent = iconMap[iconName];
+  if (!iconName || typeof iconName !== 'string') {
+    return null;
+  }
 
-  // React forward_ref 组件是对象类型，不是函数类型，所以需要检查是否是有效的 React 组件
+  // 从 @ant-design/icons 中动态获取图标组件
+  const IconComponent = (Icons as any)[iconName];
+
   if (IconComponent) {
-    // 检查是否是 React 组件（forward_ref 组件是对象类型）
+    // 检查是否是有效的 React 组件
     const isReactComponent =
       typeof IconComponent === 'function' ||
       (typeof IconComponent === 'object' &&

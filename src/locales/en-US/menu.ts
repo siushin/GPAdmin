@@ -49,4 +49,8 @@ export default {
   'menu.org': 'Company Management',
   'menu.org.company': 'Company Management',
   'menu.org.dept': 'Department Management',
+
+  // 短信管理
+  'menu.sms': 'SMS Management',
+  'menu.sms.log': 'SMS Log',
 };

@@ -183,6 +183,21 @@ export default [
     component: './system/Log',
     access: 'canAdmin',
   },
+
+  // 短信管理
+  {
+    path: '/sms',
+    name: 'sms',
+    redirect: '/sms/log',
+    access: 'canAdmin',
+  },
+  {
+    path: '/sms/log',
+    name: 'sms.log',
+    component: './sms/log',
+    access: 'canAdmin',
+  },
+
   {
     path: '*',
     layout: false,
