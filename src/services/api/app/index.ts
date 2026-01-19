@@ -77,3 +77,35 @@ export async function uninstallModule(options?: { [key: string]: any }) {
     ...(options || {}),
   });
 }
+
+/** 模块排序项 */
+export interface ModuleSortItem {
+  module_id: number;
+  module_name: string;
+  module_title: string;
+  sort: number;
+}
+
+/** 获取模块排序列表 POST /api/admin/app/getModulesSort */
+export async function getModulesSort(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: ModuleSortItem[];
+  }>('/api/admin/app/getModulesSort', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
+/** 更新模块排序 POST /api/admin/app/updateModulesSort */
+export async function updateModulesSort(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: any;
+  }>('/api/admin/app/updateModulesSort', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}

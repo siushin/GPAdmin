@@ -3,28 +3,40 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
+  HolderOutlined,
   ReloadOutlined,
+  SortAscendingOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import {
   Button,
   Card,
   Col,
+  Drawer,
   Empty,
   Form,
   Input,
+  List,
   Modal,
   message,
   Pagination,
   Popconfirm,
   Radio,
   Row,
+  Space,
   Spin,
   Tag,
   Typography,
 } from 'antd';
-import React, { useEffect, useMemo, useState } from 'react';
-import { getMyApps, uninstallModule, updateModules } from '@/services/api/app';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  getModulesSort,
+  getMyApps,
+  type ModuleSortItem,
+  uninstallModule,
+  updateModules,
+  updateModulesSort,
+} from '@/services/api/app';
 import StandardFormRow from './components/StandardFormRow';
 import TagSelect from './components/TagSelect';
 import type { AppItem } from './Market';
@@ -51,6 +63,17 @@ const My: React.FC = () => {
   const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
   const [updateLoading, setUpdateLoading] = useState<boolean>(false);
   const [updateType, setUpdateType] = useState<'all' | 'specified'>('all');
+
+  // 排序相关状态
+  const [sortDrawerVisible, setSortDrawerVisible] = useState<boolean>(false);
+  const [sortLoading, setSortLoading] = useState<boolean>(false);
+  const [sortSaving, setSortSaving] = useState<boolean>(false);
+  const [sortList, setSortList] = useState<ModuleSortItem[]>([]);
+  const [originalSortList, setOriginalSortList] = useState<ModuleSortItem[]>(
+    [],
+  );
+  const [dragItem, setDragItem] = useState<ModuleSortItem | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchApps();
@@ -200,6 +223,121 @@ const My: React.FC = () => {
     }
   };
 
+  // 打开排序抽屉
+  const handleOpenSortDrawer = async () => {
+    setSortDrawerVisible(true);
+    setSortLoading(true);
+    try {
+      const response = await getModulesSort();
+      if (response.code === 200 && response.data) {
+        setSortList(response.data);
+        setOriginalSortList([...response.data]);
+      } else {
+        message.error(response.message || '获取模块排序失败');
+      }
+    } catch (error: any) {
+      console.error('获取模块排序失败:', error);
+      message.error(error?.message || '获取模块排序失败');
+    } finally {
+      setSortLoading(false);
+    }
+  };
+
+  // 关闭排序抽屉
+  const handleCloseSortDrawer = () => {
+    setSortDrawerVisible(false);
+    setSortList([]);
+    setOriginalSortList([]);
+    setDragItem(null);
+    setDragOverIndex(null);
+  };
+
+  // 重置排序
+  const handleResetSort = () => {
+    setSortList([...originalSortList]);
+  };
+
+  // 保存排序
+  const handleSaveSort = async () => {
+    setSortSaving(true);
+    try {
+      const response = await updateModulesSort({
+        data: {
+          sort_list: sortList.map((item) => ({ module_id: item.module_id })),
+        },
+      });
+      if (response.code === 200) {
+        message.success(
+          response.message || '排序保存成功，请退出登录后重新登录以使排序生效',
+        );
+        setOriginalSortList([...sortList]);
+      } else {
+        message.error(response.message || '保存排序失败');
+      }
+    } catch (error: any) {
+      console.error('保存排序失败:', error);
+      message.error(error?.message || '保存排序失败');
+    } finally {
+      setSortSaving(false);
+    }
+  };
+
+  // 拖拽开始
+  const handleDragStart = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, item: ModuleSortItem) => {
+      setDragItem(item);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(item.module_id));
+    },
+    [],
+  );
+
+  // 拖拽经过
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, index: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setDragOverIndex(index);
+    },
+    [],
+  );
+
+  // 拖拽离开
+  const handleDragLeave = useCallback(() => {
+    setDragOverIndex(null);
+  }, []);
+
+  // 放下
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+      e.preventDefault();
+      if (!dragItem) return;
+
+      const currentIndex = sortList.findIndex(
+        (item) => item.module_id === dragItem.module_id,
+      );
+      if (currentIndex === -1 || currentIndex === targetIndex) {
+        setDragItem(null);
+        setDragOverIndex(null);
+        return;
+      }
+
+      const newList = [...sortList];
+      const [removed] = newList.splice(currentIndex, 1);
+      newList.splice(targetIndex, 0, removed);
+      setSortList(newList);
+      setDragItem(null);
+      setDragOverIndex(null);
+    },
+    [dragItem, sortList],
+  );
+
+  // 拖拽结束
+  const handleDragEnd = useCallback(() => {
+    setDragItem(null);
+    setDragOverIndex(null);
+  }, []);
+
   return (
     <PageContainer
       title="我的应用"
@@ -211,6 +349,13 @@ const My: React.FC = () => {
           onClick={() => setUpdateModalVisible(true)}
         >
           更新本地模块
+        </Button>,
+        <Button
+          key="sort"
+          icon={<SortAscendingOutlined />}
+          onClick={handleOpenSortDrawer}
+        >
+          排序
         </Button>,
       ]}
     >
@@ -456,6 +601,94 @@ const My: React.FC = () => {
           )}
         </Form>
       </Modal>
+
+      <Drawer
+        title="模块排序"
+        placement="right"
+        width={400}
+        open={sortDrawerVisible}
+        onClose={handleCloseSortDrawer}
+        footer={
+          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Button
+              onClick={handleResetSort}
+              disabled={sortLoading || sortSaving}
+            >
+              重置
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleSaveSort}
+              loading={sortSaving}
+              disabled={sortLoading}
+            >
+              保存
+            </Button>
+          </Space>
+        }
+      >
+        <Spin spinning={sortLoading}>
+          {sortList.length === 0 && !sortLoading ? (
+            <Empty description="暂无模块数据" />
+          ) : (
+            <List
+              dataSource={sortList}
+              renderItem={(item, index) => (
+                <div
+                  key={item.module_id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  style={{
+                    padding: '8px 12px',
+                    marginBottom: 4,
+                    background:
+                      dragOverIndex === index
+                        ? '#e6f4ff'
+                        : dragItem?.module_id === item.module_id
+                          ? '#f5f5f5'
+                          : '#fff',
+                    border:
+                      dragOverIndex === index
+                        ? '2px dashed #1890ff'
+                        : '1px solid #f0f0f0',
+                    borderRadius: 6,
+                    cursor: 'grab',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'all 0.2s ease',
+                    opacity: dragItem?.module_id === item.module_id ? 0.5 : 1,
+                  }}
+                >
+                  <HolderOutlined
+                    style={{
+                      marginRight: 8,
+                      color: '#999',
+                      fontSize: 16,
+                    }}
+                  />
+                  <div
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ fontWeight: 500 }}>{item.module_title}</div>
+                    <div style={{ fontSize: 12, color: '#999' }}>
+                      {item.module_name}
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          )}
+        </Spin>
+      </Drawer>
     </PageContainer>
   );
 };
