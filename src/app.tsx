@@ -434,6 +434,6 @@ export const layout: RunTimeLayoutConfig = ({
  */
 export const request: RequestConfig = {
   // 设置 baseURL，直接请求真实的后端 API
-  baseURL: process.env.UMI_APP_API_BASE_URL || 'http://laravel-api.cc',
+  baseURL: process.env.UMI_APP_API_BASE_URL || 'http://gpadmin-api.cc',
   ...errorConfig,
 };

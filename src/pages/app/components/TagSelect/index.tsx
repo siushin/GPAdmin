@@ -37,6 +37,7 @@ export interface TagSelectProps {
   expandable?: boolean;
   value?: (string | number)[];
   defaultValue?: (string | number)[];
+  defaultAllChecked?: boolean;
   style?: React.CSSProperties;
   hideCheckAll?: boolean;
   actionsText?: {
@@ -55,6 +56,7 @@ const TagSelect: FC<TagSelectProps> & {
   const {
     children,
     hideCheckAll = false,
+    defaultAllChecked = false,
     className,
     style,
     expandable,
@@ -63,7 +65,7 @@ const TagSelect: FC<TagSelectProps> & {
   const [expand, setExpand] = useState<boolean>(false);
   // 用于跟踪"全部"是否被用户明确点击过（而不是因为所有选项被选中而自动选中）
   const [allExplicitlyChecked, setAllExplicitlyChecked] =
-    useState<boolean>(false);
+    useState<boolean>(defaultAllChecked);
 
   const [value, setValue] = useMergedState<(string | number)[]>(
     props.defaultValue || [],

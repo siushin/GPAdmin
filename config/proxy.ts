@@ -26,9 +26,9 @@ export default {
    * @doc https://github.com/chimurai/http-proxy-middleware
    */
   dev: {
-    // localhost:8000/api/** -> http://laravel-api.cc/api/**
+    // localhost:8000/api/** -> http://gpadmin-api.cc/api/**
     '/api': {
-      target: process.env.UMI_APP_API_BASE_URL || 'http://laravel-api.cc',
+      target: process.env.UMI_APP_API_BASE_URL || 'http://gpadmin-api.cc',
       changeOrigin: true,
       secure: false,
       // 不重写路径，保留 /api 前缀

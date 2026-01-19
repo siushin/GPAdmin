@@ -184,7 +184,7 @@ export default defineConfig({
    */
   define: {
     'process.env.UMI_APP_API_BASE_URL':
-      process.env.UMI_APP_API_BASE_URL || 'http://laravel-api.cc/api',
+      process.env.UMI_APP_API_BASE_URL || 'http://gpadmin-api.cc/api',
     'process.env.UMI_APP_TITLE': process.env.UMI_APP_TITLE || 'GPAdmin管理后台',
     'process.env.UMI_APP_SUBTITLE':
       process.env.UMI_APP_SUBTITLE || '你的宝可梦仓库再也不会乱成精灵球堆啦',

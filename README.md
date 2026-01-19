@@ -73,7 +73,7 @@ npm test
 ## 📚 相关文档
 
 - [开发文档](https://github.com/siushin/GPAdmin-doc)
-- [后端项目](https://github.com/siushin/laravel-api)
+- [后端项目](https://github.com/siushin/GPAdmin-api)
 - [Ant Design Pro 文档](https://pro.ant.design)
 
 ## 🧑🏻‍💻 关于作者

@@ -235,7 +235,7 @@ const My: React.FC = () => {
         >
           <StandardFormRow title="应用来源" block style={{ paddingBottom: 11 }}>
             <FormItem name="source">
-              <TagSelect>
+              <TagSelect defaultAllChecked>
                 {availableSources.map((source) => (
                   <TagSelect.Option value={source} key={source}>
                     {sourceLabels[source] || source}
