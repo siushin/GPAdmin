@@ -1,5 +1,9 @@
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import type {
+  ActionType,
+  ProColumns,
+  ProFormInstance,
+} from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { App, Button, Popconfirm, Space, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
@@ -9,6 +13,7 @@ import {
   deleteMenu,
   getMenuDirTree,
   getMenuList,
+  getMenuListSearchData,
   getMenuTree,
   updateMenu,
 } from '@/services/api/system';
@@ -28,6 +33,7 @@ interface MenuTableProps {
 const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
   const { message } = App.useApp();
   const actionRef = useRef<ActionType>(null);
+  const searchFormRef = useRef<ProFormInstance>(null);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -37,6 +43,29 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
   const [dirTreeOptions, setDirTreeOptions] = useState<
     Array<{ label: string; value: number }>
   >([]);
+  const [moduleOptions, setModuleOptions] = useState<
+    Array<{ label: string; value: number }>
+  >([]);
+  const [selectedModuleId, setSelectedModuleId] = useState<number | undefined>(
+    undefined,
+  );
+
+  // 加载搜索数据选项（模块列表）
+  const loadSearchDataOptions = async () => {
+    try {
+      const res = await getMenuListSearchData();
+      if (res.code === 200 && res.data) {
+        setModuleOptions(
+          res.data.module?.map((item: any) => ({
+            label: item.label || item.value,
+            value: item.value,
+          })) || [],
+        );
+      }
+    } catch (error) {
+      console.error('加载搜索数据选项失败:', error);
+    }
+  };
 
   // 加载目录树选项（用于筛选）
   const loadDirTreeOptions = async () => {
@@ -95,12 +124,22 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
           });
           return result;
         };
-        setParentMenuOptions(flattenMenus(res.data));
+        const flattened = flattenMenus(res.data);
+        // 根据 menu_id 去重，保留第一次出现的项
+        const uniqueOptions = Array.from(
+          new Map(flattened.map((item) => [item.value, item])).values(),
+        );
+        setParentMenuOptions(uniqueOptions);
       }
     } catch (error) {
       console.error('加载父菜单选项失败:', error);
     }
   };
+
+  // 组件挂载时加载搜索数据（模块列表不依赖 accountType）
+  useEffect(() => {
+    loadSearchDataOptions();
+  }, []);
 
   // 当 accountType 变化时，重新加载表格数据和父菜单选项
   useEffect(() => {
@@ -110,6 +149,9 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
   }, [accountType]);
 
   const handleAdd = () => {
+    // 获取搜索表单中选中的模块ID
+    const moduleId = searchFormRef.current?.getFieldValue('module_id');
+    setSelectedModuleId(moduleId);
     setEditingRecord(null);
     setFormVisible(true);
   };
@@ -173,6 +215,25 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
       width: 80,
       hideInSearch: true,
       fixed: 'left',
+    },
+    {
+      title: '模块',
+      dataIndex: 'module_id',
+      width: 150,
+      valueType: 'select',
+      fieldProps: {
+        placeholder: '请选择模块',
+        showSearch: true,
+        filterOption: (input: string, option: any) =>
+          (option?.label ?? '')
+            .toString()
+            .toLowerCase()
+            .includes(input.toLowerCase()),
+        options: moduleOptions,
+      },
+      render: (_, record) => {
+        return record.module_name || '-';
+      },
     },
     {
       title: '父级目录',
@@ -312,6 +373,7 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
     <>
       <ProTable<any>
         actionRef={actionRef}
+        formRef={searchFormRef}
         rowKey="menu_id"
         size={TABLE_SIZE}
         search={{
@@ -366,10 +428,13 @@ const MenuTable: React.FC<MenuTableProps> = ({ accountType }) => {
         visible={formVisible}
         editingRecord={editingRecord}
         parentMenuOptions={parentMenuOptions}
+        moduleOptions={moduleOptions}
+        selectedModuleId={!editingRecord ? selectedModuleId : undefined}
         accountType={accountType}
         onCancel={() => {
           setFormVisible(false);
           setEditingRecord(null);
+          setSelectedModuleId(undefined);
         }}
         onSubmit={handleFormSubmit}
       />

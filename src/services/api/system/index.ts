@@ -418,6 +418,23 @@ export async function getMenuDirTree(
   });
 }
 
+/** 获取菜单列表搜索数据 POST /api/admin/menu/getMenuListSearchData */
+export async function getMenuListSearchData(options?: { [key: string]: any }) {
+  return request<{
+    code: number;
+    message: string;
+    data?: {
+      module?: Array<{
+        label: string;
+        value: number;
+      }>;
+    };
+  }>('/api/admin/menu/getMenuListSearchData', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** 新增菜单 POST /api/admin/menu/add */
 export async function addMenu(
   body: {

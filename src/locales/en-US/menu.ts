@@ -53,4 +53,8 @@ export default {
   // 短信管理
   'menu.sms': 'SMS Management',
   'menu.sms.log': 'SMS Log',
+
+  // Module Names
+  'menu.基础服务': 'Base Service',
+  'menu.短信服务': 'SMS Service',
 };

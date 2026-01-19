@@ -26,6 +26,8 @@ interface MenuFormProps {
   visible: boolean;
   editingRecord: any;
   parentMenuOptions: Array<{ label: string; value: number }>;
+  moduleOptions: Array<{ label: string; value: number }>;
+  selectedModuleId?: number;
   accountType?: 'admin' | 'user';
   onCancel: () => void;
   onSubmit: (values: any) => Promise<void>;
@@ -35,6 +37,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
   visible,
   editingRecord,
   parentMenuOptions,
+  moduleOptions,
+  selectedModuleId,
   accountType = 'admin',
   onCancel,
   onSubmit,
@@ -64,6 +68,7 @@ const MenuForm: React.FC<MenuFormProps> = ({
             formRef.current.setFieldsValue({
               ...editingRecord,
               parent_id: editingRecord.parent_id ?? 0,
+              module_id: editingRecord.module_id ?? null,
               menu_type: editingRecord.menu_type || 'menu',
               status: editingRecord.status ?? 1,
               sort: editingRecord.sort ?? 0,
@@ -72,6 +77,7 @@ const MenuForm: React.FC<MenuFormProps> = ({
           } else {
             formRef.current.setFieldsValue({
               parent_id: 0,
+              module_id: selectedModuleId ?? null,
               menu_type: 'menu',
               status: 1,
               sort: 0,
@@ -83,7 +89,7 @@ const MenuForm: React.FC<MenuFormProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [visible, editingRecord]);
+  }, [visible, editingRecord, selectedModuleId]);
 
   // 获取表单标题
   const getFormTitle = () => {
@@ -143,6 +149,7 @@ const MenuForm: React.FC<MenuFormProps> = ({
           'menu_path',
           'menu_type',
           'parent_id',
+          'module_id',
           'menu_icon',
           'component',
           'redirect',
@@ -193,6 +200,23 @@ const MenuForm: React.FC<MenuFormProps> = ({
       <Row gutter={16}>
         <Col span={12}>
           <ProFormSelect
+            name="module_id"
+            label="模块"
+            options={moduleOptions}
+            fieldProps={{
+              placeholder: '请选择模块',
+              showSearch: true,
+              filterOption: (input, option) =>
+                (option?.label ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(input.toLowerCase()),
+              disabled: !!editingRecord, // 编辑时禁用
+            }}
+          />
+        </Col>
+        <Col span={12}>
+          <ProFormSelect
             name="menu_type"
             label="类型"
             options={MENU_TYPE_OPTIONS}
@@ -202,6 +226,8 @@ const MenuForm: React.FC<MenuFormProps> = ({
             }}
           />
         </Col>
+      </Row>
+      <Row gutter={16}>
         <Col span={12}>
           <ProFormSelect
             name="parent_id"
