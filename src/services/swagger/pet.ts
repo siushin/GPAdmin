@@ -1,12 +1,9 @@
-// @ts-expect-error
+// @ts-ignore
 /* eslint-disable */
 import { request } from '@umijs/max';
 
 /** Update an existing pet PUT /pet */
-export async function updatePet(
-  body: API.Pet,
-  options?: { [key: string]: any },
-) {
+export async function updatePet(body: API.Pet, options?: { [key: string]: any }) {
   return request<any>('/pet', {
     method: 'PUT',
     headers: {
@@ -51,13 +48,23 @@ export async function updatePetWithForm(
   options?: { [key: string]: any },
 ) {
   const { petId: param0, ...queryParams } = params;
+  const formData = new FormData();
+
+  Object.keys(body).forEach((ele) => {
+    const item = (body as any)[ele];
+
+    if (item !== undefined && item !== null) {
+      formData.append(
+        ele,
+        typeof item === 'object' && !(item instanceof File) ? JSON.stringify(item) : item,
+      );
+    }
+  });
+
   return request<any>(`/pet/${param0}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
     params: { ...queryParams },
-    data: body,
+    data: formData,
     ...(options || {}),
   });
 }
@@ -65,12 +72,16 @@ export async function updatePetWithForm(
 /** Deletes a pet DELETE /pet/${param0} */
 export async function deletePet(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.deletePetParams,
+  params: API.deletePetParams & {
+    // header
+    api_key?: string;
+  },
   options?: { [key: string]: any },
 ) {
   const { petId: param0, ...queryParams } = params;
   return request<any>(`/pet/${param0}`, {
     method: 'DELETE',
+    headers: {},
     params: { ...queryParams },
     ...(options || {}),
   });
@@ -95,20 +106,10 @@ export async function uploadFile(
     const item = (body as any)[ele];
 
     if (item !== undefined && item !== null) {
-      if (typeof item === 'object' && !(item instanceof File)) {
-        if (Array.isArray(item)) {
-          item.forEach((f) => {
-            formData.append(ele, f || '');
-          });
-        } else {
-          formData.append(
-            ele,
-            new Blob([JSON.stringify(item)], { type: 'application/json' }),
-          );
-        }
-      } else {
-        formData.append(ele, item);
-      }
+      formData.append(
+        ele,
+        typeof item === 'object' && !(item instanceof File) ? JSON.stringify(item) : item,
+      );
     }
   });
 

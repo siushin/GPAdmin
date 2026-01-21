@@ -6,17 +6,16 @@
  * 布局组件
  */
 import Footer from './Footer';
-import IconDisplay from './IconDisplay';
-import { getIconComponent } from './IconDisplay/getIconComponent';
 import { SelectLang, SettingButton } from './RightContent';
 import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
 
+/**
+ * 从 base 模块重新导出公共组件
+ */
 export {
-  AvatarDropdown,
-  AvatarName,
-  Footer,
-  SelectLang,
-  SettingButton,
-  IconDisplay,
   getIconComponent,
-};
+  IconDisplay,
+  RichTextEditor,
+} from '@/modules/base/components';
+
+export { AvatarDropdown, AvatarName, Footer, SelectLang, SettingButton };

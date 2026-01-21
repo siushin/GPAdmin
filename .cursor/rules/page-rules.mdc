@@ -10,20 +10,20 @@ scope:
 
 ## 目录结构
 
-所有页面文件必须放在 `@/pages/support/` 目录下，并按功能模块分类：
+所有页面文件必须放在 `@/modules/[模块名]/pages/` 目录下，并按功能模块分类：
 
-- `support/system/` - 系统管理相关页面
-- `support/app/` - 应用管理相关页面
-- `support/dashboard/` - 仪表盘相关页面
-- `support/notification/` - 通知相关页面
-- `support/[模块名]/` - 新增模块需创建对应目录
+- `modules/admin/pages/system/` - 系统管理相关页面
+- `modules/admin/pages/app/` - 应用管理相关页面
+- `modules/admin/pages/dashboard/` - 仪表盘相关页面
+- `modules/admin/pages/notification/` - 通知相关页面
+- `modules/[模块名]/pages/[功能]/` - 新增模块需创建对应目录
 
 ## 规则
 
-- 所有新建页面必须放在 `support` 目录下的对应模块目录中
+- 所有新建页面必须放在 `modules` 目录下的对应模块目录中
 - 如果模块目录不存在，需要先创建模块目录
 - 页面文件命名使用 PascalCase（如：`UserList.tsx`）
-- 路由配置中的 `component` 路径需使用 `./support/[模块]/[页面]` 格式
+- 路由配置中的 `component` 路径需使用 `@/modules/[模块]/pages/[功能]/[页面]` 格式
 
 ## 常量使用规范
 
@@ -31,7 +31,7 @@ scope:
   - `SysParamFlag.No = 0` // 否
   - `SysParamFlag.Yes = 1` // 是
 - 禁止在代码中直接使用数字 `0` 或 `1` 进行 `sys_param_flag` 的判断比较
-- 常量定义在 `@/utils/constants.ts` 中
+- 常量定义在 `@/modules/base/utils/constants.ts` 中
 
 ## 表格字段显示规范
 
@@ -165,4 +165,4 @@ const handleBatchAudit = async () => {
 </Modal>
 ```
 
-**参考实现：** `src/pages/user/components/UserList.tsx`（批量审核功能）
+**参考实现：** `src/modules/admin/pages/user/components/UserList.tsx`（批量审核功能）

@@ -18,6 +18,13 @@ const PUBLIC_PATH: string = '/';
 
 export default defineConfig({
   /**
+   * @name 路径别名配置
+   * @description 配置额外的路径别名，方便引用
+   */
+  alias: {
+    '@config': join(__dirname, './'),
+  },
+  /**
    * @name 开启 hash 模式
    * @description 让 build 之后的产物包含 hash 后缀。通常用于增量发布和避免浏览器加载缓存。
    * @doc https://umijs.org/docs/api/config#hash
@@ -167,7 +174,6 @@ export default defineConfig({
     },
   ],
   // 禁用 mock，让所有接口走真实的后端 API
-  // 注意：启动命令 start:dev 中也设置了 MOCK=none
   mock: false,
   /**
    * @name 是否开启 mako

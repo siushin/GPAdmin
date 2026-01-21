@@ -1,14 +1,16 @@
 import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { history } from '@umijs/max';
-import { message } from 'antd';
-import { getNotification } from '@/utils/notification';
+import { refreshToken } from '@/modules/admin/services/user';
 import {
   clearToken,
+  getMessage,
+  getNotification,
   getToken,
   isTokenExpired,
-  refreshTokenIfNeeded,
-} from '@/utils/token';
+  isTokenExpiringSoon,
+  saveToken,
+} from '@/modules/base';
 
 const loginPath = '/user/login';
 
@@ -30,6 +32,41 @@ interface ResponseStructure {
   errorCode?: number;
   errorMessage?: string;
   showType?: ErrorShowType;
+}
+
+/**
+ * 刷新token（仅在token快过期时刷新）
+ */
+async function refreshTokenIfNeeded(): Promise<boolean> {
+  const token = getToken();
+  if (!token) {
+    return false;
+  }
+
+  // 如果token已过期，不在这里处理，让响应拦截器处理401错误
+  if (isTokenExpired()) {
+    return false;
+  }
+
+  // 如果token快过期，尝试刷新
+  if (isTokenExpiringSoon()) {
+    try {
+      const response = await refreshToken({ skipErrorHandler: true });
+      if (response?.code === 200 && response?.data?.token) {
+        const tokenData = response.data.token;
+        if (tokenData.access_token) {
+          saveToken(tokenData.access_token, tokenData.expires_in);
+          console.log('✓ Token已刷新');
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('刷新token失败:', error);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -70,10 +107,10 @@ export const errorConfig: RequestConfig = {
               // do nothing
               break;
             case ErrorShowType.WARN_MESSAGE:
-              message.warning(errorMessage);
+              getMessage().warning(errorMessage);
               break;
             case ErrorShowType.ERROR_MESSAGE:
-              message.error(errorMessage);
+              getMessage().error(errorMessage);
               break;
             case ErrorShowType.NOTIFICATION:
               getNotification().open({
@@ -85,21 +122,19 @@ export const errorConfig: RequestConfig = {
               // TODO: redirect
               break;
             default:
-              message.error(errorMessage);
+              getMessage().error(errorMessage);
           }
         }
       } else if (error.response) {
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-        message.error(`Response status:${error.response.status}`);
+        getMessage().error(`Response status:${error.response.status}`);
       } else if (error.request) {
         // 请求已经成功发起，但没有收到响应
-        // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，
-        // 而在node.js中是 http.ClientRequest 的实例
-        message.error('None response! Please retry.');
+        getMessage().error('None response! Please retry.');
       } else {
         // 发送请求时出了点问题
-        message.error('Request error, please retry.');
+        getMessage().error('Request error, please retry.');
       }
     },
   },
@@ -137,7 +172,7 @@ export const errorConfig: RequestConfig = {
       if (data?.code && data.code !== 200) {
         // 如果是401未授权或token过期，清除token并跳转登录页
         if (data.code === 401 || data.code === 1000) {
-          // 检查是否是 getUserMenus 请求（通过 URL 判断，如果无法获取则通过其他方式判断）
+          // 检查是否是 getUserMenus 请求
           const requestUrl =
             (response as any).config?.url ||
             (response as any).request?.responseURL ||
@@ -147,7 +182,6 @@ export const errorConfig: RequestConfig = {
             requestUrl.includes('getUserMenus');
 
           // 如果是 getUserMenus 请求，且 localStorage 中有用户信息和 token，可能是刚登录 token 还未完全生效
-          // 这种情况下不立即跳转，让调用方处理（getInitialState 中会使用 skipErrorHandler）
           if (
             isGetUserMenusRequest &&
             localStorage.getItem('userInfo') &&
@@ -166,7 +200,7 @@ export const errorConfig: RequestConfig = {
           return response;
         }
 
-        // 检查是否是登录接口，如果是则不在这里显示错误消息（由调用方处理）
+        // 检查是否是登录接口
         const requestUrl =
           (response as any).config?.url ||
           (response as any).request?.responseURL ||
@@ -178,7 +212,7 @@ export const errorConfig: RequestConfig = {
         // 如果不是登录接口，显示错误消息
         if (!isLoginRequest) {
           const errorMsg = data.message || '请求失败！';
-          message.error(errorMsg);
+          getMessage().error(errorMsg);
         }
       }
       return response;

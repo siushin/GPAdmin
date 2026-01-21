@@ -15,7 +15,11 @@ const Admin: React.FC = () => {
     >
       <Card>
         <Alert
-          message="umi ui 现已发布，欢迎使用 npm run ui 启动体验。"
+          message={intl.formatMessage({
+            id: 'pages.welcome.alertMessage',
+            defaultMessage:
+              'Faster and stronger heavy-duty components have been released.',
+          })}
           type="success"
           showIcon
           banner

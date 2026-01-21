@@ -1,3 +1,7 @@
+// 引入各模块的语言包
+import adminMenu from '@/modules/admin/locales/zh-CN/menu';
+import appMarketMenu from '@/modules/app-market/locales/zh-CN/menu';
+import smsMenu from '@/modules/sms/locales/zh-CN/menu';
 import component from './zh-CN/component';
 import globalHeader from './zh-CN/globalHeader';
 import menu from './zh-CN/menu';
@@ -23,4 +27,8 @@ export default {
   ...pwa,
   ...component,
   ...sms,
+  // 模块菜单语言包
+  ...adminMenu,
+  ...appMarketMenu,
+  ...smsMenu,
 };

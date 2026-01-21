@@ -9,17 +9,19 @@ import React, { useEffect } from 'react';
 import {
   AvatarDropdown,
   AvatarName,
-  Footer,
   SelectLang,
   SettingButton,
 } from '@/components';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
-import { getUserMenus } from '@/services/api/user';
+import { moduleList } from '@/moduleLoader';
+import { getUserMenus } from '@/modules/admin/services/user';
 import {
+  clearToken,
+  isTokenExpired,
   setMessageInstance,
   setNotificationInstance,
-} from '@/utils/notification';
-import { clearToken, isTokenExpired } from '@/utils/token';
+} from '@/modules/base';
+import { Footer } from '@/modules/base/components';
+import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import '@ant-design/v5-patch-for-react-19';
@@ -149,6 +151,18 @@ const WelcomeNotification: React.FC<{
 
   return <>{children}</>;
 };
+
+/**
+ * 模块路由已在 config/routes.ts 中静态配置
+ * 此处仅打印已加载的模块信息用于调试
+ */
+export function patchClientRoutes({ routes }: { routes: any[] }) {
+  // 打印已加载的模块信息
+  console.log(
+    '[App] 已加载模块:',
+    moduleList.map((m) => m.name),
+  );
+}
 
 /**
  * @see https://umijs.org/docs/api/runtime-config#getinitialstate
@@ -375,6 +389,33 @@ export const layout: RunTimeLayoutConfig = ({
       // 转换图标字符串为图标组件
       return patchMenuIcon(menuData);
     },
+    // 处理顶部模块菜单点击，支持 redirect 重定向
+    menuProps: {
+      onClick: ({ key }: { key: string }) => {
+        // 在菜单数据中查找对应的菜单项
+        const menuData = initialState?.menuData || [];
+        const findMenuItem = (menus: any[], targetKey: string): any => {
+          for (const menu of menus) {
+            if (menu.path === targetKey || menu.key === targetKey) {
+              return menu;
+            }
+            if (menu.children || menu.routes) {
+              const found = findMenuItem(
+                menu.children || menu.routes,
+                targetKey,
+              );
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        const menuItem = findMenuItem(menuData, key);
+        // 如果菜单项有 redirect，跳转到 redirect 地址
+        if (menuItem?.redirect) {
+          history.push(menuItem.redirect);
+        }
+      },
+    },
     footerRender: () => <Footer />,
     onPageChange: () => {
       const { location } = history;
@@ -433,7 +474,11 @@ export const layout: RunTimeLayoutConfig = ({
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const request: RequestConfig = {
-  // 设置 baseURL，直接请求真实的后端 API
-  baseURL: process.env.UMI_APP_API_BASE_URL || 'http://gpadmin-api.cc',
+  // 开发环境使用代理，生产环境使用 baseURL
+  // 代理配置在 config/proxy.ts 中
+  // 生产环境需要配置 baseURL 或在 nginx 中配置代理
+  ...(process.env.NODE_ENV === 'production'
+    ? { baseURL: process.env.UMI_APP_API_BASE_URL || 'http://gpadmin-api.cc' }
+    : {}),
   ...errorConfig,
 };

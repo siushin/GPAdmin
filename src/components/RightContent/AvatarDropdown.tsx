@@ -9,8 +9,8 @@ import { Spin } from 'antd';
 import { createStyles } from 'antd-style';
 import React from 'react';
 import { flushSync } from 'react-dom';
+import { clearToken } from '@/modules/base/utils/token';
 import { outLogin } from '@/services/ant-design-pro/login';
-import { clearToken } from '@/utils/token';
 import HeaderDropdown from '../HeaderDropdown';
 
 export type GlobalHeaderRightProps = {

@@ -1,16 +1,25 @@
 /**
  * @name umi 的路由配置
  * @description 只支持 path,component,routes,redirect,wrappers,name,icon 的配置
- * @param path  path 只支持两种占位符配置，第一种是动态参数 :id 的形式，第二种是 * 通配符，通配符只能出现路由字符串的最后。
- * @param component 配置 location 和 path 匹配后用于渲染的 React 组件路径。可以是绝对路径，也可以是相对路径，如果是相对路径，会从 src/pages 开始找起。
- * @param routes 配置子路由，通常在需要为多个路径增加 layout 组件时使用。
- * @param redirect 配置路由跳转
- * @param wrappers 配置路由组件的包装组件，通过包装组件可以为当前的路由组件组合进更多的功能。 比如，可以用于路由级别的权限校验
- * @param name 配置路由的标题，默认读取国际化文件 menu.ts 中 menu.xxxx 的值，如配置 name 为 login，则读取 menu.ts 中 menu.login 的取值作为标题
- * @param icon 配置路由的图标，取值参考 https://ant.design/components/icon-cn， 注意去除风格后缀和大小写，如想要配置图标为 <StepBackwardOutlined /> 则取值应为 stepBackward 或 StepBackward，如想要配置图标为 <UserOutlined /> 则取值应为 user 或者 User
+ *
+ * 业务路由配置在各模块的 routes.ts 中定义
+ * 在此处统一引入并合并
+ *
+ * 模块对应关系：
+ * - admin: 后端 Modules/Base
+ * - app-market: 后端 Modules/AppMarket
+ * - sms: 后端 Modules/Sms
+ *
  * @doc https://umijs.org/docs/guides/routes
  */
+
+// 引入各模块路由
+import adminRoutes from '../src/modules/admin/routes';
+import appMarketRoutes from '../src/modules/app-market/routes';
+import smsRoutes from '../src/modules/sms/routes';
+
 export default [
+  // 登录相关路由（无布局）- 使用业务代码的登录页
   {
     path: '/user',
     layout: false,
@@ -18,186 +27,40 @@ export default [
       {
         name: 'login',
         path: '/user/login',
-        component: './user/login',
+        component: '@/modules/admin/pages/user/login',
       },
       {
         name: 'register',
         path: '/user/register',
-        component: './user/register',
+        component: '@/modules/admin/pages/user/register',
       },
       {
         name: 'resetPassword',
         path: '/user/reset-password',
-        component: './user/reset-password',
+        component: '@/modules/admin/pages/user/reset-password',
       },
     ],
   },
 
+  // 根路由 - 包含所有需要布局的业务路由
   {
     path: '/',
-    component: './index',
+    routes: [
+      // 默认重定向到工作台
+      {
+        path: '/',
+        redirect: '/workbench',
+      },
+      // 注入 admin 模块路由（后端 Modules/Base）
+      ...adminRoutes,
+      // 注入 app-market 模块路由（后端 Modules/AppMarket）
+      ...appMarketRoutes,
+      // 注入 sms 模块路由（后端 Modules/Sms）
+      ...smsRoutes,
+    ],
   },
 
-  // 工作台
-  {
-    path: '/workbench',
-    name: 'workbench',
-    component: './dashboard/Workplace',
-    access: 'canAdmin',
-  },
-
-  // 用户管理
-  {
-    path: '/user',
-    name: 'user',
-    redirect: '/user/list',
-    access: 'canAdmin',
-  },
-  {
-    path: '/user/list',
-    name: 'user.list',
-    component: './user/User',
-    access: 'canAdmin',
-  },
-  {
-    path: '/user/pending',
-    name: 'user.pending',
-    component: './user/Pending',
-    access: 'canAdmin',
-  },
-
-  // 通知管理
-  {
-    path: '/notification',
-    name: 'notif',
-    redirect: '/notification/systemNotification',
-    access: 'canAdmin',
-  },
-  {
-    path: '/notification/systemNotification',
-    name: 'notif.systemNotification',
-    component: './notification/SystemNotification',
-    access: 'canAdmin',
-  },
-  {
-    path: '/notification/message',
-    name: 'notif.message',
-    component: './notification/Message',
-    access: 'canAdmin',
-  },
-  {
-    path: '/notification/announcement',
-    name: 'notif.announcement',
-    component: './notification/Announcement',
-    access: 'canAdmin',
-  },
-
-  // 应用管理
-  {
-    path: '/app',
-    name: 'app',
-    redirect: '/app/market',
-    access: 'canAdmin',
-  },
-  {
-    path: '/app/market',
-    name: 'app.market',
-    component: './app/Market',
-    access: 'canAdmin',
-  },
-  {
-    path: '/app/my',
-    name: 'app.my',
-    component: './app/My',
-    access: 'canAdmin',
-  },
-
-  // 公司管理
-  {
-    path: '/company',
-    name: 'org',
-    redirect: '/company/company',
-    access: 'canAdmin',
-  },
-  {
-    path: '/company/company',
-    name: 'org.company',
-    component: './company/Company',
-    access: 'canAdmin',
-  },
-  {
-    path: '/company/department',
-    name: 'org.dept',
-    component: './company/Department',
-    access: 'canAdmin',
-  },
-
-  // 菜单管理
-  {
-    path: '/menu',
-    name: 'menu',
-    redirect: '/menu/role',
-    access: 'canAdmin',
-  },
-  {
-    path: '/menu/role',
-    name: 'menu.role',
-    component: './menu/Role',
-    access: 'canAdmin',
-  },
-  {
-    path: '/menu/menu',
-    name: 'menu.menu',
-    component: './menu/Menu',
-    access: 'canAdmin',
-  },
-
-  // 系统管理
-  {
-    path: '/system',
-    name: 'system',
-    redirect: '/system/admin',
-    access: 'canAdmin',
-  },
-  {
-    path: '/system/admin',
-    name: 'system.admin',
-    component: './system/Admin',
-    access: 'canAdmin',
-  },
-  {
-    path: '/system/dict',
-    name: 'system.dict',
-    component: './system/Dict',
-    access: 'canAdmin',
-  },
-  {
-    path: '/system/dictTree',
-    name: 'system.dictTree',
-    component: './system/DictTree',
-    access: 'canAdmin',
-  },
-  {
-    path: '/system/log',
-    name: 'system.log',
-    component: './system/Log',
-    access: 'canAdmin',
-  },
-
-  // 短信管理
-  {
-    path: '/sms',
-    name: 'sms',
-    redirect: '/sms/log',
-    access: 'canAdmin',
-  },
-  {
-    path: '/sms/log',
-    name: 'sms.log',
-    component: './sms/log',
-    access: 'canAdmin',
-  },
-
+  // 404 页面
   {
     path: '*',
     layout: false,

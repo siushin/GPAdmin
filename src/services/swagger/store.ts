@@ -1,4 +1,4 @@
-// @ts-expect-error
+// @ts-ignore
 /* eslint-disable */
 import { request } from '@umijs/max';
 
@@ -11,10 +11,7 @@ export async function getInventory(options?: { [key: string]: any }) {
 }
 
 /** Place an order for a pet POST /store/order */
-export async function placeOrder(
-  body: API.Order,
-  options?: { [key: string]: any },
-) {
+export async function placeOrder(body: API.Order, options?: { [key: string]: any }) {
   return request<API.Order>('/store/order', {
     method: 'POST',
     data: body,

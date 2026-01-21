@@ -1,6 +1,6 @@
 import { useIntl } from '@umijs/max';
-import { Button, message } from 'antd';
-import { getNotification } from '@/utils/notification';
+import { Button } from 'antd';
+import { getMessage, getNotification } from '@/modules/base/utils/notification';
 import defaultSettings from '../config/defaultSettings';
 
 const { pwa } = defaultSettings;
@@ -24,7 +24,7 @@ const clearCache = () => {
 if (pwa) {
   // Notify user if offline now
   window.addEventListener('sw.offline', () => {
-    message.warning(useIntl().formatMessage({ id: 'app.pwa.offline' }));
+    getMessage().warning(useIntl().formatMessage({ id: 'app.pwa.offline' }));
   });
 
   // Pop up a prompt on the page asking the user if they want to use the latest version
