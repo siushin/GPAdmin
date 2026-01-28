@@ -4,3 +4,6 @@
 [submodule "src/modules/app-market"]
 	path = src/modules/app-market
 	url = git@github.com:siushin/gpa-module-app-market-fe.git
+[submodule "src/modules/sms"]
+	path = src/modules/sms
+	url = git@github.com:siushin/gpa-module-sms-fe.git
