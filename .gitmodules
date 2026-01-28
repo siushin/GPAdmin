@@ -1,0 +1,3 @@
+[submodule "src/modules/admin"]
+	path = src/modules/admin
+	url = git@github.com:siushin/gpa-module-admin-fe.git
