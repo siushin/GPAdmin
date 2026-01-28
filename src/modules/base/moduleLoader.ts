@@ -3,27 +3,20 @@
  * 静态导入 modules 目录下的所有模块
  */
 
-import adminModule from './modules/admin';
-import appMarketModule from './modules/app-market';
+import adminModule from '../admin';
+import appMarketModule from '../app-market';
 // 静态导入所有模块
-import baseModule from './modules/base';
-import smsModule from './modules/sms';
-import type { ModuleLoadResult, ModuleMeta } from './modules/types';
+import smsModule from '../sms';
+import type { ModuleLoadResult, ModuleMeta } from './types';
 
 /**
  * 所有模块列表 - 新增模块时在这里添加
  * 模块对应关系：
- * - base: 公共组件和工具
  * - admin: 后端 Modules/Base
  * - app-market: 后端 Modules/AppMarket
  * - sms: 后端 Modules/Sms
  */
-const allModules: ModuleMeta[] = [
-  baseModule,
-  adminModule,
-  appMarketModule,
-  smsModule,
-];
+const allModules: ModuleMeta[] = [adminModule, appMarketModule, smsModule];
 
 /**
  * 解析并验证模块

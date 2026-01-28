@@ -1,13 +1,19 @@
 /**
  * Base 模块
  * 提供公共的工具函数、组件和基础服务
- * 不包含路由，仅作为其他模块的基础依赖
+ * 包含模块加载器、类型定义、权限配置等通用功能
  */
 
-import type { ModuleMeta } from '../types';
+import type { ModuleMeta } from './types';
 
+// 导出权限配置
+export { default as access } from './access';
 // 导出组件
 export * from './components';
+// 导出模块加载器
+export * from './moduleLoader';
+// 导出类型定义
+export * from './types';
 // 导出工具函数
 export * from './utils';
 

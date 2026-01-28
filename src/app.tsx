@@ -12,11 +12,11 @@ import {
   SelectLang,
   SettingButton,
 } from '@/components';
-import { moduleList } from '@/moduleLoader';
 import { getUserMenus } from '@/modules/admin/services/user';
 import {
   clearToken,
   isTokenExpired,
+  moduleList,
   setMessageInstance,
   setNotificationInstance,
 } from '@/modules/base';
